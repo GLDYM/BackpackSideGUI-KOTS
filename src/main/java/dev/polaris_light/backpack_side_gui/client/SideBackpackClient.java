@@ -67,6 +67,7 @@ public final class SideBackpackClient {
     private static int backpackSlot = -1;
     private static int slotCount = 0;
     private static String displayName = "";
+    private static final UtilityPanelState utilityState = new UtilityPanelState();
     private static boolean hasCraftingUpgrade = false;
     private static boolean hasFurnaceUpgrade = false;
     private static boolean hasAnvilUpgrade = false;
@@ -133,8 +134,14 @@ public final class SideBackpackClient {
         hasFurnaceUpgrade = packet.furnaceUpgrade();
         hasAnvilUpgrade = packet.anvilUpgrade();
         hasSmithingUpgrade = packet.smithingUpgrade();
+        utilityState.hasCraftingUpgrade = hasCraftingUpgrade;
+        utilityState.hasFurnaceUpgrade = hasFurnaceUpgrade;
+        utilityState.hasAnvilUpgrade = hasAnvilUpgrade;
+        utilityState.hasSmithingUpgrade = hasSmithingUpgrade;
+        utilityState.activePanel = activeUtilityPanel;
         if (!isUtilityTypeVisible(activeUtilityPanel)) {
             activeUtilityPanel = -1;
+            utilityState.activePanel = -1;
         }
         items.clear();
         items.addAll(packet.items());
@@ -142,6 +149,8 @@ public final class SideBackpackClient {
     }
 
     public static void receiveUtilitySync(UtilitySyncPayload packet) {
+        utilityState.applySync(packet.utilityType(), packet.items(), packet.furnaceLitTime(), packet.furnaceLitDuration(),
+                packet.furnaceCookProgress(), packet.furnaceCookTotal(), packet.anvilCost(), packet.anvilName());
         utilitySyncType = packet.utilityType();
         utilityItems.clear();
         utilityItems.addAll(packet.items());
@@ -250,7 +259,7 @@ public final class SideBackpackClient {
         }
         double mouseX = (mc.mouseHandler.xpos() * mc.getWindow().getGuiScaledWidth()) / mc.getWindow().getScreenWidth();
         double mouseY = (mc.mouseHandler.ypos() * mc.getWindow().getGuiScaledHeight()) / mc.getWindow().getScreenHeight();
-        PanelRect rect = getPanelRect(screen.width, screen.height);
+        BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
         int panelSlot = !((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue() ? getHoveredSlot(rect, mouseX, mouseY) : -1;
         if (!((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue() && panelSlot < 0 && panelInteractiveContains(rect, mouseX, mouseY)) {
             return false;
@@ -314,7 +323,7 @@ public final class SideBackpackClient {
         if (isBackpackScreen(screen)) {
             return;
         }
-        PanelRect rect = getPanelRect(screen.width, screen.height);
+        BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
         GuiGraphics graphics = event.getGuiGraphics();
         if (!available) {
             return;
@@ -328,7 +337,7 @@ public final class SideBackpackClient {
         } else {
             renderPanel(graphics, mc, rect, event.getMouseX(), event.getMouseY());
             if (panelInteractiveContains(rect, event.getMouseX(), event.getMouseY())) {
-                renderCarriedStackOnTop(graphics, mc, event.getMouseX(), event.getMouseY());
+                PanelRenderer.renderCarriedStack(graphics, mc, getCarriedStackForRender(mc), event.getMouseX(), event.getMouseY());
             }
             graphics.pose().popPose();
         }
@@ -347,7 +356,7 @@ public final class SideBackpackClient {
             if (isBackpackScreen(screen)) {
                 return;
             }
-            PanelRect rect = getPanelRect(screen.width, screen.height);
+            BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
             if (!available) {
                 return;
             }
@@ -381,9 +390,10 @@ public final class SideBackpackClient {
                     activeUtilityPanel = activeUtilityPanel == utility ? -1 : utility;
                     utilityItems.clear();
                     utilitySyncType = activeUtilityPanel;
-                    if (activeUtilityPanel >= 0) {
-                        ModNetwork.sendUtilityRequest(backpackSlot, activeUtilityPanel);
-                    }
+                if (activeUtilityPanel >= 0) {
+                    ModNetwork.sendUtilityRequest(backpackSlot, activeUtilityPanel);
+                }
+                utilityState.activePanel = activeUtilityPanel;
                     event.setCanceled(true);
                     return;
                 }
@@ -502,7 +512,7 @@ public final class SideBackpackClient {
         if (abstractContainerScreen instanceof AbstractContainerScreen) {
             AbstractContainerScreen<?> screen = abstractContainerScreen;
             if (!isBackpackScreen(screen)) {
-                PanelRect rect = getPanelRect(screen.width, screen.height);
+                BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
                 if (movingPanel) {
                     commitPanelDragOffsets();
                     movingPanel = false;
@@ -582,7 +592,7 @@ public final class SideBackpackClient {
             if (isBackpackScreen(screen)) {
                 return;
             }
-            PanelRect rect = getPanelRect(screen.width, screen.height);
+            BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
             if (movingPanel) {
                 int dx = ((int) event.getMouseX()) - moveStartMouseX;
                 int dy = ((int) event.getMouseY()) - moveStartMouseY;
@@ -639,7 +649,7 @@ public final class SideBackpackClient {
                 event.setCanceled(true);
                 return;
             }
-            PanelRect rect = getPanelRect(screen.width, screen.height);
+            BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
             if (((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue() || !panelInteractiveContains(rect, event.getMouseX(), event.getMouseY())) {
                 return;
             }
@@ -775,36 +785,36 @@ public final class SideBackpackClient {
         return false;
     }
 
-    private static void renderPanel(GuiGraphics graphics, Minecraft mc, PanelRect rect, double mouseX, double mouseY) {
+    private static void renderPanel(GuiGraphics graphics, Minecraft mc, BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         int logicalSlot;
-        int panelWidth = rect.width + 8;
-        int panelHeight = (rect.visibleRows * SLOT_SIZE) + 22;
-        graphics.fill(rect.x - 4, rect.y - SLOT_SIZE, (rect.x - 4) + panelWidth, (rect.y - SLOT_SIZE) + panelHeight, -871362544);
-        graphics.fill(rect.x - 4, rect.y - SLOT_SIZE, (rect.x - 4) + panelWidth, rect.y - 17, -11184811);
+        int panelWidth = rect.width() + 8;
+        int panelHeight = (rect.visibleRows() * SLOT_SIZE) + 22;
+        graphics.fill(rect.x() - 4, rect.y() - SLOT_SIZE, (rect.x() - 4) + panelWidth, (rect.y() - SLOT_SIZE) + panelHeight, -871362544);
+        graphics.fill(rect.x() - 4, rect.y() - SLOT_SIZE, (rect.x() - 4) + panelWidth, rect.y() - 17, -11184811);
         if (!searchOpen) {
-            graphics.drawString(mc.font, (displayName == null || displayName.isEmpty()) ? Component.translatable("text.backpack_side_gui.title") : Component.literal(displayName), rect.x, rect.y - 14, 16777215, true);
+            graphics.drawString(mc.font, (displayName == null || displayName.isEmpty()) ? Component.translatable("text.backpack_side_gui.title") : Component.literal(displayName), rect.x(), rect.y() - 14, 16777215, true);
         }
         renderTopButtonsAndSearch(graphics, mc, rect);
         List<Integer> visibleSlots = getVisibleSlots();
         int hovered = -1;
         Map<Integer, ItemStack> dragPreview = buildDragPreview(mc);
-        for (int row = 0; row < rect.visibleRows; row++) {
+        for (int row = 0; row < rect.visibleRows(); row++) {
             for (int col = 0; col < COLUMNS; col++) {
                 int visibleIndex = ((scrollRow + row) * COLUMNS) + col;
                 if (visibleIndex < visibleSlots.size() && (logicalSlot = visibleSlots.get(visibleIndex).intValue()) < slotCount) {
-                    int x = rect.x + (col * SLOT_SIZE);
-                    int y = rect.y + (row * SLOT_SIZE);
+                    int x = rect.x() + (col * SLOT_SIZE);
+                    int y = rect.y() + (row * SLOT_SIZE);
                     boolean isHovered = mouseX >= ((double) x) && mouseX < ((double) (x + SLOT_SIZE)) && mouseY >= ((double) y) && mouseY < ((double) (y + SLOT_SIZE));
                     boolean isDragSelected = draggingStack && dragSlots.contains(Integer.valueOf(logicalSlot));
                     graphics.fill(x, y, x + 17, y + 17, isDragSelected ? -10053172 : isHovered ? -8947849 : -12961222);
                     graphics.fill(x + 1, y + 1, x + 16, y + 16, -14671840);
                     ItemStack previewStack = dragPreview.get(Integer.valueOf(logicalSlot));
                     if (previewStack != null && !previewStack.isEmpty()) {
-                        renderItemWithLargeCount(graphics, mc, previewStack, x + 1, y + 1);
+                        PanelRenderer.renderItemWithLargeCount(graphics, mc, previewStack, x + 1, y + 1);
                     } else if (logicalSlot < items.size()) {
                         ItemStack stack = items.get(logicalSlot);
                         if (!stack.isEmpty()) {
-                            renderItemWithLargeCount(graphics, mc, stack, x + 1, y + 1);
+                            PanelRenderer.renderItemWithLargeCount(graphics, mc, stack, x + 1, y + 1);
                         }
                     }
                     if (isHovered) {
@@ -813,7 +823,7 @@ public final class SideBackpackClient {
                 }
             }
         }
-        renderScrollbar(graphics, rect);
+        PanelRenderer.renderScrollbar(graphics, rect, getTotalRows(), getMaxScrollRows(), scrollRow);
         renderPanelButtons(graphics, rect);
         renderUtilityPanel(graphics, mc, rect, mouseX, mouseY);
         boolean showedButtonTooltip = renderTopButtonTooltips(graphics, mc, rect, mouseX, mouseY);
@@ -826,9 +836,9 @@ public final class SideBackpackClient {
         }
     }
 
-    private static void renderTopButtonsAndSearch(GuiGraphics graphics, Minecraft mc, PanelRect rect) {
-        int y = rect.y - 16;
-        int categoryX = (rect.x + 162) - 14;
+    private static void renderTopButtonsAndSearch(GuiGraphics graphics, Minecraft mc, BackpackPanelLayout.PanelRect rect) {
+        int y = rect.y() - 16;
+        int categoryX = (rect.x() + 162) - 14;
         int sortX = (categoryX - 14) - 2;
         int searchX = (sortX - 14) - 2;
         renderSmallIconButton(graphics, SEARCH_ICON, searchX, y);
@@ -836,7 +846,7 @@ public final class SideBackpackClient {
         renderTextButton(graphics, mc, categoryX, y, SORT_MODE_LABELS[sortMode]);
         if (searchOpen) {
             int barRight = searchX - 3;
-            int barX = rect.x + 2;
+            int barX = rect.x() + 2;
             int barW = Math.max(40, barRight - barX);
             graphics.fill(barX, y, barX + barW, y + 14, -300871407);
             graphics.fill(barX, y, barX + barW, y + 1, -8947849);
@@ -855,9 +865,9 @@ public final class SideBackpackClient {
         graphics.drawString(mc.font, text, tx, y + 3, 16777215, true);
     }
 
-    private static int getTopButtonIndex(PanelRect rect, double mouseX, double mouseY) {
-        int y = rect.y - 16;
-        int categoryX = (rect.x + 162) - 14;
+    private static int getTopButtonIndex(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
+        int y = rect.y() - 16;
+        int categoryX = (rect.x() + 162) - 14;
         int sortX = (categoryX - 14) - 2;
         int searchX = (sortX - 14) - 2;
         if (contains(mouseX, mouseY, searchX, y, 14, 14)) {
@@ -869,24 +879,24 @@ public final class SideBackpackClient {
         return contains(mouseX, mouseY, categoryX, y, 14, 14) ? 2 : -1;
     }
 
-    private static boolean searchBarContains(PanelRect rect, double mouseX, double mouseY) {
+    private static boolean searchBarContains(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         if (!searchOpen) {
             return false;
         }
-        int y = rect.y - 16;
-        int categoryX = (rect.x + 162) - 14;
+        int y = rect.y() - 16;
+        int categoryX = (rect.x() + 162) - 14;
         int sortX = (categoryX - 14) - 2;
         int searchX = (sortX - 14) - 2;
         int barRight = searchX - 3;
-        int barX = rect.x + 2;
+        int barX = rect.x() + 2;
         int barW = Math.max(40, barRight - barX);
         return contains(mouseX, mouseY, barX, y, barW, 14);
     }
 
-    private static boolean panelInteractiveContains(PanelRect rect, double mouseX, double mouseY) {
-        int panelWidth = rect.width + 8;
-        int panelHeight = (rect.visibleRows * SLOT_SIZE) + 22;
-        if (contains(mouseX, mouseY, rect.x - 4, rect.y - SLOT_SIZE, panelWidth, panelHeight) || searchBarContains(rect, mouseX, mouseY) || moveButtonContains(rect, mouseX, mouseY) || showHideButtonContains(rect, mouseX, mouseY)) {
+    private static boolean panelInteractiveContains(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
+        int panelWidth = rect.width() + 8;
+        int panelHeight = (rect.visibleRows() * SLOT_SIZE) + 22;
+        if (contains(mouseX, mouseY, rect.x() - 4, rect.y() - SLOT_SIZE, panelWidth, panelHeight) || searchBarContains(rect, mouseX, mouseY) || moveButtonContains(rect, mouseX, mouseY) || showHideButtonContains(rect, mouseX, mouseY)) {
             return true;
         }
         if (((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue() || getUtilityButtonType(rect, mouseX, mouseY) < 0) {
@@ -895,7 +905,7 @@ public final class SideBackpackClient {
         return true;
     }
 
-    private static boolean renderTopButtonTooltips(GuiGraphics graphics, Minecraft mc, PanelRect rect, double mouseX, double mouseY) {
+    private static boolean renderTopButtonTooltips(GuiGraphics graphics, Minecraft mc, BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         MutableComponent mutableComponentTranslatable;
         int topButton = getTopButtonIndex(rect, mouseX, mouseY);
         if (topButton < 0) {
@@ -912,7 +922,7 @@ public final class SideBackpackClient {
         return true;
     }
 
-    private static void renderPanelButtonTooltips(GuiGraphics graphics, Minecraft mc, PanelRect rect, double mouseX, double mouseY) {
+    private static void renderPanelButtonTooltips(GuiGraphics graphics, Minecraft mc, BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         int us;
         if (moveButtonContains(rect, mouseX, mouseY)) {
             graphics.renderTooltip(mc.font, Component.translatable("text.backpack_side_gui.tooltip.move"), (int) mouseX, (int) mouseY);
@@ -956,40 +966,24 @@ public final class SideBackpackClient {
         return mouseX >= ((double) x) && mouseX < ((double) (x + w)) && mouseY >= ((double) y) && mouseY < ((double) (y + h));
     }
 
-    private static void renderPanelButtons(GuiGraphics graphics, PanelRect rect) {
+    private static void renderPanelButtons(GuiGraphics graphics, BackpackPanelLayout.PanelRect rect) {
         int y = getButtonY(rect);
-        int moveX = rect.x;
-        int toggleX = rect.x + 14 + 3;
-        renderIconButton(graphics, MOVE_ICON, moveX, y);
-        renderIconButton(graphics, ((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue() ? SHOW_ICON : HIDE_ICON, toggleX, y);
+        int moveX = rect.x();
+        int toggleX = rect.x() + 14 + 3;
+        PanelRenderer.renderIconButton(graphics, MOVE_ICON, moveX, y, false);
+        PanelRenderer.renderIconButton(graphics, ((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue() ? SHOW_ICON : HIDE_ICON, toggleX, y, false);
         if (!((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue()) {
             int[] visibleTypes = getVisibleUtilityTypes();
             for (int i = 0; i < visibleTypes.length; i++) {
                 int type = visibleTypes[i];
                 int x = getUtilityButtonX(rect, i);
-                renderIconButton(graphics, getUtilityIcon(type), x, y, activeUtilityPanel == type);
+                PanelRenderer.renderIconButton(graphics, getUtilityIcon(type), x, y, activeUtilityPanel == type);
             }
         }
     }
 
-    private static int getUtilityButtonX(PanelRect rect, int visibleIndex) {
-        return rect.x + (17 * (2 + visibleIndex));
-    }
-
-    private static void renderIconButton(GuiGraphics graphics, ResourceLocation icon, int x, int y) {
-        renderIconButton(graphics, icon, x, y, false);
-    }
-
-    private static void renderIconButton(GuiGraphics graphics, ResourceLocation icon, int x, int y, boolean selected) {
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0f, 0.0f, 20.0f);
-        graphics.fill(x - 1, y - 1, x + 14 + 1, y + 14 + 1, selected ? -2047904 : -872415232);
-        graphics.fill(x, y, x + 14, y + 14, selected ? -11187676 : -14013910);
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.enableBlend();
-        graphics.pose().translate(0.0f, 0.0f, 2.0f);
-        graphics.blit(icon, x + 1, y + 1, 0.0f, 0.0f, 12, 12, 12, 12);
-        graphics.pose().popPose();
+    private static int getUtilityButtonX(BackpackPanelLayout.PanelRect rect, int visibleIndex) {
+        return rect.x() + (17 * (2 + visibleIndex));
     }
 
     private static boolean isUtilityTypeVisible(int type) {
@@ -1007,12 +1001,12 @@ public final class SideBackpackClient {
         }
     }
 
-    private static void renderUtilityPanel(GuiGraphics graphics, Minecraft mc, PanelRect rect, double mouseX, double mouseY) {
+    private static void renderUtilityPanel(GuiGraphics graphics, Minecraft mc, BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         MutableComponent mutableComponentEmpty;
         if (activeUtilityPanel < 0 || !isUtilityTypeVisible(activeUtilityPanel)) {
             return;
         }
-        int x = rect.x;
+        int x = rect.x();
         int y = getUtilityPanelY(rect);
         graphics.fill(x - 4, y - 4, x + 162 + 4, y + UTILITY_PANEL_HEIGHT + 4, -871362544);
         graphics.fill(x - 4, y - 4, x + 162 + 4, y - 3, -11184811);
@@ -1042,20 +1036,20 @@ public final class SideBackpackClient {
                     renderUtilitySlotWithItem(graphics, mc, sx + (col * SLOT_SIZE), sy + (row * SLOT_SIZE), (row * 3) + col, mouseX, mouseY);
                 }
             }
-            graphics.drawString(mc.font, "闁?", x + 70, sy + 20, 16777215, true);
+            graphics.drawString(mc.font, "闂?", x + 70, sy + 20, 16777215, true);
             renderUtilitySlotWithItem(graphics, mc, x + 93, sy + SLOT_SIZE, COLUMNS, mouseX, mouseY);
             return;
         }
         if (activeUtilityPanel == 1) {
             renderUtilitySlotWithItem(graphics, mc, x + 22, sy + 2, 0, mouseX, mouseY);
             renderUtilitySlotWithItem(graphics, mc, x + 22, sy + 30, 1, mouseX, mouseY);
-            renderFurnaceBars(graphics, x, sy);
-            graphics.drawString(mc.font, "闁?", x + 58, sy + SLOT_SIZE, 16777215, true);
+            PanelRenderer.renderFurnaceBars(graphics, x, sy, furnaceLitTime, furnaceLitDuration, furnaceCookProgress, furnaceCookTotal);
+            graphics.drawString(mc.font, "闂?", x + 58, sy + SLOT_SIZE, 16777215, true);
             renderUtilitySlotWithItem(graphics, mc, x + 88, sy + 16, 2, mouseX, mouseY);
             return;
         }
         if (activeUtilityPanel == 2) {
-            renderAnvilNameBox(graphics, mc, rect);
+            PanelRenderer.renderAnvilNameBox(graphics, mc, rect.x() + SCROLLBAR_WIDTH, getUtilityPanelY(rect) + 15, anvilNameFocused, anvilName);
             renderUtilitySlotWithItem(graphics, mc, x + 15, sy + 20, 0, mouseX, mouseY);
             graphics.drawString(mc.font, "+", x + 40, sy + 25, 16777215, true);
             renderUtilitySlotWithItem(graphics, mc, x + 55, sy + 20, 1, mouseX, mouseY);
@@ -1064,7 +1058,7 @@ public final class SideBackpackClient {
             if (anvilCost > 0) {
                 boolean tooExpensive = anvilCost >= 40 && (mc.player == null || !mc.player.isCreative());
                 boolean notEnoughXp = (tooExpensive || mc.player == null || mc.player.isCreative() || mc.player.experienceLevel >= anvilCost) ? false : true;
-                String costText = tooExpensive ? "闂佸搫顦弲娑樏洪敐鍥С妞ゆ帒瀚崣濠囨煕鐏炲墽绠撻柟?" : notEnoughXp ? "缂傚倸鍊风粈浣烘崲濮椻偓閹澘鈻庨幇顔规灃閻庡箍鍎遍悧鍡涘窗?" : "缂傚倷鐒︾粙鎴λ囨潏顭戞闁搞儜鈧Σ鍫ユ煕椤愵剛宀涢柛? " + anvilCost;
+                String costText = tooExpensive ? "闂備礁鎼ˇ顐﹀疾濞戞◤娲晲閸ヮ亜小濡炪倖甯掔€氼剟宕ｆ繝鍥ㄧ厱閻忕偛澧界粻鎾绘煙?" : notEnoughXp ? "缂傚倸鍊搁崐椋庣矆娴ｇ儤宕叉慨妞诲亾闁诡喗婢橀埢搴ㄥ箛椤旇鐏冮柣搴＄畭閸庨亶鎮ч崱娑樼獥?" : "缂傚倸鍊烽悞锔剧矙閹次诲洦娼忛…鎴烆啍闂佹悶鍎滈埀顒€危閸儲鐓曟い鎰靛墰瀹€娑㈡煕? " + anvilCost;
                 int costColor = tooExpensive ? 16733525 : notEnoughXp ? 16751001 : 8454016;
                 graphics.drawString(mc.font, costText, x + 80, sy + 42, costColor, true);
                 return;
@@ -1075,40 +1069,21 @@ public final class SideBackpackClient {
             renderUtilitySlotWithItem(graphics, mc, x + 7, sy + 16, 0, mouseX, mouseY);
             renderUtilitySlotWithItem(graphics, mc, x + 31, sy + 16, 1, mouseX, mouseY);
             renderUtilitySlotWithItem(graphics, mc, x + 55, sy + 16, 2, mouseX, mouseY);
-            graphics.drawString(mc.font, "闁?", x + 82, sy + 21, 16777215, true);
+            graphics.drawString(mc.font, "闂?", x + 82, sy + 21, 16777215, true);
             renderUtilitySlotWithItem(graphics, mc, x + 106, sy + 16, 3, mouseX, mouseY);
         }
     }
 
-    private static void renderAnvilNameBox(GuiGraphics graphics, Minecraft mc, PanelRect rect) {
-        int x = rect.x + SCROLLBAR_WIDTH;
-        int y = getUtilityPanelY(rect) + 15;
-        graphics.fill(x, y, x + 92, y + 12, anvilNameFocused ? -13421773 : -870309856);
-        graphics.fill(x, y, x + 92, y + 1, anvilNameFocused ? -8064 : -8947849);
-        String shown = (anvilName == null || anvilName.isEmpty()) ? "Rename" : anvilName;
-        int color = (anvilName == null || anvilName.isEmpty()) ? 7829367 : 16777215;
-        graphics.drawString(mc.font, shown, x + 3, y + 2, color, false);
-    }
 
-    private static boolean anvilNameBoxContains(PanelRect rect, double mouseX, double mouseY) {
+    private static boolean anvilNameBoxContains(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         if (activeUtilityPanel != 2) {
             return false;
         }
-        int x = rect.x + SCROLLBAR_WIDTH;
+        int x = rect.x() + SCROLLBAR_WIDTH;
         int y = getUtilityPanelY(rect) + 15;
         return contains(mouseX, mouseY, x, y, 92, 12);
     }
 
-    private static void renderFurnaceBars(GuiGraphics graphics, int x, int sy) {
-        if (furnaceLitDuration > 0 && furnaceLitTime > 0) {
-            int fire = Math.max(1, Math.min(13, (furnaceLitTime * 13) / Math.max(1, furnaceLitDuration)));
-            graphics.fill(x + 45, sy + 31 + (13 - fire), x + 51, sy + 44, -29696);
-        }
-        if (furnaceCookTotal > 0 && furnaceCookProgress > 0) {
-            int cook = Math.max(1, Math.min(22, (furnaceCookProgress * 22) / Math.max(1, furnaceCookTotal)));
-            graphics.fill(x + 54, sy + 25, x + 54 + cook, sy + 29, -5592406);
-        }
-    }
 
     private static void renderUtilitySlotWithItem(GuiGraphics graphics, Minecraft mc, int x, int y, int slot, double mouseX, double mouseY) {
         boolean hovered = contains(mouseX, mouseY, x, y, SLOT_SIZE, SLOT_SIZE);
@@ -1128,10 +1103,6 @@ public final class SideBackpackClient {
         }
     }
 
-    private static void renderUtilitySlot(GuiGraphics graphics, int x, int y) {
-        graphics.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, -12961222);
-        graphics.fill(x + 1, y + 1, x + 17, y + 17, -14671840);
-    }
 
     private static int[] getVisibleUtilityTypes() {
         int[] tmp = new int[4];
@@ -1181,18 +1152,18 @@ public final class SideBackpackClient {
         }
     }
 
-    private static boolean moveButtonContains(PanelRect rect, double mouseX, double mouseY) {
+    private static boolean moveButtonContains(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         int y = getButtonY(rect);
-        return mouseX >= ((double) rect.x) && mouseX < ((double) (rect.x + 14)) && mouseY >= ((double) y) && mouseY < ((double) (y + 14));
+        return mouseX >= ((double) rect.x()) && mouseX < ((double) (rect.x() + 14)) && mouseY >= ((double) y) && mouseY < ((double) (y + 14));
     }
 
-    private static boolean showHideButtonContains(PanelRect rect, double mouseX, double mouseY) {
-        int x = rect.x + 14 + 3;
+    private static boolean showHideButtonContains(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
+        int x = rect.x() + 14 + 3;
         int y = getButtonY(rect);
         return mouseX >= ((double) x) && mouseX < ((double) (x + 14)) && mouseY >= ((double) y) && mouseY < ((double) (y + 14));
     }
 
-    private static int getUtilityButtonType(PanelRect rect, double mouseX, double mouseY) {
+    private static int getUtilityButtonType(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         if (((Boolean) BackpackSideGuiConfig.PANEL_HIDDEN.get()).booleanValue()) {
             return -1;
         }
@@ -1207,11 +1178,11 @@ public final class SideBackpackClient {
         return -1;
     }
 
-    private static int getUtilitySlotAt(PanelRect rect, double mouseX, double mouseY) {
+    private static int getUtilitySlotAt(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         if (activeUtilityPanel < 0 || !isUtilityTypeVisible(activeUtilityPanel)) {
             return -1;
         }
-        int x = rect.x;
+        int x = rect.x();
         int sy = getUtilityPanelY(rect) + 17;
         if (activeUtilityPanel == 0) {
             int sx = x + 8;
@@ -1260,27 +1231,28 @@ public final class SideBackpackClient {
         return -1;
     }
 
-    private static boolean utilityPanelContains(PanelRect rect, double mouseX, double mouseY) {
+    private static boolean utilityPanelContains(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         if (activeUtilityPanel < 0 || !isUtilityTypeVisible(activeUtilityPanel)) {
             return false;
         }
-        int x = rect.x - 4;
+        int x = rect.x() - 4;
         int y = getUtilityPanelY(rect) - 4;
         return contains(mouseX, mouseY, x, y, 170, 74);
     }
 
-    private static int getUtilityPanelY(PanelRect rect) {
+    private static int getUtilityPanelY(BackpackPanelLayout.PanelRect rect) {
         return getButtonY(rect) + 14 + 5;
     }
 
-    private static int getButtonY(PanelRect rect) {
-        return rect.y + (rect.visibleRows * SLOT_SIZE) + 5;
+    private static int getButtonY(BackpackPanelLayout.PanelRect rect) {
+        return rect.y() + (rect.visibleRows() * SLOT_SIZE) + 5;
     }
 
     private static void setPanelHidden(boolean hidden) {
         BackpackSideGuiConfig.PANEL_HIDDEN.set(Boolean.valueOf(hidden));
         if (hidden) {
             activeUtilityPanel = -1;
+            utilityState.activePanel = -1;
         }
         saveClientConfig();
         cancelDragState();
@@ -1312,24 +1284,6 @@ public final class SideBackpackClient {
         }
     }
 
-    private static void renderItemWithLargeCount(GuiGraphics graphics, Minecraft mc, ItemStack stack, int x, int y) {
-        if (stack == null || stack.isEmpty()) {
-            return;
-        }
-        graphics.renderItem(stack, x, y);
-        if (stack.getCount() != 1) {
-            String count = String.valueOf(stack.getCount());
-            graphics.pose().pushPose();
-            graphics.pose().translate(0.0f, 0.0f, 200.0f);
-            int tx = ((x + 19) - 2) - mc.font.width(count);
-            int ty = y + SCROLLBAR_WIDTH + 3;
-            graphics.drawString(mc.font, count, tx, ty, 16777215, true);
-            graphics.pose().popPose();
-            return;
-        }
-        graphics.renderItemDecorations(mc.font, stack, x, y);
-    }
-
     private static void restoreCarriedRenderOverride(Minecraft mc) {
         if (!carriedRenderOverrideActive) {
             return;
@@ -1341,39 +1295,10 @@ public final class SideBackpackClient {
         carriedRenderOriginal = ItemStack.EMPTY;
     }
 
-    private static void renderCarriedStackOnTop(GuiGraphics graphics, Minecraft mc, double mouseX, double mouseY) {
-        ItemStack carried;
-        if (mc == null || mc.player == null || mc.player.containerMenu == null || (carried = mc.player.containerMenu.getCarried()) == null || carried.isEmpty()) {
-            return;
-        }
-        ItemStack shown = carried.copy();
-        if (draggingStack) {
-            Map<Integer, ItemStack> dragPreview = buildDragPreview(mc);
-            int assigned = getAssignedDragCount(dragPreview);
-            if (assigned > 0) {
-                int remaining = Math.max(0, shown.getCount() - assigned);
-                if (remaining <= 0) {
-                    return;
-                } else {
-                    shown.setCount(remaining);
-                }
-            }
-        } else if (draggingUtilityStack) {
-            Map<Integer, ItemStack> dragPreview2 = buildUtilityDragPreview(mc);
-            int assigned2 = getAssignedUtilityDragCount(dragPreview2);
-            if (assigned2 > 0) {
-                int remaining2 = Math.max(0, shown.getCount() - assigned2);
-                if (remaining2 <= 0) {
-                    return;
-                } else {
-                    shown.setCount(remaining2);
-                }
-            }
-        }
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0f, 0.0f, 900.0f);
-        renderItemWithLargeCount(graphics, mc, shown, ((int) mouseX) - 8, ((int) mouseY) - 8);
-        graphics.pose().popPose();
+    private static ItemStack getCarriedStackForRender(Minecraft mc) {
+        if (mc == null || mc.player == null || mc.player.containerMenu == null) return ItemStack.EMPTY;
+        ItemStack carried = mc.player.containerMenu.getCarried();
+        return carried == null ? ItemStack.EMPTY : carried.copy();
     }
 
     private static ItemStack getHoveredPanelStackAtMouse(Minecraft mc, AbstractContainerScreen<?> screen) {
@@ -1382,33 +1307,13 @@ public final class SideBackpackClient {
         }
         double mouseX = (mc.mouseHandler.xpos() * mc.getWindow().getGuiScaledWidth()) / mc.getWindow().getScreenWidth();
         double mouseY = (mc.mouseHandler.ypos() * mc.getWindow().getGuiScaledHeight()) / mc.getWindow().getScreenHeight();
-        PanelRect rect = getPanelRect(screen.width, screen.height);
+        BackpackPanelLayout.PanelRect rect = getBackpackPanelLayoutPanelRect(screen.width, screen.height);
         int slot = getHoveredSlot(rect, mouseX, mouseY);
         if (slot < 0 || slot >= items.size()) {
             return ItemStack.EMPTY;
         }
         ItemStack stack = items.get(slot);
         return stack == null ? ItemStack.EMPTY : stack.copy();
-    }
-
-    private static void renderReducedCarriedStack(GuiGraphics graphics, Minecraft mc, double mouseX, double mouseY, Map<Integer, ItemStack> dragPreview) {
-        if (mc.player == null || mc.player.containerMenu == null) {
-            return;
-        }
-        ItemStack carried = mc.player.containerMenu.getCarried();
-        if (carried.isEmpty()) {
-            return;
-        }
-        int assigned = getAssignedDragCount(dragPreview);
-        int remaining = Math.max(0, carried.getCount() - assigned);
-        int x = ((int) mouseX) - 8;
-        int y = ((int) mouseY) - 8;
-        if (remaining <= 0) {
-            return;
-        }
-        ItemStack shown = carried.copy();
-        shown.setCount(remaining);
-        renderItemWithLargeCount(graphics, mc, shown, x, y);
     }
 
     private static int getAssignedDragCount(Map<Integer, ItemStack> dragPreview) {
@@ -1646,35 +1551,14 @@ public final class SideBackpackClient {
         return carried == null ? ItemStack.EMPTY : carried.copy();
     }
 
-    private static void renderScrollbar(GuiGraphics graphics, PanelRect rect) {
-        int totalRows = getTotalRows();
-        int maxScroll = getMaxScrollRows();
-        if (totalRows <= rect.visibleRows || maxScroll <= 0) {
-            return;
-        }
-        int trackX = rect.x + 162 + 3;
-        int trackY = rect.y;
-        int trackH = rect.visibleRows * SLOT_SIZE;
-        int thumbH = Math.max(12, (trackH * rect.visibleRows) / Math.max(1, totalRows));
-        int thumbTravel = Math.max(1, trackH - thumbH);
-        int thumbY = trackY + ((int) Math.round(thumbTravel * (scrollRow / maxScroll)));
-        graphics.fill(trackX, trackY, trackX + SCROLLBAR_WIDTH, trackY + trackH, -14671840);
-        graphics.fill(trackX + 1, thumbY, (trackX + SCROLLBAR_WIDTH) - 1, thumbY + thumbH, -6645094);
-    }
 
-    private static void renderSmallHint(GuiGraphics graphics, int x, int y, Component message) {
-        Minecraft mc = Minecraft.getInstance();
-        graphics.fill(x - 4, y - SLOT_SIZE, x + 120, y + 4, -1728053248);
-        graphics.drawString(mc.font, message, x, y - 13, 11184810, true);
-    }
-
-    private static int getHoveredSlot(PanelRect rect, double mouseX, double mouseY) {
+    private static int getHoveredSlot(BackpackPanelLayout.PanelRect rect, double mouseX, double mouseY) {
         if (!rect.slotsContains(mouseX, mouseY)) {
             return -1;
         }
-        int col = (((int) mouseX) - rect.x) / SLOT_SIZE;
-        int row = (((int) mouseY) - rect.y) / SLOT_SIZE;
-        if (col < 0 || col >= COLUMNS || row < 0 || row >= rect.visibleRows) {
+        int col = (((int) mouseX) - rect.x()) / SLOT_SIZE;
+        int row = (((int) mouseY) - rect.y()) / SLOT_SIZE;
+        if (col < 0 || col >= COLUMNS || row < 0 || row >= rect.visibleRows()) {
             return -1;
         }
         int visibleIndex = ((scrollRow + row) * COLUMNS) + col;
@@ -1685,31 +1569,21 @@ public final class SideBackpackClient {
         return visibleSlots.get(visibleIndex).intValue();
     }
 
-    private static PanelRect getPanelRect(int screenWidth, int screenHeight) {
-        int x;
-        int visibleRowsSetting = Math.max(2, Math.min(12, ((Integer) BackpackSideGuiConfig.VISIBLE_ROWS.get()).intValue()));
-        int rows = Math.min(visibleRowsSetting, Math.max(1, getTotalRows()));
-        int extraScrollbar = getTotalRows() > rows ? 12 : 0;
-        int panelWidth = 162 + extraScrollbar;
-        int panelHeight = (rows * SLOT_SIZE) + 22 + 14 + 4;
-        if (!((Boolean) BackpackSideGuiConfig.PANEL_RIGHT_SIDE.get()).booleanValue()) {
-            x = (((screenWidth / 2) - 94) - panelWidth) + getEffectiveXOffset();
-        } else {
-            x = (screenWidth / 2) + 94 + getEffectiveXOffset();
-        }
-        int x2 = Math.max(0, Math.min(screenWidth - panelWidth, x));
-        int y = Math.max(0, ((screenHeight - panelHeight) / 2) + SLOT_SIZE + getEffectiveYOffset());
-        return new PanelRect(x2, Math.min(((screenHeight - (rows * SLOT_SIZE)) - 14) - 10, y), panelWidth, rows * SLOT_SIZE, rows);
+    private static BackpackPanelLayout.PanelRect getBackpackPanelLayoutPanelRect(int screenWidth, int screenHeight) {
+        return BackpackPanelLayout.calculate(screenWidth, screenHeight, getTotalRows(),
+                ((Integer) BackpackSideGuiConfig.VISIBLE_ROWS.get()).intValue(),
+                ((Boolean) BackpackSideGuiConfig.PANEL_RIGHT_SIDE.get()).booleanValue(),
+                getEffectiveXOffset(), getEffectiveYOffset());
     }
 
-    private static void updateScrollFromMouse(PanelRect rect, double mouseY) {
+    private static void updateScrollFromMouse(BackpackPanelLayout.PanelRect rect, double mouseY) {
         int maxScroll = getMaxScrollRows();
         if (maxScroll <= 0) {
             scrollRow = 0;
             return;
         }
-        int trackH = rect.visibleRows * SLOT_SIZE;
-        double ratio = (mouseY - rect.y) / Math.max(1.0d, trackH);
+        int trackH = rect.visibleRows() * SLOT_SIZE;
+        double ratio = (mouseY - rect.y()) / Math.max(1.0d, trackH);
         scrollRow = (int) Math.round(MthClamp(ratio, 0.0d, 1.0d) * maxScroll);
         clampScroll();
     }
@@ -1817,51 +1691,5 @@ public final class SideBackpackClient {
         return screen != null && screen.getClass().getName().equals("net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen");
     }
 
-    private static final class PanelRect {
-        private final int x;
-        private final int y;
-        private final int width;
-        private final int height;
-        private final int visibleRows;
-
-        private PanelRect(int x, int y, int width, int height, int visibleRows) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.visibleRows = visibleRows;
-        }
-
-        public int x() {
-            return this.x;
-        }
-
-        public int y() {
-            return this.y;
-        }
-
-        public int width() {
-            return this.width;
-        }
-
-        public int height() {
-            return this.height;
-        }
-
-        public int visibleRows() {
-            return this.visibleRows;
-        }
-
-        boolean contains(double mouseX, double mouseY) {
-            return mouseX >= ((double) this.x) && mouseX < ((double) (this.x + this.width)) && mouseY >= ((double) this.y) && mouseY < ((double) (this.y + this.height));
-        }
-
-        boolean slotsContains(double mouseX, double mouseY) {
-            return mouseX >= ((double) this.x) && mouseX < ((double) (this.x + 162)) && mouseY >= ((double) this.y) && mouseY < ((double) (this.y + this.height));
-        }
-
-        boolean scrollbarContains(double mouseX, double mouseY) {
-            return mouseX >= ((double) (this.x + 162)) && mouseX < ((double) (this.x + this.width)) && mouseY >= ((double) this.y) && mouseY < ((double) (this.y + this.height));
-        }
-    }
 }
+

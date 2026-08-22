@@ -46,7 +46,6 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 
 public final class ServerBackpackAccess {
