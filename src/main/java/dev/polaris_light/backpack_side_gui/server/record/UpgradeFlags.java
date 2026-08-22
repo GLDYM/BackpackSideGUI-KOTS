@@ -1,8 +1,10 @@
-package dev.polaris_light.backpack_side_gui.server;
+package dev.polaris_light.backpack_side_gui.server.record;
 
-record UpgradeFlags(boolean crafting, boolean furnace, boolean anvil, boolean smithing) {
+import dev.polaris_light.backpack_side_gui.server.ServerBackpackAccess;
 
-    boolean allows(int type) {
+public record UpgradeFlags(boolean crafting, boolean furnace, boolean anvil, boolean smithing) {
+
+    public boolean allows(int type) {
         switch (type) {
             case ServerBackpackAccess.UTILITY_CRAFTING:
                 return crafting;

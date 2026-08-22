@@ -1,5 +1,6 @@
 package dev.polaris_light.backpack_side_gui.server;
 
+import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;

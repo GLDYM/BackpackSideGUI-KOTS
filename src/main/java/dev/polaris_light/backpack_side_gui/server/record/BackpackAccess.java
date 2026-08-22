@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.server;
+package dev.polaris_light.backpack_side_gui.server.record;
 
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;

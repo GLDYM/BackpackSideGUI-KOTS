@@ -3,6 +3,8 @@ package dev.polaris_light.backpack_side_gui.server;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
 import dev.polaris_light.backpack_side_gui.network.PanelSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.UtilitySyncPayload;
+import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.record.UpgradeFlags;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

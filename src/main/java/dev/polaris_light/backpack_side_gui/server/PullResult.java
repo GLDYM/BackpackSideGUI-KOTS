@@ -1,5 +1,6 @@
 package dev.polaris_light.backpack_side_gui.server;
 
+import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.world.item.ItemStack;
 
 final class PullResult {
