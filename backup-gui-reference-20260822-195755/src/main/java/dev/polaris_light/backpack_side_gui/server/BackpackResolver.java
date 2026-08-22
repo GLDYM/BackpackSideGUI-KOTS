@@ -119,7 +119,8 @@ public final class BackpackResolver {
 
         IBackpackWrapper wrapper = BackpackWrapper.fromStack(stack);
         int stackLimit = StackUpgradeItem.getInventorySlotLimit(wrapper);
-        return Optional.of(new BackpackAccess(slot, stack, handler, stackLimit, curiosHandler, curiosSlot));
+        IItemHandler effective = stackLimit > 64 ? new StackLimitItemHandler(handler, stackLimit) : handler;
+        return Optional.of(new BackpackAccess(slot, stack, effective, stackLimit, curiosHandler, curiosSlot));
     }
 
     private static boolean isSophisticatedBackpack(ItemStack stack) {
