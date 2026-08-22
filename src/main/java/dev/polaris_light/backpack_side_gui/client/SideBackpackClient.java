@@ -32,7 +32,7 @@ public final class SideBackpackClient {
             return;
         RenderSystem.disableDepthTest();
         event.getGuiGraphics().pose().pushPose();
-        event.getGuiGraphics().pose().translate(0.0F, 0.0F, 500.0F);
+        event.getGuiGraphics().pose().translate(0.0F, 0.0F, 200.0F);
         try {
             OVERLAY.render(event.getScreen(), event.getGuiGraphics(), Minecraft.getInstance(), event.getMouseX(),
                     event.getMouseY());

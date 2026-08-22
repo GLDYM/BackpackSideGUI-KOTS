@@ -90,9 +90,9 @@ final class BackpackOverlayWidget {
         if (slots.isEmpty())
             return;
         updateBounds(screen.width, screen.height);
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 130.0F);
         if (visible) {
-            graphics.pose().pushPose();
-            graphics.pose().translate(0.0F, 0.0F, 100.0F);
             int backgroundWidth = width + Layout.PANEL_PADDING;
             graphics.fill(x - 4, y - Layout.TOP_OFFSET, x - 4 + backgroundWidth,
                     y + height + Layout.BOTTOM_PADDING, Palette.PANEL);
@@ -105,9 +105,9 @@ final class BackpackOverlayWidget {
             for (BackpackSlot slot : slots)
                 slot.render(graphics, minecraft, x, y, scrollbar.row(), visibleRows);
             scrollbar.render(graphics);
-            graphics.pose().popPose();
         }
         renderBottomButtons(graphics, minecraft, mouseX, mouseY);
+        graphics.pose().popPose();
     }
 
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
