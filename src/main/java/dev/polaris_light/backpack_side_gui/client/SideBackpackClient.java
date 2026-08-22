@@ -23,18 +23,24 @@ public final class SideBackpackClient {
         }
     }
 
-    public static void receive(String name, List<ItemStack> stacks) {
+    public static void receive(String name, List<ItemStack> stacks, ItemStack carried) {
         OVERLAY.setContents(name, stacks);
+        if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.containerMenu != null) {
+            Minecraft.getInstance().player.containerMenu.setCarried(carried == null ? ItemStack.EMPTY : carried.copy());
+        }
     }
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         RenderSystem.disableDepthTest();
+        event.getGuiGraphics().pose().pushPose();
+        event.getGuiGraphics().pose().translate(0.0F, 0.0F, 500.0F);
         try {
             OVERLAY.render(event.getScreen(), event.getGuiGraphics(), Minecraft.getInstance(), event.getMouseX(),
                     event.getMouseY());
         } finally {
+            event.getGuiGraphics().pose().popPose();
             RenderSystem.enableDepthTest();
         }
     }
