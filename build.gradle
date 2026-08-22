@@ -58,7 +58,7 @@ dependencies {
     runtimeOnly "curse.maven:sophisticated-backpacks-422301:${sophisticated_backpacks_fileid}"
 }
 
-sourceSets.main.java { srcDirs = ['src/main/java/dev/polaris_light/backpack_side_gui'] }
+// sourceSets.main.java { srcDirs = ['src/main/java/dev/polaris_light/backpack_side_gui'] }
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
