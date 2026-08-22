@@ -23,11 +23,8 @@ public final class SideBackpackClient {
         }
     }
 
-    public static void receive(String name, List<ItemStack> stacks, ItemStack carried) {
+    public static void receive(String name, List<ItemStack> stacks) {
         OVERLAY.setContents(name, stacks);
-        if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.containerMenu != null) {
-            Minecraft.getInstance().player.containerMenu.setCarried(carried == null ? ItemStack.EMPTY : carried.copy());
-        }
     }
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
