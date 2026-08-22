@@ -1,0 +1,47 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="backpack_side_gui"
+version="1.4.2-neoforge-1.21.1"
+displayName="Backpack Side GUI"
+logoFile="icon.png"
+authors="Locknar"
+description='''Adds a movable side backpack panel for Sophisticated Backpacks, with inventory transfer, sorting, large stack support, and built-in utility panels.'''
+
+[[dependencies.backpack_side_gui]]
+modId="neoforge"
+type="required"
+versionRange="[21.1,21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.backpack_side_gui]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+
+[[dependencies.backpack_side_gui]]
+modId="curios"
+type="required"
+versionRange="[0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.backpack_side_gui]]
+modId="jei"
+type="required"
+versionRange="[0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.backpack_side_gui]]
+modId="sophisticatedbackpacks"
+type="required"
+versionRange="[3.25.0,)"
+ordering="AFTER"
+side="BOTH"

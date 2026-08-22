@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+mcmodsrepo/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+bin/
+out/
+
+# NeoForge development runtime
+run/
+logs/
+*.launch
+
+# Generated files and local caches
+src/generated/
+*.class
+.cache/

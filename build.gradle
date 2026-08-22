@@ -1,0 +1,77 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.115'
+}
+
+version = project.mod_version
+group = project.mod_group_id
+base { archivesName = "${mod_id}-${mc_version}" }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client { client(); systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id }
+        server { server(); programArgument '--nogui'; systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" { sourceSet(sourceSets.main) }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.ryanhcode.dev/releases' }
+    maven { url = 'https://maven.blamejared.com' }
+    maven { name = 'Illusive Soulworks'; url = 'https://maven.theillusivec4.top/' }
+    maven { name = 'CurseMaven'; url = 'https://cursemaven.com' }
+}
+
+dependencies {
+    implementation files('libs/sophisticatedbackpacks-1.21.1-3.25.78.2107.jar')
+    implementation files('libs/sophisticatedcore-1.21.1-1.4.89.2291.jar')
+    runtimeOnly files('libs/spark-1.10.124-neoforge.jar')
+
+    compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${mc_version}-neoforge-api:${jei_version}"
+    runtimeOnly "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
+    compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
+    runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+    compileOnly "curse.maven:sophisticated-core-618298:${sophisticated_core_fileid}"
+    runtimeOnly "curse.maven:sophisticated-core-618298:${sophisticated_core_fileid}"
+    compileOnly "curse.maven:sophisticated-backpacks-422301:${sophisticated_backpacks_fileid}"
+    runtimeOnly "curse.maven:sophisticated-backpacks-422301:${sophisticated_backpacks_fileid}"
+}
+
+sourceSets.main.java { srcDirs = ['src/main/java/dev/polaris_light/backpack_side_gui'] }
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+tasks.named('processResources', ProcessResources).configure {
+    filesMatching('META-INF/neoforge.mods.toml') { expand project.properties }
+}
+
+jar {
+    manifest { attributes 'Specification-Title': mod_id, 'Specification-Version': '1', 'Implementation-Version': project.version }
+}
+
+publishing {
+    publications { register('mavenJava', MavenPublication) { from components.java } }
+    repositories { maven { url = uri("${project.projectDir}/mcmodsrepo") } }
+}
