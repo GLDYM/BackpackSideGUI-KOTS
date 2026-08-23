@@ -3,14 +3,17 @@ package dev.polaris_light.backpack_side_gui.client.gui;
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayWidget;
 import dev.polaris_light.backpack_side_gui.client.gui.area.BackpackOverlayArea;
-import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlayButton;
-import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlayButtonAction;
+import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.ScreenEvent;
+
+import java.util.List;
 
 public final class OverlayWidget extends IOverlayWidget {
 
@@ -20,10 +23,8 @@ public final class OverlayWidget extends IOverlayWidget {
     private int dragOffsetX, dragOffsetY;
     private int x, y;
 
-    private final BackpackOverlayButton moveButton = new BackpackOverlayButton(icon("move"),
-            Component.translatable("text.backpack_side_gui.tooltip.move"), BackpackOverlayButtonAction.MOVE);
-    private final BackpackOverlayButton visibilityButton = new BackpackOverlayButton(icon("show"),
-            Component.translatable("text.backpack_side_gui.tooltip.show"), BackpackOverlayButtonAction.TOGGLE);
+    private final MoveOverlayButton moveButton = new MoveOverlayButton(icon("move"));
+    private final VisibilityOverlayButton visibilityButton = new VisibilityOverlayButton(area, icon("show"), icon("hide"));
 
     @Override
     public void beginDragging(double mx, double my) {
@@ -32,7 +33,7 @@ public final class OverlayWidget extends IOverlayWidget {
         dragOffsetY = (int) my - y;
     }
 
-    public void setContents(String title, java.util.List<net.minecraft.world.item.ItemStack> items) {
+    public void setContents(String title, List<ItemStack> items) {
         area.setContents(title, items);
     }
 
@@ -48,8 +49,7 @@ public final class OverlayWidget extends IOverlayWidget {
         moveButton.setBounds(x, y);
         moveButton.render(g, mc);
 
-        visibilityButton.setIcon(icon("hide"));
-        visibilityButton.setLabel(Component.translatable("text.backpack_side_gui.tooltip.hide"));
+        visibilityButton.updateState();
         visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
         visibilityButton.render(g, mc);
 
@@ -58,6 +58,7 @@ public final class OverlayWidget extends IOverlayWidget {
         area.render(s, g, mc);
     }
 
+    @Override
     public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {
         moveButton.renderTooltip(g, mc, mx, my);
         visibilityButton.renderTooltip(g, mc, mx, my);
@@ -70,7 +71,7 @@ public final class OverlayWidget extends IOverlayWidget {
         moveButton.setBounds(x, y);
         visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
         return moveButton.press(this, e.getMouseX(), e.getMouseY())
-                || visibilityButton.press(area, e.getMouseX(), e.getMouseY());
+                || visibilityButton.press(e.getMouseX(), e.getMouseY());
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {

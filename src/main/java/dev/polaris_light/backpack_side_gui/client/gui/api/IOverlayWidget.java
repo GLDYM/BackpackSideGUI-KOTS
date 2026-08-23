@@ -9,4 +9,6 @@ public abstract class IOverlayWidget extends IOverlay {
     public abstract void beginDragging(double mouseX, double mouseY);
 
     public abstract void render(Screen screen, GuiGraphics graphics, Minecraft minecraft);
+
+    public abstract void renderTooltip(GuiGraphics graphics, Minecraft minecraft, double mouseX, double mouseY);
 }

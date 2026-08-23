@@ -1,24 +1,21 @@
 package dev.polaris_light.backpack_side_gui.client.gui.element;
 
-import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlay;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-public final class BackpackOverlayButton extends IOverlayElement {
+public class BackpackOverlayButton extends IOverlayElement {
     private static final int SIZE = 14;
     private ResourceLocation icon;
     private Component label;
-    private final BackpackOverlayButtonAction action;
     private boolean visible = true;
     private int x, y;
 
-    public BackpackOverlayButton(ResourceLocation icon, Component label, BackpackOverlayButtonAction action) {
+    public BackpackOverlayButton(ResourceLocation icon, Component label) {
         this.icon = icon;
         this.label = label;
-        this.action = action;
     }
 
     public void setIcon(ResourceLocation icon) {
@@ -41,19 +38,14 @@ public final class BackpackOverlayButton extends IOverlayElement {
         visible = !visible;
     }
 
-    public void beginDragging(double mouseX, double mouseY) {
-        // Buttons do not support dragging
-    }
-
     public void setBounds(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    public boolean press(IOverlay target, double mx, double my) {
+    public boolean press(double mx, double my) {
         if (!visible || mx < x || mx >= x + SIZE || my < y || my >= y + SIZE)
             return false;
-        action.perform(target, mx, my);
         return true;
     }
 
