@@ -67,15 +67,22 @@ public final class ModNetwork {
         if (p.clickType() == 4 || p.clickType() == 5) {
             if (!carried.isEmpty()) return;
             ItemStack picked = slot.getItem().copy();
-            int amount = p.clickType() == 5 ? Math.min(slot.getMaxStackSize(picked), (picked.getCount() + 1) / 2) : Math.min(slot.getMaxStackSize(picked), picked.getCount());
+            int cursorLimit = Math.max(1, picked.getMaxStackSize());
+            int amount = p.clickType() == 5
+                    ? Math.min(cursorLimit, (picked.getCount() + 1) / 2)
+                    : Math.min(cursorLimit, picked.getCount());
             ItemStack moved = slot.remove(amount);
             if (!player.getInventory().add(moved)) slot.set(moved);
         } else if (p.clickType() <= 1) {
             if (!carried.isEmpty()) return;
             ItemStack in = slot.getItem();
-            int max = Math.min(Math.max(1, slot.getMaxStackSize(in)), in.getCount());
+            int cursorLimit = Math.max(1, in.getMaxStackSize());
+            int max = Math.min(cursorLimit, in.getCount());
             int amount = p.clickType() == 1 ? Math.min(max, (in.getCount() + 1) / 2) : max;
-            player.containerMenu.setCarried(slot.safeTake(amount, amount, player));
+            ItemStack picked = slot.isInfinite()
+                    ? slot.remove(amount)
+                    : slot.safeTake(amount, amount, player);
+            player.containerMenu.setCarried(picked);
         } else {
             if (carried.isEmpty() || !slot.mayPlace(carried)) return;
             int amount = p.clickType() == 2 ? 1 : carried.getCount();
