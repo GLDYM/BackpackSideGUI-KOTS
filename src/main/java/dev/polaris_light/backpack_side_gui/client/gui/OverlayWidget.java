@@ -59,6 +59,7 @@ public final class OverlayWidget extends IOverlayWidget {
 
     @Override
     public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {
+        area.renderTooltip(g, mx, my);
         moveButton.renderTooltip(g, mc, mx, my);
         visibilityButton.renderTooltip(g, mc, mx, my);
     }

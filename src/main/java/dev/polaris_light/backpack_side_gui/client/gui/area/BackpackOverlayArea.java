@@ -176,6 +176,14 @@ public class BackpackOverlayArea extends IOverlayArea {
         return visible && mouseX >= x - 4 && mouseX < x + width + 4
                 && mouseY >= y - Layout.TOP_OFFSET && mouseY < y + height + Layout.BOTTOM_PADDING;
     }
+    
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible) return;
+        int rows = Math.max(1, (slots.size() + Layout.COLUMNS - 1) / Layout.COLUMNS);
+        int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
+        for (BackpackOverlaySlot slot : slots)
+            slot.renderHighlight(graphics, x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
+    }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {
         updateBounds(screenWidth, screenHeight);
