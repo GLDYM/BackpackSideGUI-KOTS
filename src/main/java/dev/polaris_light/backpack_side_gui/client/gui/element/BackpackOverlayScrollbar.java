@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.client;
+package dev.polaris_light.backpack_side_gui.client.gui.element;
 
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -53,14 +53,14 @@ public final class BackpackOverlayScrollbar {
         return true;
     }
 
-    boolean release() {
+    public boolean release() {
         if (!dragging)
             return false;
         dragging = false;
         return true;
     }
 
-    void render(GuiGraphics g) {
+    public void render(GuiGraphics g) {
         if (maxRow == 0)
             return;
         g.fill(x, y, x + 6, y + height, -14671840);

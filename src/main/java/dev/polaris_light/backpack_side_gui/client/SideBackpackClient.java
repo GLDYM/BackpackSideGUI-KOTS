@@ -1,15 +1,19 @@
 package dev.polaris_light.backpack_side_gui.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+
+import dev.polaris_light.backpack_side_gui.client.gui.BackpackOverlayScreenPolicy;
+import dev.polaris_light.backpack_side_gui.client.gui.OverlayWidget;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
 import net.minecraft.client.Minecraft;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.minecraft.world.item.ItemStack;
+import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import java.util.List;
 
 public final class SideBackpackClient {
-    private static final BackpackOverlayWidget OVERLAY = new BackpackOverlayWidget();
+    private static final OverlayWidget OVERLAY = new OverlayWidget();
     private static int refreshTicks;
 
     private SideBackpackClient() {
@@ -34,8 +38,11 @@ public final class SideBackpackClient {
         event.getGuiGraphics().pose().pushPose();
         event.getGuiGraphics().pose().translate(0.0F, 0.0F, 200.0F);
         try {
-            OVERLAY.render(event.getScreen(), event.getGuiGraphics(), Minecraft.getInstance(), event.getMouseX(),
-                    event.getMouseY());
+            OVERLAY.setAnchorPosition(event.getScreen().width / 2 + BackpackSideGuiConfig.OVERLAY_X.get(),
+                    event.getScreen().height / 2 + BackpackSideGuiConfig.OVERLAY_Y.get());
+            Minecraft minecraft = Minecraft.getInstance();
+            OVERLAY.render(event.getScreen(), event.getGuiGraphics(), minecraft);
+            OVERLAY.renderTooltip(event.getGuiGraphics(), minecraft, event.getMouseX(), event.getMouseY());
         } finally {
             event.getGuiGraphics().pose().popPose();
             RenderSystem.enableDepthTest();
