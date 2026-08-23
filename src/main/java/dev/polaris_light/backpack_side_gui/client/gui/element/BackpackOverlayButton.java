@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class BackpackOverlayButton extends IOverlayElement {
-    private static final int SIZE = 14;
+    private static final int SIZE = 16;
     private ResourceLocation icon;
     private Component label;
     private boolean visible = true;
@@ -54,9 +54,9 @@ public class BackpackOverlayButton extends IOverlayElement {
     public void render(GuiGraphics g, Minecraft mc) {
         if (!visible)
             return;
-        g.fill(x - 1, y - 1, x + SIZE + 1, y + SIZE + 1, -872415232);
-        g.fill(x, y, x + SIZE, y + SIZE, -14013910);
-        g.blit(icon, x + 1, y + 1, 0, 0, 12, 12, 12, 12);
+        g.fill(x, y, x + SIZE, y + SIZE, -872415232);
+        g.fill(x + 1, y + 1, x + SIZE - 1, y + SIZE - 1, -14013910);
+        g.blit(icon, x + 2, y + 2, 0, 0, 12, 12, 12, 12);
     }
 
     public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {

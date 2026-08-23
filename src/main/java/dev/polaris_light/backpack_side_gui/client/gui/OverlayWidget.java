@@ -16,7 +16,7 @@ import java.util.List;
 
 public final class OverlayWidget extends IOverlayWidget {
 
-    private static final int BUTTON_SIZE = 14, BUTTON_GAP = 3;
+    private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;
     private final BackpackOverlayArea area = new BackpackOverlayArea();
     private boolean dragging;
     private int dragOffsetX, dragOffsetY;

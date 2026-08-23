@@ -40,7 +40,8 @@ public final class SideBackpackClient {
         if (!hasBackpack) return;
         RenderSystem.disableDepthTest();
         event.getGuiGraphics().pose().pushPose();
-        event.getGuiGraphics().pose().translate(0.0F, 0.0F, 200.0F);
+        // Why 330.0F? Ask Mojang.
+        event.getGuiGraphics().pose().translate(0.0F, 0.0F, 330.0F);
         try {
             OVERLAY.setAnchorPosition(event.getScreen().width / 2 + BackpackSideGuiConfig.OVERLAY_X.get(),
                     event.getScreen().height / 2 + BackpackSideGuiConfig.OVERLAY_Y.get());

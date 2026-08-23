@@ -29,9 +29,9 @@ public final class SortModeOverlayButton extends BackpackOverlayButton {
         if (!isVisible())
             return;
         int x = getX(), y = getY();
-        graphics.fill(x - 1, y - 1, x + 15, y + 15, -872415232);
-        graphics.fill(x, y, x + 14, y + 14, -14013910);
+        graphics.fill(x, y, x + 16, y + 16, -872415232);
+        graphics.fill(x + 1, y + 1, x + 15, y + 15, -14013910);
         String text = SORT_LABELS[mode];
-        graphics.drawString(minecraft.font, text, x + (15 - minecraft.font.width(text)) / 2, y + 4, 16777215, true);
+        graphics.drawString(minecraft.font, text, x + (16 - minecraft.font.width(text)) / 2, y + 4, 16777215, true);
     }
 }
