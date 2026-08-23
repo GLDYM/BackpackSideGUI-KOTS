@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
+import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -29,7 +30,7 @@ public final class ModNetwork {
                                     new CustomPacketPayload[0]);
                         } else
                             resolved.ifPresent(access -> {
-                                var stacks = new ArrayList<net.minecraft.world.item.ItemStack>();
+                                var stacks = new ArrayList<ItemStack>();
                                 for (int i = 0; i < access.handler().getSlots(); i++)
                                     stacks.add(access.handler().getStackInSlot(i).copy());
                                 PacketDistributor.sendToPlayer(player,
@@ -117,18 +118,18 @@ public final class ModNetwork {
         var access = BackpackResolver.resolve(player);
         if (access.isEmpty() || !(access.get().handler() instanceof IItemHandlerModifiable inv))
             return;
-        var stacks = new ArrayList<net.minecraft.world.item.ItemStack>();
+        var stacks = new ArrayList<ItemStack>();
         for (int i = 0; i < inv.getSlots(); i++) {
             var s = inv.getStackInSlot(i).copy();
             if (!s.isEmpty())
                 stacks.add(s);
-            inv.setStackInSlot(i, net.minecraft.world.item.ItemStack.EMPTY);
+            inv.setStackInSlot(i, ItemStack.EMPTY);
         }
-        var merged = new ArrayList<net.minecraft.world.item.ItemStack>();
+        var merged = new ArrayList<ItemStack>();
         for (var s : stacks) {
             var left = s.copy();
             for (var e : merged)
-                if (net.minecraft.world.item.ItemStack.isSameItemSameComponents(e, left)) {
+                if (ItemStack.isSameItemSameComponents(e, left)) {
                     int n = Math.min(left.getCount(),
                             Math.max(0, Math.max(access.get().stackLimit(), e.getMaxStackSize()) - e.getCount()));
                     e.grow(n);
@@ -143,28 +144,28 @@ public final class ModNetwork {
                 left.shrink(part.getCount());
             }
         }
-        Comparator<net.minecraft.world.item.ItemStack> name = Comparator
+        Comparator<ItemStack> name = Comparator
                 .comparing(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT));
         if (mode == 0)
-            merged.sort(Comparator.comparingInt(net.minecraft.world.item.ItemStack::getCount).reversed()
+            merged.sort(Comparator.comparingInt(ItemStack::getCount).reversed()
                     .thenComparing(name));
         else if (mode == 1)
             merged.sort(Comparator.comparing(
-                    (net.minecraft.world.item.ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace())
+                    (ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace())
                     .thenComparing(name));
         else if (mode == 2)
             merged.sort(name);
         else
             merged.sort(Comparator.comparing(
-                    (net.minecraft.world.item.ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString())
+                    (ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString())
                     .thenComparing(name));
         for (int i = 0; i < merged.size() && i < inv.getSlots(); i++)
             inv.setStackInSlot(i, merged.get(i));
         PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
 
-    private static BackpackSyncPayload snapshot(dev.polaris_light.backpack_side_gui.server.record.BackpackAccess a) {
-        var s = new ArrayList<net.minecraft.world.item.ItemStack>();
+    private static BackpackSyncPayload snapshot(BackpackAccess a) {
+        var s = new ArrayList<ItemStack>();
         for (int i = 0; i < a.handler().getSlots(); i++) {
             var stack = a.handler().getStackInSlot(i).copy();
             s.add(stack);

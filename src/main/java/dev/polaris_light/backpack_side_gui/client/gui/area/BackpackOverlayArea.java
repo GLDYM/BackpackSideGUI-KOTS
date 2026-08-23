@@ -11,6 +11,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import dev.polaris_light.backpack_side_gui.network.ModNetwork;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import dev.polaris_light.backpack_side_gui.client.gui.element.OverlayTextInput;
 import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButton;
@@ -155,14 +157,14 @@ public class BackpackOverlayArea extends IOverlayArea {
         if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows && col >= 0 && col < 9
                 && display >= 0 && display < visibleLogicalSlots.size()) {
             ItemStack carried = event
-                    .getScreen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container
+                    .getScreen() instanceof AbstractContainerScreen<?> container
                             ? container.getMenu().getCarried()
-                            : net.minecraft.client.Minecraft.getInstance().player.containerMenu.getCarried();
-            boolean shift = net.minecraft.client.gui.screens.Screen.hasShiftDown();
+                            : Minecraft.getInstance().player.containerMenu.getCarried();
+            boolean shift = Screen.hasShiftDown();
             int clickType = carried.isEmpty()
                     ? (shift ? (event.getButton() == 1 ? 5 : 4) : (event.getButton() == 1 ? 1 : 0))
                     : (event.getButton() == 1 ? 2 : 3);
-            dev.polaris_light.backpack_side_gui.network.ModNetwork.requestSlot(visibleLogicalSlots.get(display),
+            ModNetwork.requestSlot(visibleLogicalSlots.get(display),
                     clickType, carried);
             return true;
         }

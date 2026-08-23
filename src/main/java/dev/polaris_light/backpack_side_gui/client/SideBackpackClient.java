@@ -6,6 +6,7 @@ import dev.polaris_light.backpack_side_gui.client.gui.BackpackOverlayScreenPolic
 import dev.polaris_light.backpack_side_gui.client.gui.OverlayWidget;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.minecraft.world.item.ItemStack;
@@ -18,7 +19,7 @@ public final class SideBackpackClient {
     private static boolean hasBackpack;
 
     public static boolean shouldBlockContainerInput(
-            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen, double mouseX,
+            AbstractContainerScreen<?> screen, double mouseX,
             double mouseY) {
         return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
                 && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
@@ -44,7 +45,7 @@ public final class SideBackpackClient {
 
     public static void receiveCarried(ItemStack carried) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen)
+        if (mc.screen instanceof AbstractContainerScreen<?> screen)
             screen.getMenu().setCarried(carried == null ? ItemStack.EMPTY : carried.copy());
     }
 
