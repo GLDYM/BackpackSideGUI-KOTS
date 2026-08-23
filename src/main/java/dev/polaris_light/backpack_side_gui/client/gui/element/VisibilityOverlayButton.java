@@ -1,6 +1,5 @@
 package dev.polaris_light.backpack_side_gui.client.gui.element;
 
-import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlay;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayElement;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -44,7 +43,7 @@ public final class VisibilityOverlayButton extends BackpackOverlayButton {
     }
 
     private void updateIconAndLabel() {
-        setIcon(targetVisible ? hideIcon : showIcon);
+        setIcon(targetVisible ? showIcon : hideIcon);
         setLabel(Component.translatable(targetVisible ? "text.backpack_side_gui.tooltip.hide"
                 : "text.backpack_side_gui.tooltip.show"));
     }

@@ -12,8 +12,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.minecraft.resources.ResourceLocation;
-import net.p3pp3rf1y.sophisticatedcore.util.CountAbbreviator;
+import dev.polaris_light.backpack_side_gui.client.gui.element.OverlayTextInput;
+import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.SortOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.SortModeOverlayButton;
 
 /**
  * Backpack Render
@@ -31,40 +33,49 @@ public class BackpackOverlayArea extends IOverlayArea {
         private static final int VISIBLE_ROWS = 6;
     }
 
-    private static final class Controls {
-    }
-
     private static final class Palette {
         private static final int PANEL = -871362544;
         private static final int PANEL_TOP_EDGE = -11184811;
         private static final int TITLE = 16777215;
-        private static final int SLOT_BORDER = -12961222;
-        private static final int SLOT_BACKGROUND = -14671840;
-        private static final int BUTTON_BORDER = -872415232;
-        private static final int BUTTON_BACKGROUND = -14013910;
-        private static final int ITEM_COUNT = 16777215;
     }
 
-    private static final class Numbers {
-        private static final int VANILLA_COUNT_LIMIT = 99;
-        private static final float MAX_COUNT_WIDTH = 16.0F;
-        private static final float COUNT_Y_ADJUSTMENT = 3.0F;
-    }
 
     private final List<BackpackOverlaySlot> slots = new ArrayList<>();
+    private final List<ItemStack> allItems = new ArrayList<>();
     private final BackpackOverlayScrollbar scrollbar = new BackpackOverlayScrollbar();
+    private final OverlayTextInput searchInput = new OverlayTextInput(106);
+    private final SearchOverlayButton searchButton = new SearchOverlayButton(searchInput);
+    private final SortModeOverlayButton sortModeButton = new SortModeOverlayButton();
+    private final SortOverlayButton sortButton = new SortOverlayButton(sortModeButton::mode);
     private String title = "Backpack";
+    private String filter = "";
+
 
     public void setContents(String title, List<ItemStack> items) {
+        setContents(title, items, filter);
+    }
+
+    public void setFilter(String filter) {
+        setContents(title, allItems, filter);
+    }
+
+    public void setContents(String title, List<ItemStack> items, String filter) {
         this.title = title == null || title.isBlank() ? "Backpack" : title;
+        this.filter = filter == null ? "" : filter;
+        List<ItemStack> source = new ArrayList<>(items);
+        allItems.clear();
+        allItems.addAll(source);
         slots.clear();
-        for (int i = 0; i < items.size(); i++)
-            slots.add(new BackpackOverlaySlot(i, items.get(i)));
+        String needle = this.filter.toLowerCase(java.util.Locale.ROOT);
+        for (int i = 0; i < source.size(); i++) {
+            ItemStack stack = source.get(i);
+            if (needle.isEmpty()
+                    || stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(needle))
+                slots.add(new BackpackOverlaySlot(i, stack));
+        }
     }
 
     public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
-        if (slots.isEmpty())
-            return;
         updateBounds(screen.width, screen.height);
         graphics.pose().pushPose();
         graphics.pose().translate(0.0F, 0.0F, 130.0F);
@@ -74,12 +85,30 @@ public class BackpackOverlayArea extends IOverlayArea {
                     y + height + Layout.BOTTOM_PADDING, Palette.PANEL);
             graphics.fill(x - 4, y - Layout.TOP_OFFSET, x - 4 + backgroundWidth,
                     y - Layout.TOP_OFFSET + 1, Palette.PANEL_TOP_EDGE);
-            graphics.drawString(minecraft.font, Component.literal(title), x, y - 14, Palette.TITLE, true);
+
             int totalRows = Math.max(1, (slots.size() + Layout.COLUMNS - 1) / Layout.COLUMNS);
             int visibleRows = Math.max(1, height / Layout.SLOT_SIZE);
             scrollbar.update(x + Layout.SLOT_AREA_WIDTH + 3, y, visibleRows, totalRows);
             renderSlots(graphics, minecraft, scrollbar.row(), visibleRows);
             scrollbar.render(graphics);
+
+            int topY = y - 15;
+
+            searchButton.setBounds(x + 115, topY);
+            sortButton.setBounds(x + 131, topY);
+            sortModeButton.setBounds(x + 147, topY);
+
+            searchButton.render(graphics, minecraft);
+            sortButton.render(graphics, minecraft);
+            sortModeButton.render(graphics, minecraft);
+
+            if (searchInput.isVisible()) {
+                searchInput.setBounds(x + 1, topY);
+                searchInput.render(graphics, minecraft,
+                        Component.translatable("text.backpack_side_gui.tooltip.search"));
+            } else {
+                graphics.drawString(minecraft.font, Component.literal(title), x + 1, y - 12, Palette.TITLE, true);
+            }
         }
         graphics.pose().popPose();
     }
@@ -94,13 +123,26 @@ public class BackpackOverlayArea extends IOverlayArea {
     }
 
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
-        if (event.getButton() != 0 || slots.isEmpty())
+        if (event.getButton() != 0)
             return false;
         double mouseX = event.getMouseX();
         double mouseY = event.getMouseY();
         updateBounds(event.getScreen().width, event.getScreen().height);
 
+        // Clicking anywhere in the screen outside the input removes its focus,
+        // including when the user clicks another screen's text field.
+        searchInput.mousePressed(mouseX, mouseY);
         if (visible && scrollbar.press(mouseX, mouseY))
+            return true;
+        int topY = y - 15;
+        searchButton.setBounds(x + 116, topY);
+        sortButton.setBounds(x + 132, topY);
+        if (searchInput.isFocused())
+            return true;
+        if (searchButton.press(mouseX, mouseY) || sortButton.press(mouseX, mouseY))
+            return true;
+        sortModeButton.setBounds(x + 148, topY);
+        if (sortModeButton.press(mouseX, mouseY))
             return true;
         return false;
     }
@@ -153,10 +195,31 @@ public class BackpackOverlayArea extends IOverlayArea {
         return getButtonY();
     }
 
-    public void prepareLayout(int screenWidth, int screenHeight) {
-        if (!slots.isEmpty()) updateBounds(screenWidth, screenHeight);
+    public boolean keyPressed(int key) {
+        boolean handled = searchInput.keyPressed(key);
+        if (handled)
+            setFilter(searchInput.value());
+        return handled;
     }
-    public int buttonOffsetY() { return getButtonY() - y; }
 
-    public void setOverlayPosition(int x, int y) { this.x = x; this.y = y; }
+    public boolean charTyped(char c) {
+        boolean handled = searchInput.charTyped(c);
+        if (handled)
+            setFilter(searchInput.value());
+        return handled;
+    }
+
+    public void prepareLayout(int screenWidth, int screenHeight) {
+        if (!slots.isEmpty())
+            updateBounds(screenWidth, screenHeight);
+    }
+
+    public int buttonOffsetY() {
+        return getButtonY() - y;
+    }
+
+    public void setOverlayPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
 }

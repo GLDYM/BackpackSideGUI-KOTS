@@ -14,5 +14,7 @@ public final class ClientBootstrap {
         NeoForge.EVENT_BUS.addListener(SideBackpackClient::onMouseDraggedPre);
         NeoForge.EVENT_BUS.addListener(SideBackpackClient::onMouseReleasedPre);
         NeoForge.EVENT_BUS.addListener(SideBackpackClient::onMouseScrolledPre);
+        NeoForge.EVENT_BUS.addListener(SideBackpackClient::onKeyPressed);
+        NeoForge.EVENT_BUS.addListener(SideBackpackClient::onCharacterTyped);
     }
 }

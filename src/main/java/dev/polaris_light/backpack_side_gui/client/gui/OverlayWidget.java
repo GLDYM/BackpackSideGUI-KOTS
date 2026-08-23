@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
@@ -98,6 +97,8 @@ public final class OverlayWidget extends IOverlayWidget {
     public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre e) {
         return area.mouseScrolled(e);
     }
+    public boolean keyPressed(int key) { return area.keyPressed(key); }
+    public boolean charTyped(char c) { return area.charTyped(c); }
 
     private void saveAnchorPosition(Screen screen) {
         BackpackSideGuiConfig.OVERLAY_X.set(x - screen.width / 2);

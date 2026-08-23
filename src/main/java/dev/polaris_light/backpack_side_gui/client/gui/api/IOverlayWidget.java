@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
 /** Contract for the complete floating overlay, which owns one or more areas. */
-public abstract class IOverlayWidget extends IOverlay {
+public abstract class IOverlayWidget {
     public abstract void beginDragging(double mouseX, double mouseY);
 
     public abstract void render(Screen screen, GuiGraphics graphics, Minecraft minecraft);
