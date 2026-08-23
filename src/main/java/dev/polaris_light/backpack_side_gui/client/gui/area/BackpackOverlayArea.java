@@ -153,7 +153,9 @@ public class BackpackOverlayArea extends IOverlayArea {
         int visibleRows = Math.max(1, height / 18);
         if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows && col >= 0 && col < 9
                 && display >= 0 && display < visibleLogicalSlots.size()) {
-            ItemStack carried = net.minecraft.client.Minecraft.getInstance().player.containerMenu.getCarried();
+            ItemStack carried = event.getScreen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container
+                    ? container.getMenu().getCarried()
+                    : net.minecraft.client.Minecraft.getInstance().player.containerMenu.getCarried();
             boolean shift = net.minecraft.client.gui.screens.Screen.hasShiftDown();
             int clickType = carried.isEmpty()
                     ? (shift ? (event.getButton() == 1 ? 5 : 4) : (event.getButton() == 1 ? 1 : 0))

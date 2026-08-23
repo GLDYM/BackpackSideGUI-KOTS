@@ -45,6 +45,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player) handleSlot(player, payload);
                 }));
+        registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
         registrar.playToServer(SortPayload.TYPE, SortPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player)
@@ -62,7 +64,8 @@ public final class ModNetwork {
         var access = BackpackResolver.resolve(player);
         if (access.isEmpty() || p.slot() < 0 || p.slot() >= access.get().handler().getSlots()) return;
         ItemStack carried = player.containerMenu.getCarried();
-        if (!ItemStack.matches(carried, p.carried())) return;
+        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried())) return;
+        if (player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried())) carried = p.carried().copy();
         var slot = new BackpackVirtualSlot(access.get().stack(), p.slot(), player);
         if (p.clickType() == 4 || p.clickType() == 5) {
             if (!carried.isEmpty()) return;
@@ -90,6 +93,7 @@ public final class ModNetwork {
             player.containerMenu.setCarried(rest.isEmpty() ? ItemStack.EMPTY : rest);
         }
         player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()), new CustomPacketPayload[0]);
         PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
     public static void requestSort(int mode) { PacketDistributor.sendToServer(new SortPayload(mode), new CustomPacketPayload[0]); }

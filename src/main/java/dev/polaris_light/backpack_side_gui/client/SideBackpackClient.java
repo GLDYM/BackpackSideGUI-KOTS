@@ -37,6 +37,11 @@ public final class SideBackpackClient {
         if (!hasBackpack) return;
         OVERLAY.setContents(name, stacks);
     }
+    public static void receiveCarried(ItemStack carried) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen)
+            screen.getMenu().setCarried(carried == null ? ItemStack.EMPTY : carried.copy());
+    }
 
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
