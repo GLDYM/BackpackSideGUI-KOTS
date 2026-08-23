@@ -34,7 +34,9 @@ public final class VisibilityOverlayButton extends BackpackOverlayButton {
         return pressed;
     }
 
-    public boolean isTargetVisible() { return targetVisible; }
+    public boolean isTargetVisible() {
+        return targetVisible;
+    }
 
     public void setTargetVisible(boolean visible) {
         targetVisible = visible;

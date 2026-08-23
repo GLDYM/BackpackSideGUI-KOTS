@@ -12,6 +12,7 @@ import net.neoforged.fml.config.ModConfig;
 @Mod(BackpackSideGuiMod.MOD_ID)
 public final class BackpackSideGuiMod {
     public static final String MOD_ID = "backpack_side_gui";
+
     public BackpackSideGuiMod(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.CLIENT, BackpackSideGuiConfig.CLIENT_SPEC);
         modBus.addListener(ModNetwork::registerPayloads);

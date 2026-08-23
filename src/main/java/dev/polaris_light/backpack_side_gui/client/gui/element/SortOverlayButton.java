@@ -7,16 +7,20 @@ import java.util.function.IntSupplier;
 
 public final class SortOverlayButton extends BackpackOverlayButton {
     private final IntSupplier mode;
+
     public SortOverlayButton() {
         this(() -> 0);
     }
+
     public SortOverlayButton(IntSupplier mode) {
-        super(ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/sort.png"), Component.translatable("text.backpack_side_gui.tooltip.sort"));
+        super(ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/sort.png"),
+                Component.translatable("text.backpack_side_gui.tooltip.sort"));
         this.mode = mode;
     }
-    
+
     public boolean press(double mouseX, double mouseY) {
-        if (!super.press(mouseX, mouseY)) return false;
+        if (!super.press(mouseX, mouseY))
+            return false;
         ModNetwork.requestSort(mode.getAsInt());
         return true;
     }

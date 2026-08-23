@@ -39,7 +39,6 @@ public class BackpackOverlayArea extends IOverlayArea {
         private static final int TITLE = 16777215;
     }
 
-
     private final List<BackpackOverlaySlot> slots = new ArrayList<>();
     private final List<Integer> visibleLogicalSlots = new ArrayList<>();
     private final List<ItemStack> allItems = new ArrayList<>();
@@ -50,7 +49,6 @@ public class BackpackOverlayArea extends IOverlayArea {
     private final SortOverlayButton sortButton = new SortOverlayButton(sortModeButton::mode);
     private String title = "Backpack";
     private String filter = "";
-
 
     public void setContents(String title, List<ItemStack> items) {
         setContents(title, items, filter);
@@ -74,7 +72,7 @@ public class BackpackOverlayArea extends IOverlayArea {
             if (needle.isEmpty()
                     || stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(needle))
                 slots.add(new BackpackOverlaySlot(visibleLogicalSlots.size(), stack));
-                visibleLogicalSlots.add(i);
+            visibleLogicalSlots.add(i);
         }
     }
 
@@ -140,10 +138,13 @@ public class BackpackOverlayArea extends IOverlayArea {
             int topY = y - 16;
             searchButton.setBounds(x + 115, topY);
             sortButton.setBounds(x + 131, topY);
-            if (searchInput.isFocused()) return true;
-            if (searchButton.press(mouseX, mouseY) || sortButton.press(mouseX, mouseY)) return true;
+            if (searchInput.isFocused())
+                return true;
+            if (searchButton.press(mouseX, mouseY) || sortButton.press(mouseX, mouseY))
+                return true;
             sortModeButton.setBounds(x + 147, topY);
-            if (sortModeButton.press(mouseX, mouseY)) return true;
+            if (sortModeButton.press(mouseX, mouseY))
+                return true;
             return visible && mouseX >= x - 4 && mouseX < x + width + 4
                     && mouseY >= y - Layout.TOP_OFFSET && mouseY < y + height + Layout.BOTTOM_PADDING;
         }
@@ -153,14 +154,16 @@ public class BackpackOverlayArea extends IOverlayArea {
         int visibleRows = Math.max(1, height / 18);
         if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows && col >= 0 && col < 9
                 && display >= 0 && display < visibleLogicalSlots.size()) {
-            ItemStack carried = event.getScreen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container
-                    ? container.getMenu().getCarried()
-                    : net.minecraft.client.Minecraft.getInstance().player.containerMenu.getCarried();
+            ItemStack carried = event
+                    .getScreen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container
+                            ? container.getMenu().getCarried()
+                            : net.minecraft.client.Minecraft.getInstance().player.containerMenu.getCarried();
             boolean shift = net.minecraft.client.gui.screens.Screen.hasShiftDown();
             int clickType = carried.isEmpty()
                     ? (shift ? (event.getButton() == 1 ? 5 : 4) : (event.getButton() == 1 ? 1 : 0))
                     : (event.getButton() == 1 ? 2 : 3);
-            dev.polaris_light.backpack_side_gui.network.ModNetwork.requestSlot(visibleLogicalSlots.get(display), clickType, carried);
+            dev.polaris_light.backpack_side_gui.network.ModNetwork.requestSlot(visibleLogicalSlots.get(display),
+                    clickType, carried);
             return true;
         }
         int topY = y - 16;
@@ -176,9 +179,10 @@ public class BackpackOverlayArea extends IOverlayArea {
         return visible && mouseX >= x - 4 && mouseX < x + width + 4
                 && mouseY >= y - Layout.TOP_OFFSET && mouseY < y + height + Layout.BOTTOM_PADDING;
     }
-    
+
     public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
-        if (!visible) return;
+        if (!visible)
+            return;
         int rows = Math.max(1, (slots.size() + Layout.COLUMNS - 1) / Layout.COLUMNS);
         int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
         for (BackpackOverlaySlot slot : slots)
@@ -187,7 +191,8 @@ public class BackpackOverlayArea extends IOverlayArea {
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {
         updateBounds(screenWidth, screenHeight);
-        if (!visible) return false;
+        if (!visible)
+            return false;
         // All header controls belong to this area and appear/disappear with it.
         // The input only changes header contents; it does not expand the hitbox.
         int backgroundWidth = width + Layout.PANEL_PADDING;

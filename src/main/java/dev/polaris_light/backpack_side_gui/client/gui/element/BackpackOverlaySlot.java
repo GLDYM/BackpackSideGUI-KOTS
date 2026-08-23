@@ -32,9 +32,11 @@ public final class BackpackOverlaySlot extends Slot {
         // vanilla container paths normalize oversized stacks to 64. The sync
         // payload already carries the real Sophisticated count.
         ItemStack shown = stack;
-        if (shown.isEmpty()) return;
+        if (shown.isEmpty())
+            return;
         g.renderItem(shown, sx + 1, sy + 1);
-        if (shown.getCount() <= 1) return;
+        if (shown.getCount() <= 1)
+            return;
         String c = CountAbbreviator.abbreviate(shown.getCount());
         g.pose().pushPose();
         g.pose().translate(0.0F, 0.0F, 300.0F);
@@ -44,9 +46,11 @@ public final class BackpackOverlaySlot extends Slot {
 
     public void renderHighlight(GuiGraphics g, int ox, int oy, int scroll, int visible, double mouseX, double mouseY) {
         int row = index / 9;
-        if (row < scroll || row >= scroll + visible) return;
+        if (row < scroll || row >= scroll + visible)
+            return;
         int sx = ox + (index % 9) * 18, sy = oy + (row - scroll) * 18;
-        if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18) return;
+        if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
+            return;
         {
             int highlight = 0x70FFF04A;
             g.fill(sx, sy, sx + 18, sy + 18, highlight);

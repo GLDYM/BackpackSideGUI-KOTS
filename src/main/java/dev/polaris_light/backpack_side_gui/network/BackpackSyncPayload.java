@@ -24,7 +24,8 @@ public record BackpackSyncPayload(String title, List<ItemStack> items) implement
                     ItemStack stack = ItemStack.STREAM_CODEC.decode(buf);
                     stack.setCount(Math.max(1, buf.readVarInt()));
                     items.add(stack);
-                } else items.add(ItemStack.EMPTY);
+                } else
+                    items.add(ItemStack.EMPTY);
             }
             return new BackpackSyncPayload(title, items);
         }

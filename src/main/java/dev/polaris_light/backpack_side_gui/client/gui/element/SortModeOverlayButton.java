@@ -7,14 +7,17 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Compact text button used by the backpack header to switch sort modes. */
 public final class SortModeOverlayButton extends BackpackOverlayButton {
-    private static final String[] SORT_LABELS = {"1", "T", "A", "M"};
+    private static final String[] SORT_LABELS = { "1", "T", "A", "M" };
     private int mode;
 
     public SortModeOverlayButton() {
-        super(ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/sort.png"), Component.translatable("text.backpack_side_gui.tooltip.sort"));
+        super(ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/sort.png"),
+                Component.translatable("text.backpack_side_gui.tooltip.sort"));
     }
 
-    public int mode() { return mode; }
+    public int mode() {
+        return mode;
+    }
 
     @Override
     public boolean press(double mouseX, double mouseY) {

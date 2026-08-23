@@ -11,7 +11,8 @@ public final class MoveOverlayButton extends BackpackOverlayButton {
 
     public boolean press(IOverlayWidget widget, double mouseX, double mouseY) {
         boolean pressed = super.press(mouseX, mouseY);
-        if (pressed) widget.beginDragging(mouseX, mouseY);
+        if (pressed)
+            widget.beginDragging(mouseX, mouseY);
         return pressed;
     }
 }

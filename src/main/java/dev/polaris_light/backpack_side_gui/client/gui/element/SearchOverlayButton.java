@@ -7,7 +7,8 @@ public final class SearchOverlayButton extends BackpackOverlayButton {
     private final OverlayTextInput input;
 
     public SearchOverlayButton(OverlayTextInput input) {
-        super( ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/search.png"), Component.translatable("text.backpack_side_gui.tooltip.search"));
+        super(ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/search.png"),
+                Component.translatable("text.backpack_side_gui.tooltip.search"));
         this.input = input;
     }
 

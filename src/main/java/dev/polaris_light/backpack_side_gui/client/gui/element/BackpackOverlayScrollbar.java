@@ -23,7 +23,10 @@ public final class BackpackOverlayScrollbar {
     public int row() {
         return row;
     }
-    public boolean isScrollable() { return maxRow > 0; }
+
+    public boolean isScrollable() {
+        return maxRow > 0;
+    }
 
     public boolean scroll(double mouseX, double mouseY, double amount) {
         if (maxRow == 0 || !contains(mouseX, mouseY))

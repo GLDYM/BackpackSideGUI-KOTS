@@ -23,7 +23,7 @@ final class FlagResolver {
         }
 
         // for (int i = 0; i < backpack.handler().getSlots(); i++) {
-        //     result.add(backpack.handler().getStackInSlot(i));
+        // result.add(backpack.handler().getStackInSlot(i));
         // }
 
         return new UpgradeFlags(result.crafting, result.furnace, result.anvil, result.smithing);

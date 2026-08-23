@@ -28,9 +28,9 @@ public abstract class IOverlayArea extends IOverlayElement {
 
     // @Override
     // public void beginDragging(double mouseX, double mouseY) {
-    //     dragging = true;
-    //     dragOffsetX = (int) mouseX - x;
-    //     dragOffsetY = (int) mouseY - y;
+    // dragging = true;
+    // dragOffsetX = (int) mouseX - x;
+    // dragOffsetY = (int) mouseY - y;
     // }
 
     protected void clamp(int screenWidth, int screenHeight) {

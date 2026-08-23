@@ -23,7 +23,8 @@ public final class OverlayWidget extends IOverlayWidget {
     private int x, y;
 
     private final MoveOverlayButton moveButton = new MoveOverlayButton(icon("move"));
-    private final VisibilityOverlayButton visibilityButton = new VisibilityOverlayButton(area, icon("show"), icon("hide"));
+    private final VisibilityOverlayButton visibilityButton = new VisibilityOverlayButton(area, icon("show"),
+            icon("hide"));
 
     @Override
     public void beginDragging(double mx, double my) {
@@ -77,6 +78,7 @@ public final class OverlayWidget extends IOverlayWidget {
     public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {
         return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
     }
+
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
         return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
     }
@@ -105,8 +107,14 @@ public final class OverlayWidget extends IOverlayWidget {
     public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre e) {
         return area.mouseScrolled(e);
     }
-    public boolean keyPressed(int key) { return area.keyPressed(key); }
-    public boolean charTyped(char c) { return area.charTyped(c); }
+
+    public boolean keyPressed(int key) {
+        return area.keyPressed(key);
+    }
+
+    public boolean charTyped(char c) {
+        return area.charTyped(c);
+    }
 
     private void saveAnchorPosition(Screen screen) {
         BackpackSideGuiConfig.OVERLAY_X.set(x - screen.width / 2);

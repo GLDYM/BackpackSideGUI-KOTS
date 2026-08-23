@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 public record OpenBackpackPayload() implements CustomPacketPayload {
     public static final Type<OpenBackpackPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "open_backpack"));
-            
+
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenBackpackPayload> STREAM_CODEC = StreamCodec
             .unit(new OpenBackpackPayload());
 

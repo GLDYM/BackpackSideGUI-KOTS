@@ -17,8 +17,11 @@ public final class SideBackpackClient {
     private static int refreshTicks;
     private static boolean hasBackpack;
 
-    public static boolean shouldBlockContainerInput(net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
-        return hasBackpack && BackpackOverlayScreenPolicy.allows(screen) && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
+    public static boolean shouldBlockContainerInput(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen, double mouseX,
+            double mouseY) {
+        return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
+                && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
     }
 
     private SideBackpackClient() {
@@ -34,20 +37,22 @@ public final class SideBackpackClient {
 
     public static void receive(String name, List<ItemStack> stacks) {
         hasBackpack = name != null && !name.isBlank();
-        if (!hasBackpack) return;
+        if (!hasBackpack)
+            return;
         OVERLAY.setContents(name, stacks);
     }
+
     public static void receiveCarried(ItemStack carried) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen)
             screen.getMenu().setCarried(carried == null ? ItemStack.EMPTY : carried.copy());
     }
 
-
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
-        if (!hasBackpack) return;
+        if (!hasBackpack)
+            return;
         RenderSystem.disableDepthTest();
         event.getGuiGraphics().pose().pushPose();
         // Why 330.0F? Ask Mojang.
@@ -67,16 +72,20 @@ public final class SideBackpackClient {
     public static void onMousePressedPre(ScreenEvent.MouseButtonPressed.Pre event) {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
-        if (!hasBackpack) return;
+        if (!hasBackpack)
+            return;
         boolean panelHit = OVERLAY.panelInteractiveContains(event);
-        if (panelHit) event.setCanceled(true);
-        if (OVERLAY.mousePressed(event)) event.setCanceled(true);
+        if (panelHit)
+            event.setCanceled(true);
+        if (OVERLAY.mousePressed(event))
+            event.setCanceled(true);
     }
 
     public static void onMouseDraggedPre(ScreenEvent.MouseDragged.Pre event) {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
-        if (!hasBackpack) return;
+        if (!hasBackpack)
+            return;
         if (OVERLAY.mouseDragged(event))
             event.setCanceled(true);
     }
@@ -84,7 +93,8 @@ public final class SideBackpackClient {
     public static void onMouseReleasedPre(ScreenEvent.MouseButtonReleased.Pre event) {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
-        if (!hasBackpack) return;
+        if (!hasBackpack)
+            return;
         if (OVERLAY.mouseReleased(event))
             event.setCanceled(true);
     }
@@ -95,6 +105,16 @@ public final class SideBackpackClient {
         if (OVERLAY.mouseScrolled(event))
             event.setCanceled(true);
     }
-    public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) { if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen()) && OVERLAY.keyPressed(event.getKeyCode())) event.setCanceled(true); }
-    public static void onCharacterTyped(ScreenEvent.CharacterTyped.Pre event) { if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen()) && OVERLAY.charTyped(event.getCodePoint())) event.setCanceled(true); }
+
+    public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+        if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen())
+                && OVERLAY.keyPressed(event.getKeyCode()))
+            event.setCanceled(true);
+    }
+
+    public static void onCharacterTyped(ScreenEvent.CharacterTyped.Pre event) {
+        if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen())
+                && OVERLAY.charTyped(event.getCodePoint()))
+            event.setCanceled(true);
+    }
 }

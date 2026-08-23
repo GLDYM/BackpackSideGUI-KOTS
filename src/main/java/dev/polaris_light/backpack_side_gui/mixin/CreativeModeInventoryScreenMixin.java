@@ -10,15 +10,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void backpackSideGui$blockClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (SideBackpackClient.shouldBlockContainerInput((CreativeModeInventoryScreen) (Object) this, mouseX, mouseY)) cir.setReturnValue(true);
+    private void backpackSideGui$blockClick(double mouseX, double mouseY, int button,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (SideBackpackClient.shouldBlockContainerInput((CreativeModeInventoryScreen) (Object) this, mouseX, mouseY))
+            cir.setReturnValue(true);
     }
+
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
-    private void backpackSideGui$blockRelease(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (SideBackpackClient.shouldBlockContainerInput((CreativeModeInventoryScreen) (Object) this, mouseX, mouseY)) cir.setReturnValue(true);
+    private void backpackSideGui$blockRelease(double mouseX, double mouseY, int button,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (SideBackpackClient.shouldBlockContainerInput((CreativeModeInventoryScreen) (Object) this, mouseX, mouseY))
+            cir.setReturnValue(true);
     }
+
     @Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true)
-    private void backpackSideGui$blockDrag(double mouseX, double mouseY, int button, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
-        if (SideBackpackClient.shouldBlockContainerInput((CreativeModeInventoryScreen) (Object) this, mouseX, mouseY)) cir.setReturnValue(true);
+    private void backpackSideGui$blockDrag(double mouseX, double mouseY, int button, double dx, double dy,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (SideBackpackClient.shouldBlockContainerInput((CreativeModeInventoryScreen) (Object) this, mouseX, mouseY))
+            cir.setReturnValue(true);
     }
 }

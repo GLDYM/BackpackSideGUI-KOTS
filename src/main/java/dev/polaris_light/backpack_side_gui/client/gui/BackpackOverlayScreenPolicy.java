@@ -5,13 +5,14 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 
 /** Defines which underlying Minecraft screens may receive the overlay. */
 public final class BackpackOverlayScreenPolicy {
-    private static final String SOPHISTICATED_BACKPACK_SCREEN =
-            "net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen";
+    private static final String SOPHISTICATED_BACKPACK_SCREEN = "net.p3pp3rf1y.sophisticatedbackpacks.client.gui.BackpackScreen";
 
-    private BackpackOverlayScreenPolicy() {}
+    private BackpackOverlayScreenPolicy() {
+    }
 
     public static boolean allows(Screen screen) {
-        if (!(screen instanceof AbstractContainerScreen<?>)) return false;
+        if (!(screen instanceof AbstractContainerScreen<?>))
+            return false;
         return !SOPHISTICATED_BACKPACK_SCREEN.equals(screen.getClass().getName());
     }
 }

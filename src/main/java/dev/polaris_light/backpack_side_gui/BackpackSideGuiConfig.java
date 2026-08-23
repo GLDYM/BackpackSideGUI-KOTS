@@ -14,5 +14,7 @@ public final class BackpackSideGuiConfig {
         b.pop();
         CLIENT_SPEC = b.build();
     }
-    private BackpackSideGuiConfig() {}
+
+    private BackpackSideGuiConfig() {
+    }
 }
