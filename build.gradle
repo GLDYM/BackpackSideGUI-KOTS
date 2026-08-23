@@ -82,7 +82,7 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 jar {
-    manifest { attributes 'Specification-Title': mod_id, 'Specification-Version': '1', 'Implementation-Version': project.version }
+    manifest { attributes 'Specification-Title': mod_id, 'Specification-Version': '1', 'Implementation-Version': project.version, 'MixinConfigs': 'backpack_side_gui.mixins.json' }
 }
 
 publishing {

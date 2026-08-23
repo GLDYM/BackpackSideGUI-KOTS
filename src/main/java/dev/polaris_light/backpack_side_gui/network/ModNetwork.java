@@ -11,6 +11,8 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.minecraft.core.registries.BuiltInRegistries;
 import java.util.Comparator;
 import java.util.Locale;
+import net.minecraft.world.item.ItemStack;
+import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -39,6 +41,10 @@ public final class ModNetwork {
         registrar.playToClient(BackpackSyncPayload.TYPE, BackpackSyncPayload.STREAM_CODEC,
                 (payload, context) -> context
                         .enqueueWork(() -> SideBackpackClient.receive(payload.title(), payload.items())));
+        registrar.playToServer(BackpackSlotPayload.TYPE, BackpackSlotPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer player) handleSlot(player, payload);
+                }));
         registrar.playToServer(SortPayload.TYPE, SortPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player)
@@ -48,6 +54,36 @@ public final class ModNetwork {
 
     public static void requestOpen() {
         PacketDistributor.sendToServer(new OpenBackpackPayload(), new CustomPacketPayload[0]);
+    }
+    public static void requestSlot(int slot, int clickType, ItemStack carried) {
+        PacketDistributor.sendToServer(new BackpackSlotPayload(slot, clickType, carried.copy()), new CustomPacketPayload[0]);
+    }
+    private static void handleSlot(ServerPlayer player, BackpackSlotPayload p) {
+        var access = BackpackResolver.resolve(player);
+        if (access.isEmpty() || p.slot() < 0 || p.slot() >= access.get().handler().getSlots()) return;
+        ItemStack carried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(carried, p.carried())) return;
+        var slot = new BackpackVirtualSlot(access.get().stack(), p.slot(), player);
+        if (p.clickType() == 4 || p.clickType() == 5) {
+            if (!carried.isEmpty()) return;
+            ItemStack picked = slot.getItem().copy();
+            int amount = p.clickType() == 5 ? Math.min(slot.getMaxStackSize(picked), (picked.getCount() + 1) / 2) : Math.min(slot.getMaxStackSize(picked), picked.getCount());
+            ItemStack moved = slot.remove(amount);
+            if (!player.getInventory().add(moved)) slot.set(moved);
+        } else if (p.clickType() <= 1) {
+            if (!carried.isEmpty()) return;
+            ItemStack in = slot.getItem();
+            int max = Math.min(Math.max(1, slot.getMaxStackSize(in)), in.getCount());
+            int amount = p.clickType() == 1 ? Math.min(max, (in.getCount() + 1) / 2) : max;
+            player.containerMenu.setCarried(slot.safeTake(amount, amount, player));
+        } else {
+            if (carried.isEmpty() || !slot.mayPlace(carried)) return;
+            int amount = p.clickType() == 2 ? 1 : carried.getCount();
+            ItemStack rest = slot.safeInsert(carried.copyWithCount(amount));
+            player.containerMenu.setCarried(rest.isEmpty() ? ItemStack.EMPTY : rest);
+        }
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
     public static void requestSort(int mode) { PacketDistributor.sendToServer(new SortPayload(mode), new CustomPacketPayload[0]); }
 
@@ -67,5 +103,5 @@ public final class ModNetwork {
         PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
 
-    private static BackpackSyncPayload snapshot(dev.polaris_light.backpack_side_gui.server.record.BackpackAccess a) { var s = new ArrayList<net.minecraft.world.item.ItemStack>(); for (int i=0;i<a.handler().getSlots();i++) s.add(a.handler().getStackInSlot(i).copy()); return new BackpackSyncPayload(a.stack().getHoverName().getString(), s); }
+    private static BackpackSyncPayload snapshot(dev.polaris_light.backpack_side_gui.server.record.BackpackAccess a) { var s = new ArrayList<net.minecraft.world.item.ItemStack>(); for (int i=0;i<a.handler().getSlots();i++) { var stack=a.handler().getStackInSlot(i).copy(); s.add(stack); } return new BackpackSyncPayload(a.stack().getHoverName().getString(), s); }
 }

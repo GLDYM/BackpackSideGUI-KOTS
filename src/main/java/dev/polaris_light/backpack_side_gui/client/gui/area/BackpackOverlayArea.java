@@ -41,6 +41,7 @@ public class BackpackOverlayArea extends IOverlayArea {
 
 
     private final List<BackpackOverlaySlot> slots = new ArrayList<>();
+    private final List<Integer> visibleLogicalSlots = new ArrayList<>();
     private final List<ItemStack> allItems = new ArrayList<>();
     private final BackpackOverlayScrollbar scrollbar = new BackpackOverlayScrollbar();
     private final OverlayTextInput searchInput = new OverlayTextInput(108);
@@ -66,12 +67,14 @@ public class BackpackOverlayArea extends IOverlayArea {
         allItems.clear();
         allItems.addAll(source);
         slots.clear();
+        visibleLogicalSlots.clear();
         String needle = this.filter.toLowerCase(java.util.Locale.ROOT);
         for (int i = 0; i < source.size(); i++) {
             ItemStack stack = source.get(i);
             if (needle.isEmpty()
                     || stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(needle))
-                slots.add(new BackpackOverlaySlot(i, stack));
+                slots.add(new BackpackOverlaySlot(visibleLogicalSlots.size(), stack));
+                visibleLogicalSlots.add(i);
         }
     }
 
@@ -120,8 +123,6 @@ public class BackpackOverlayArea extends IOverlayArea {
     }
 
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
-        if (event.getButton() != 0)
-            return false;
         double mouseX = event.getMouseX();
         double mouseY = event.getMouseY();
         updateBounds(event.getScreen().width, event.getScreen().height);
@@ -131,6 +132,35 @@ public class BackpackOverlayArea extends IOverlayArea {
         searchInput.mousePressed(mouseX, mouseY);
         if (visible && scrollbar.press(mouseX, mouseY))
             return true;
+        // Do not derive a slot from coordinates outside the actual 9-column
+        // grid. Integer division for negative offsets could otherwise map a
+        // click just left of the panel to the first/previous logical slot.
+        if (mouseX < x || mouseX >= x + Layout.SLOT_AREA_WIDTH
+                || mouseY < y || mouseY >= y + height) {
+            int topY = y - 16;
+            searchButton.setBounds(x + 115, topY);
+            sortButton.setBounds(x + 131, topY);
+            if (searchInput.isFocused()) return true;
+            if (searchButton.press(mouseX, mouseY) || sortButton.press(mouseX, mouseY)) return true;
+            sortModeButton.setBounds(x + 147, topY);
+            if (sortModeButton.press(mouseX, mouseY)) return true;
+            return visible && mouseX >= x - 4 && mouseX < x + width + 4
+                    && mouseY >= y - Layout.TOP_OFFSET && mouseY < y + height + Layout.BOTTOM_PADDING;
+        }
+        int row = (int) ((mouseY - y) / 18) + scrollbar.row();
+        int col = (int) ((mouseX - x) / 18);
+        int display = row * 9 + col;
+        int visibleRows = Math.max(1, height / 18);
+        if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows && col >= 0 && col < 9
+                && display >= 0 && display < visibleLogicalSlots.size()) {
+            ItemStack carried = net.minecraft.client.Minecraft.getInstance().player.containerMenu.getCarried();
+            boolean shift = net.minecraft.client.gui.screens.Screen.hasShiftDown();
+            int clickType = carried.isEmpty()
+                    ? (shift ? (event.getButton() == 1 ? 5 : 4) : (event.getButton() == 1 ? 1 : 0))
+                    : (event.getButton() == 1 ? 2 : 3);
+            dev.polaris_light.backpack_side_gui.network.ModNetwork.requestSlot(visibleLogicalSlots.get(display), clickType, carried);
+            return true;
+        }
         int topY = y - 16;
         searchButton.setBounds(x + 115, topY);
         sortButton.setBounds(x + 131, topY);
@@ -141,7 +171,19 @@ public class BackpackOverlayArea extends IOverlayArea {
         sortModeButton.setBounds(x + 147, topY);
         if (sortModeButton.press(mouseX, mouseY))
             return true;
-        return false;
+        return visible && mouseX >= x - 4 && mouseX < x + width + 4
+                && mouseY >= y - Layout.TOP_OFFSET && mouseY < y + height + Layout.BOTTOM_PADDING;
+    }
+
+    public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {
+        updateBounds(screenWidth, screenHeight);
+        if (!visible) return false;
+        // All header controls belong to this area and appear/disappear with it.
+        // The input only changes header contents; it does not expand the hitbox.
+        int backgroundWidth = width + Layout.PANEL_PADDING;
+        return mouseX >= x - 4 && mouseX < x - 4 + backgroundWidth
+                && mouseY >= y - Layout.TOP_OFFSET
+                && mouseY < y + height + Layout.BOTTOM_PADDING;
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre event) {

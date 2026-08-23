@@ -73,6 +73,13 @@ public final class OverlayWidget extends IOverlayWidget {
                 || visibilityButton.press(e.getMouseX(), e.getMouseY());
     }
 
+    public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {
+        return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
+    }
+    public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
+        return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
+    }
+
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {
         // Move
         if (dragging && e.getMouseButton() == 0) {

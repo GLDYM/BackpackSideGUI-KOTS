@@ -8,6 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.LoggerFactory;
 
 public record BackpackSyncPayload(String title, List<ItemStack> items) implements CustomPacketPayload {
     public static final Type<BackpackSyncPayload> TYPE = new Type<>(
@@ -19,7 +20,11 @@ public record BackpackSyncPayload(String title, List<ItemStack> items) implement
             int count = Math.min(162, buf.readVarInt());
             List<ItemStack> items = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
-                items.add(buf.readBoolean() ? ItemStack.STREAM_CODEC.decode(buf) : ItemStack.EMPTY);
+                if (buf.readBoolean()) {
+                    ItemStack stack = ItemStack.STREAM_CODEC.decode(buf);
+                    stack.setCount(Math.max(1, buf.readVarInt()));
+                    items.add(stack);
+                } else items.add(ItemStack.EMPTY);
             }
             return new BackpackSyncPayload(title, items);
         }
@@ -31,8 +36,12 @@ public record BackpackSyncPayload(String title, List<ItemStack> items) implement
                 ItemStack stack = payload.items().get(i);
                 boolean present = stack != null && !stack.isEmpty();
                 buf.writeBoolean(present);
-                if (present)
-                    ItemStack.STREAM_CODEC.encode(buf, stack);
+                if (present) {
+                    ItemStack encoded = stack.copy();
+                    encoded.setCount(1);
+                    ItemStack.STREAM_CODEC.encode(buf, encoded);
+                    buf.writeVarInt(Math.max(1, stack.getCount()));
+                }
             }
         }
     };

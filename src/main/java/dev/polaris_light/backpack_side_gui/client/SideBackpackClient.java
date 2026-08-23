@@ -17,6 +17,10 @@ public final class SideBackpackClient {
     private static int refreshTicks;
     private static boolean hasBackpack;
 
+    public static boolean shouldBlockContainerInput(net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
+        return hasBackpack && BackpackOverlayScreenPolicy.allows(screen) && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
+    }
+
     private SideBackpackClient() {
     }
 
@@ -33,6 +37,7 @@ public final class SideBackpackClient {
         if (!hasBackpack) return;
         OVERLAY.setContents(name, stacks);
     }
+
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
@@ -58,8 +63,9 @@ public final class SideBackpackClient {
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         if (!hasBackpack) return;
-        if (OVERLAY.mousePressed(event))
-            event.setCanceled(true);
+        boolean panelHit = OVERLAY.panelInteractiveContains(event);
+        if (panelHit) event.setCanceled(true);
+        if (OVERLAY.mousePressed(event)) event.setCanceled(true);
     }
 
     public static void onMouseDraggedPre(ScreenEvent.MouseDragged.Pre event) {
