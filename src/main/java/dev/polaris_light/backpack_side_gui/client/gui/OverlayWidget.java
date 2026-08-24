@@ -112,7 +112,7 @@ public final class OverlayWidget extends IOverlayWidget {
                 || visibilityButton.press(e.getMouseX(), e.getMouseY()))
             return true;
         for (int i = 0; i < utilityButtons.length; i++)
-            if (utilityFlags[i] && utilityButtons[i].press(e.getMouseX(), e.getMouseY()))
+            if (utilityButtons[i].isVisible() && utilityButtons[i].press(e.getMouseX(), e.getMouseY()))
                 return true;
         return false;
     }

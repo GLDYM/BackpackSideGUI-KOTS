@@ -127,6 +127,12 @@ public class BackpackOverlayArea extends IOverlayArea {
         double mouseY = event.getMouseY();
         updateBounds(event.getScreen().width, event.getScreen().height);
 
+        // A hidden area must not consume clicks intended for the underlying GUI.
+        // The visibility toggle is owned by OverlayWidget and is handled after
+        // this method returns.
+        if (!visible)
+            return false;
+
         // Clicking anywhere in the screen outside the input removes its focus,
         // including when the user clicks another screen's text field.
         searchInput.mousePressed(mouseX, mouseY);
