@@ -8,6 +8,8 @@ import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayB
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityType;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.CraftingSyncPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,7 +18,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.util.List;
-import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
 
 public final class OverlayWidget extends IOverlayWidget {
     private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;
@@ -38,11 +39,13 @@ public final class OverlayWidget extends IOverlayWidget {
     private final boolean[] utilityFlags = new boolean[5];
 
     private UtilityType activeUtility;
+    private final dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea crafting = new dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea();
     private final dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea smithing = new dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea();
 
     public void receiveSmithing(SmithingSyncPayload p) {
         smithing.sync(p.template(), p.base(), p.addition(), p.result());
     }
+    public void receiveCrafting(CraftingSyncPayload p) { crafting.sync(java.util.Arrays.copyOf(p.items(), 9), p.items()[9]); }
 
     public void setUtilityFlags(boolean[] flags) {
         java.util.Arrays.fill(utilityFlags, false);
@@ -60,6 +63,7 @@ public final class OverlayWidget extends IOverlayWidget {
     private void onUtilityPressed(UtilityOverlayButton clicked) {
         activeUtility = activeUtility == clicked.utilityType() ? null : clicked.utilityType();
         smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
+        crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
@@ -93,9 +97,14 @@ public final class OverlayWidget extends IOverlayWidget {
         area.render(s, g, mc);
 
         smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
+        crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
         if (smithing.isVisible()) {
             smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             smithing.render(s, g, mc);
+        }
+        if (crafting.isVisible()) {
+            crafting.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
+            crafting.render(s, g, mc);
         }
 
         moveButton.setBounds(x, y);
@@ -119,6 +128,7 @@ public final class OverlayWidget extends IOverlayWidget {
     public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {
         area.renderTooltip(g, mx, my);
         smithing.renderTooltip(g, mx, my);
+        crafting.renderTooltip(g, mx, my);
         moveButton.renderTooltip(g, mc, mx, my);
         visibilityButton.renderTooltip(g, mc, mx, my);
         for (UtilityOverlayButton button : utilityButtons)
@@ -145,19 +155,23 @@ public final class OverlayWidget extends IOverlayWidget {
         if (area.mousePressed(e))
             return true;
         if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(e))
-                return true;
+            return true;
+        if (activeUtility == UtilityType.CRAFTING && crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height))
+            return crafting.mousePressed(e) || true;
         return false;
     }
 
     public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {
         return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height)
                 || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
-                        e.getScreen().height);
+                        e.getScreen().height)
+                || crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
     }
 
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
         return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
-                || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
+                || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
+                || crafting.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {

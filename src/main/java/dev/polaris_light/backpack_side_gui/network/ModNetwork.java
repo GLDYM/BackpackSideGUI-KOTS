@@ -16,8 +16,10 @@ import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import dev.polaris_light.backpack_side_gui.server.FlagResolver;
 import net.p3pp3rf1y.sophisticatedbackpacks.upgrades.smithing.SmithingUpgradeWrapper;
+import net.p3pp3rf1y.sophisticatedcore.upgrades.crafting.CraftingUpgradeWrapper;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.CraftingInput;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -51,6 +53,10 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
         registrar.playToClient(SmithingSyncPayload.TYPE, SmithingSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveSmithing(payload)));
+        registrar.playToClient(CraftingSyncPayload.TYPE, CraftingSyncPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCrafting(payload)));
+        registrar.playToServer(CraftingClickPayload.TYPE, CraftingClickPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> { if (context.player() instanceof ServerPlayer p) handleCraftingClick(p, payload); }));
         registrar.playToServer(SmithingClickPayload.TYPE, SmithingClickPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer p)
@@ -86,6 +92,8 @@ public final class ModNetwork {
                                 player.containerMenu.broadcastChanges();
                                 if (payload.utilityType() == 3)
                                     sendSmithing(player, access);
+                                if (payload.utilityType() == 0)
+                                    sendCrafting(player, access);
                             }
                         });
                 }));
@@ -223,6 +231,79 @@ public final class ModNetwork {
                 .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
         PacketDistributor.sendToPlayer(player,
                 new SmithingSyncPayload(inv.getStackInSlot(0), inv.getStackInSlot(1), inv.getStackInSlot(2), result));
+    }
+
+    public static void requestCraftingClick(int slot, int button, boolean shift, ItemStack carried) {
+        PacketDistributor.sendToServer(new CraftingClickPayload(slot, button, shift, carried.copy()));
+    }
+
+    private static void handleCraftingClick(ServerPlayer player, CraftingClickPayload p) {
+        var access = BackpackResolver.resolve(player); if (access.isEmpty() || p.slot() < 0 || p.slot() > 9) return;
+        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper.fromStack(access.get().stack()).getUpgradeHandler().getWrappersThatImplement(CraftingUpgradeWrapper.class);
+        if (wrappers.isEmpty()) return;
+        var inv = wrappers.get(0).getInventory(); var serverCarried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(serverCarried, p.carried())) { if (!player.gameMode.isCreative()) return; serverCarried = p.carried().copy(); player.containerMenu.setCarried(serverCarried); }
+        if (p.slot() == 9) {
+            ItemStack[] inputs = new ItemStack[9];
+            for (int i = 0; i < 9; i++) inputs[i] = inv.getStackInSlot(i).copy();
+            var input = CraftingInput.of(3, 3, java.util.Arrays.asList(inputs));
+            var result = player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
+                    .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
+            if (!result.isEmpty()) {
+                if (p.shift()) {
+                    while (!result.isEmpty() && canInsertCraftResult(player, result)) {
+                        if (!player.getInventory().add(result.copy())) break;
+                        consumeCraftingInputs(inv);
+                        result = getCraftingResult(player, inv);
+                    }
+                } else if (serverCarried.isEmpty()) {
+                    player.containerMenu.setCarried(result.copy());
+                    consumeCraftingInputs(inv);
+                } else if (ItemStack.isSameItemSameComponents(serverCarried, result)
+                        && serverCarried.getCount() + result.getCount() <= serverCarried.getMaxStackSize()) {
+                    serverCarried.grow(result.getCount());
+                    player.containerMenu.setCarried(serverCarried);
+                    consumeCraftingInputs(inv);
+                }
+            }
+        } else if (serverCarried.isEmpty()) player.containerMenu.setCarried(inv.extractItem(p.slot(), p.button() == 1 ? Math.max(1, inv.getStackInSlot(p.slot()).getCount() / 2) : inv.getStackInSlot(p.slot()).getCount(), false));
+        else player.containerMenu.setCarried(inv.insertItem(p.slot(), serverCarried, false));
+        player.containerMenu.broadcastChanges(); PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy())); sendCrafting(player, access.get());
+    }
+
+    private static void consumeCraftingInputs(net.neoforged.neoforge.items.IItemHandler inv) {
+        for (int i = 0; i < 9; i++) if (!inv.getStackInSlot(i).isEmpty()) inv.extractItem(i, 1, false);
+    }
+
+    private static ItemStack getCraftingResult(ServerPlayer player, net.neoforged.neoforge.items.IItemHandler inv) {
+        ItemStack[] items = new ItemStack[9];
+        for (int i = 0; i < 9; i++) items[i] = inv.getStackInSlot(i).copy();
+        var input = CraftingInput.of(3, 3, java.util.Arrays.asList(items));
+        return player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
+                .map(h -> h.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
+    }
+
+    private static boolean canInsertCraftResult(ServerPlayer player, ItemStack result) {
+        int capacity = 0;
+        for (ItemStack slot : player.getInventory().items) {
+            if (slot.isEmpty()) capacity += result.getMaxStackSize();
+            else if (ItemStack.isSameItemSameComponents(slot, result)) capacity += Math.max(0, slot.getMaxStackSize() - slot.getCount());
+            if (capacity >= result.getCount()) return true;
+        }
+        return false;
+    }
+
+    private static void sendCrafting(ServerPlayer player, BackpackAccess access) {
+        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper.fromStack(access.stack())
+                .getUpgradeHandler().getWrappersThatImplement(CraftingUpgradeWrapper.class);
+        if (wrappers.isEmpty()) return;
+        var inv = wrappers.get(0).getInventory();
+        ItemStack[] items = new ItemStack[10];
+        for (int i = 0; i < 9; i++) items[i] = inv.getStackInSlot(i).copy();
+        var input = CraftingInput.of(3, 3, java.util.Arrays.asList(items).subList(0, 9));
+        items[9] = player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
+                .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
+        PacketDistributor.sendToPlayer(player, new CraftingSyncPayload(items));
     }
 
     private static void sort(ServerPlayer player, int mode) {

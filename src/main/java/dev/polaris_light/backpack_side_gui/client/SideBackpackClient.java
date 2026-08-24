@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import java.util.List;
 import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.CraftingSyncPayload;
 
 public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
@@ -28,6 +29,7 @@ public final class SideBackpackClient {
     public static void receiveSmithing(SmithingSyncPayload payload) {
         OVERLAY.receiveSmithing(payload);
     }
+    public static void receiveCrafting(CraftingSyncPayload payload) { OVERLAY.receiveCrafting(payload); }
 
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,
