@@ -20,6 +20,10 @@ import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
 
 public final class OverlayWidget extends IOverlayWidget {
     private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;
+    // Keep the anchor usable even when the panel is dragged near a screen edge.
+    private static final int ANCHOR_MARGIN = 4;
+    private static final int RESERVED_RIGHT = 190;
+    private static final int RESERVED_BOTTOM = 105;
 
     private final BackpackOverlayArea area = new BackpackOverlayArea();
     private boolean dragging;
@@ -82,6 +86,7 @@ public final class OverlayWidget extends IOverlayWidget {
 
     @Override
     public void render(Screen s, GuiGraphics g, Minecraft mc) {
+        clampAnchor(s.width, s.height);
 
         area.prepareLayout(s.width, s.height);
         area.setOverlayPosition(x, y - area.buttonOffsetY());
@@ -121,18 +126,25 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
-        if (area.mousePressed(e))
-            return true;
-        if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(e))
-            return true;
-        int x = this.x, y = this.y;
-        moveButton.setBounds(x, y);
-        visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
+        // Buttons own their pixels even when a panel extends behind them.
+        clampAnchor(e.getScreen().width, e.getScreen().height);
+        moveButton.setBounds(this.x, this.y);
+        visibilityButton.setBounds(this.x + BUTTON_SIZE + BUTTON_GAP, this.y);
         if (moveButton.press(this, e.getMouseX(), e.getMouseY())
                 || visibilityButton.press(e.getMouseX(), e.getMouseY()))
             return true;
+
+        int utilityIndex = 0;
         for (int i = 0; i < utilityButtons.length; i++)
-            if (utilityButtons[i].isVisible() && utilityButtons[i].press(e.getMouseX(), e.getMouseY()))
+            if (utilityButtons[i].isVisible()) {
+                utilityButtons[i].setBounds(this.x + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++), this.y);
+                if (utilityButtons[i].press(e.getMouseX(), e.getMouseY()))
+                    return true;
+            }
+
+        if (area.mousePressed(e))
+            return true;
+        if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(e))
                 return true;
         return false;
     }
@@ -153,6 +165,7 @@ public final class OverlayWidget extends IOverlayWidget {
         if (dragging && e.getMouseButton() == 0) {
             x = (int) e.getMouseX() - dragOffsetX;
             y = (int) e.getMouseY() - dragOffsetY;
+            clampAnchor(e.getScreen().width, e.getScreen().height);
             area.setOverlayPosition(x, y - area.buttonOffsetY());
             saveAnchorPosition(e.getScreen());
             return true;
@@ -182,9 +195,17 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     private void saveAnchorPosition(Screen screen) {
+        clampAnchor(screen.width, screen.height);
         BackpackSideGuiConfig.OVERLAY_X.set(x - screen.width / 2);
         BackpackSideGuiConfig.OVERLAY_Y.set(y - screen.height / 2);
         BackpackSideGuiConfig.CLIENT_SPEC.save();
+    }
+
+    private void clampAnchor(int screenWidth, int screenHeight) {
+        int maxX = Math.max(ANCHOR_MARGIN, screenWidth - RESERVED_RIGHT);
+        int maxY = Math.max(ANCHOR_MARGIN, screenHeight - RESERVED_BOTTOM);
+        x = Math.max(ANCHOR_MARGIN, Math.min(maxX, x));
+        y = Math.max(ANCHOR_MARGIN, Math.min(maxY, y));
     }
 
     private static ResourceLocation icon(String n) {
