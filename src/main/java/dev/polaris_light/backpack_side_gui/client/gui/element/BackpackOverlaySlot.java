@@ -24,9 +24,11 @@ public final class BackpackOverlaySlot extends Slot {
     public void renderAt(GuiGraphics g, Minecraft mc, int sx, int sy) {
         g.fill(sx, sy, sx + 18, sy + 18, -872415232);
         g.fill(sx + 1, sy + 1, sx + 17, sy + 17, -14671840);
-        if (stack.isEmpty()) return;
+        if (stack.isEmpty())
+            return;
         g.renderItem(stack, sx + 1, sy + 1);
-        if (stack.getCount() <= 1) return;
+        if (stack.getCount() <= 1)
+            return;
         String c = CountAbbreviator.abbreviate(stack.getCount());
         g.pose().pushPose();
         g.pose().translate(0.0F, 0.0F, 300.0F);
@@ -35,7 +37,8 @@ public final class BackpackOverlaySlot extends Slot {
     }
 
     public void renderHighlightAt(GuiGraphics g, int sx, int sy, double mouseX, double mouseY) {
-        if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18) return;
+        if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
+            return;
         int highlight = 0x70FFF04A;
         g.fill(sx, sy, sx + 18, sy + 18, highlight);
         g.fill(sx, sy, sx + 18, sy + 1, 0xD0FFF04A);

@@ -100,7 +100,6 @@ public final class OverlayWidget extends IOverlayWidget {
         visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
         visibilityButton.render(g, mc);
 
-
         int utilityIndex = 0;
         for (int i = 0; i < utilityButtons.length; i++) {
             UtilityOverlayButton b = utilityButtons[i];
@@ -140,7 +139,8 @@ public final class OverlayWidget extends IOverlayWidget {
 
     public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {
         return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height)
-                || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
+                || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
+                        e.getScreen().height);
     }
 
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {

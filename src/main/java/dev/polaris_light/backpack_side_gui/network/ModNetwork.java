@@ -177,7 +177,8 @@ public final class ModNetwork {
             return;
         var carried = player.containerMenu.getCarried();
         if (!ItemStack.matches(carried, p.carried())) {
-            if (!player.gameMode.isCreative()) return;
+            if (!player.gameMode.isCreative())
+                return;
             carried = p.carried().copy();
             player.containerMenu.setCarried(carried);
         }
@@ -192,7 +193,8 @@ public final class ModNetwork {
                     inv.extractItem(i, 1, false);
             }
             player.containerMenu.broadcastChanges();
-            PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
+            PacketDistributor.sendToPlayer(player,
+                    new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
             sendSmithing(player, access.get());
             return;
         }

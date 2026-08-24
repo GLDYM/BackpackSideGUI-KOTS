@@ -15,7 +15,8 @@ public record SmithingClickPayload(int slot, int button, ItemStack carried) impl
                 b.writeVarInt(p.slot);
                 b.writeVarInt(p.button);
                 b.writeBoolean(!p.carried.isEmpty());
-                if (!p.carried.isEmpty()) ItemStack.STREAM_CODEC.encode(b, p.carried);
+                if (!p.carried.isEmpty())
+                    ItemStack.STREAM_CODEC.encode(b, p.carried);
             }, b -> new SmithingClickPayload(b.readVarInt(), b.readVarInt(),
                     b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY));
 

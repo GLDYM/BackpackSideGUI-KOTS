@@ -14,6 +14,7 @@ public final class SmithingOverlayArea extends IOverlayArea {
         public int firstSlotX = 0, secondSlotX = 18, thirdSlotX = 36, resultSlotX = 72;
         public int slotsY = 15, slotSize = 18, panelWidth = 98, panelHeight = 35;
     }
+
     public final Layout layout = new Layout();
     private final ItemStack[] stacks = { ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY };
     private final BackpackOverlaySlot[] slots = {
@@ -28,7 +29,8 @@ public final class SmithingOverlayArea extends IOverlayArea {
         stacks[1] = b.copy();
         stacks[2] = c.copy();
         stacks[3] = result.copy();
-        for (int i = 0; i < slots.length; i++) slots[i] = new BackpackOverlaySlot(i, stacks[i]);
+        for (int i = 0; i < slots.length; i++)
+            slots[i] = new BackpackOverlaySlot(i, stacks[i]);
         visible = true;
         // Match the legacy utility panel: 162 px content plus 4 px margins,
         // with the smithing slots placed on the same baseline as the backup.
@@ -62,7 +64,8 @@ public final class SmithingOverlayArea extends IOverlayArea {
         int[] slotX = { x + layout.firstSlotX, x + layout.secondSlotX, x + layout.thirdSlotX, x + layout.resultSlotX };
         for (int i = 0; i < slotX.length; i++) {
             if (e.getMouseX() >= slotX[i] && e.getMouseX() < slotX[i] + layout.slotSize) {
-                ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried() : ItemStack.EMPTY;
+                ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
+                        : ItemStack.EMPTY;
                 ModNetwork.requestSmithingClick(i, e.getButton(), carried);
                 return true;
             }
@@ -73,7 +76,8 @@ public final class SmithingOverlayArea extends IOverlayArea {
     }
 
     public void renderTooltip(GuiGraphics g, double mouseX, double mouseY) {
-        if (!visible) return;
+        if (!visible)
+            return;
         slots[0].renderHighlightAt(g, x + layout.firstSlotX, y + layout.slotsY, mouseX, mouseY);
         slots[1].renderHighlightAt(g, x + layout.secondSlotX, y + layout.slotsY, mouseX, mouseY);
         slots[2].renderHighlightAt(g, x + layout.thirdSlotX, y + layout.slotsY, mouseX, mouseY);
