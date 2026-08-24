@@ -9,12 +9,13 @@ import net.p3pp3rf1y.sophisticatedbackpacks.upgrades.smithing.SmithingUpgradeIte
 import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeHandler;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.cooking.ICookingUpgradeItem;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.crafting.CraftingUpgradeItem;
+import net.p3pp3rf1y.sophisticatedcore.upgrades.stonecutter.StonecutterUpgradeItem;
 
-final class FlagResolver {
+public final class FlagResolver {
     private FlagResolver() {
     }
 
-    static UpgradeFlags resolve(BackpackAccess backpack) {
+    public static UpgradeFlags resolve(BackpackAccess backpack) {
         Flags result = new Flags();
         UpgradeHandler upgrades = BackpackWrapper.fromStack(backpack.stack()).getUpgradeHandler();
 
@@ -26,11 +27,11 @@ final class FlagResolver {
         // result.add(backpack.handler().getStackInSlot(i));
         // }
 
-        return new UpgradeFlags(result.crafting, result.furnace, result.anvil, result.smithing);
+        return new UpgradeFlags(result.crafting, result.furnace, result.anvil, result.smithing, result.stonecutter);
     }
 
     private static final class Flags {
-        boolean crafting, furnace, anvil, smithing;
+        boolean crafting, furnace, anvil, smithing, stonecutter;
 
         void add(ItemStack stack) {
             if (stack == null || stack.isEmpty())
@@ -40,6 +41,7 @@ final class FlagResolver {
             furnace |= item instanceof ICookingUpgradeItem;
             anvil |= item instanceof AnvilUpgradeItem;
             smithing |= item instanceof SmithingUpgradeItem;
+            stonecutter |= item instanceof StonecutterUpgradeItem;
         }
     }
 }

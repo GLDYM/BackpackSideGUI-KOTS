@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import dev.polaris_light.backpack_side_gui.client.gui.BackpackOverlayScreenPolicy;
 import dev.polaris_light.backpack_side_gui.client.gui.OverlayWidget;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.network.UtilityFlagsPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -17,6 +18,11 @@ public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
     private static int refreshTicks;
     private static boolean hasBackpack;
+
+    public static void receiveUtilityFlags(UtilityFlagsPayload payload) {
+        OVERLAY.setUtilityFlags(new boolean[] { payload.crafting(), payload.furnace(), payload.anvil(),
+                payload.smithing(), payload.stonecutter() });
+    }
 
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,

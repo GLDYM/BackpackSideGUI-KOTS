@@ -14,6 +14,7 @@ import java.util.Locale;
 import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.FlagResolver;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -30,6 +31,7 @@ public final class ModNetwork {
                                     new CustomPacketPayload[0]);
                         } else
                             resolved.ifPresent(access -> {
+                                sendUtilityFlags(player, access);
                                 var stacks = new ArrayList<ItemStack>();
                                 for (int i = 0; i < access.handler().getSlots(); i++)
                                     stacks.add(access.handler().getStackInSlot(i).copy());
@@ -42,6 +44,8 @@ public final class ModNetwork {
         registrar.playToClient(BackpackSyncPayload.TYPE, BackpackSyncPayload.STREAM_CODEC,
                 (payload, context) -> context
                         .enqueueWork(() -> SideBackpackClient.receive(payload.title(), payload.items())));
+        registrar.playToClient(UtilityFlagsPayload.TYPE, UtilityFlagsPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
         registrar.playToServer(BackpackSlotPayload.TYPE, BackpackSlotPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player)
@@ -53,6 +57,24 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player)
                         sort(player, payload.sortMode());
+                }));
+        registrar.playToServer(UtilityRequestPayload.TYPE, UtilityRequestPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer player && payload.utilityType() >= 0
+                            && payload.utilityType() < 5)
+                        BackpackResolver.resolve(player).ifPresent(access -> {
+                            var flags = FlagResolver.resolve(access);
+                            boolean allowed = switch (payload.utilityType()) {
+                                case 0 -> flags.crafting();
+                                case 1 -> flags.furnace();
+                                case 2 -> flags.anvil();
+                                case 3 -> flags.smithing();
+                                case 4 -> flags.stonecutter();
+                                default -> false;
+                            };
+                            if (allowed)
+                                player.containerMenu.broadcastChanges();
+                        });
                 }));
     }
 
@@ -112,6 +134,16 @@ public final class ModNetwork {
 
     public static void requestSort(int mode) {
         PacketDistributor.sendToServer(new SortPayload(mode), new CustomPacketPayload[0]);
+    }
+
+    private static void sendUtilityFlags(ServerPlayer player, BackpackAccess access) {
+        var flags = FlagResolver.resolve(access);
+        PacketDistributor.sendToPlayer(player, new UtilityFlagsPayload(flags.crafting(), flags.furnace(), flags.anvil(),
+                flags.smithing(), flags.stonecutter()), new CustomPacketPayload[0]);
+    }
+
+    public static void requestUtility(int utilityType) {
+        PacketDistributor.sendToServer(new UtilityRequestPayload(utilityType), new CustomPacketPayload[0]);
     }
 
     private static void sort(ServerPlayer player, int mode) {

@@ -1,6 +1,8 @@
 package dev.polaris_light.backpack_side_gui.client.gui.element;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayElement;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -24,6 +26,18 @@ public final class VisibilityOverlayButton extends BackpackOverlayButton {
         updateIconAndLabel();
     }
 
+    @Override
+    public void render(GuiGraphics g, Minecraft mc) {
+        int color = targetVisible ? -2047904 : -872415232;
+        int color2 = targetVisible ? -11187676 : -14013910;
+        if (!visible)
+            return;
+        g.fill(x, y, x + SIZE, y + SIZE, color);
+        g.fill(x + 1, y + 1, x + SIZE - 1, y + SIZE - 1, color2);
+        g.blit(getIcon(), x + 2, y + 2, 0, 0, 12, 12, 12, 12);
+    }
+
+    @Override
     public boolean press(double mouseX, double mouseY) {
         boolean pressed = super.press(mouseX, mouseY);
         if (pressed) {

@@ -5,6 +5,9 @@ import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayWidget;
 import dev.polaris_light.backpack_side_gui.client.gui.area.BackpackOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityType;
+import dev.polaris_light.backpack_side_gui.network.ModNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,8 +18,8 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 import java.util.List;
 
 public final class OverlayWidget extends IOverlayWidget {
-
     private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;
+
     private final BackpackOverlayArea area = new BackpackOverlayArea();
     private boolean dragging;
     private int dragOffsetX, dragOffsetY;
@@ -25,6 +28,31 @@ public final class OverlayWidget extends IOverlayWidget {
     private final MoveOverlayButton moveButton = new MoveOverlayButton(icon("move"));
     private final VisibilityOverlayButton visibilityButton = new VisibilityOverlayButton(area, icon("show"),
             icon("hide"));
+
+    private final UtilityOverlayButton[] utilityButtons = new UtilityOverlayButton[5];
+    private final boolean[] utilityFlags = new boolean[5];
+
+    private UtilityType activeUtility;
+
+    public void setUtilityFlags(boolean[] flags) {
+        System.arraycopy(flags, 0, utilityFlags, 0, Math.min(flags.length, utilityFlags.length));
+    }
+
+    {
+        UtilityType[] types = UtilityType.values();
+        for (int i = 0; i < utilityButtons.length; i++) {
+            final UtilityType type = types[i];
+            utilityButtons[i] = new UtilityOverlayButton(type, icon(type.icon()), this::onUtilityPressed);
+        }
+    }
+
+    private void onUtilityPressed(UtilityOverlayButton clicked) {
+        activeUtility = activeUtility == clicked.utilityType() ? null : clicked.utilityType();
+        for (UtilityOverlayButton button : utilityButtons)
+            button.setTargetVisible(button == clicked && activeUtility != null);
+        if (activeUtility != null)
+            ModNetwork.requestUtility(activeUtility.protocolId());
+    }
 
     @Override
     public void beginDragging(double mx, double my) {
@@ -56,6 +84,15 @@ public final class OverlayWidget extends IOverlayWidget {
         area.prepareLayout(s.width, s.height);
         area.setOverlayPosition(x, y - area.buttonOffsetY());
         area.render(s, g, mc);
+
+        int utilityIndex = 0;
+        for (int i = 0; i < utilityButtons.length; i++) {
+            UtilityOverlayButton b = utilityButtons[i];
+            b.setVisible(area.isVisible() && utilityFlags[i]);
+            if (utilityFlags[i])
+                b.setBounds(x + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++), y);
+            b.render(g, mc);
+        }
     }
 
     @Override
@@ -71,8 +108,13 @@ public final class OverlayWidget extends IOverlayWidget {
         int x = this.x, y = this.y;
         moveButton.setBounds(x, y);
         visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
-        return moveButton.press(this, e.getMouseX(), e.getMouseY())
-                || visibilityButton.press(e.getMouseX(), e.getMouseY());
+        if (moveButton.press(this, e.getMouseX(), e.getMouseY())
+                || visibilityButton.press(e.getMouseX(), e.getMouseY()))
+            return true;
+        for (int i = 0; i < utilityButtons.length; i++)
+            if (utilityFlags[i] && utilityButtons[i].press(e.getMouseX(), e.getMouseY()))
+                return true;
+        return false;
     }
 
     public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {

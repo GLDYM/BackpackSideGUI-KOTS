@@ -7,11 +7,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class BackpackOverlayButton extends IOverlayElement {
-    private static final int SIZE = 16;
-    private ResourceLocation icon;
-    private Component label;
-    private boolean visible = true;
-    private int x, y;
+    public static final int SIZE = 16;
+    public ResourceLocation icon;
+    public Component label;
+    public boolean visible = true;
+    public int x, y;
 
     public BackpackOverlayButton(ResourceLocation icon, Component label) {
         this.icon = icon;
@@ -49,6 +49,10 @@ public class BackpackOverlayButton extends IOverlayElement {
 
     protected int getY() {
         return y;
+    }
+
+    protected ResourceLocation getIcon() {
+        return icon;
     }
 
     public boolean press(double mx, double my) {
