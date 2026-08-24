@@ -19,15 +19,18 @@
   "text.backpack_side_gui.tooltip.utility.furnace": "熔炉",
   "text.backpack_side_gui.tooltip.utility.anvil": "铁砧",
   "text.backpack_side_gui.tooltip.utility.smithing": "锻造台",
+  "text.backpack_side_gui.tooltip.utility.stonecutter": "切石机",
   "text.backpack_side_gui.tooltip.utility.panel_open": "点击使用对应功能",
   "text.backpack_side_gui.embedded.crafting": "工作台",
   "text.backpack_side_gui.embedded.furnace": "熔炉",
   "text.backpack_side_gui.embedded.anvil": "铁砧",
   "text.backpack_side_gui.embedded.smithing": "锻造台",
+  "text.backpack_side_gui.embedded.stonecutter": "切石机",
   "text.backpack_side_gui.embedded.click_open": "点击使用功能",
   "text.backpack_side_gui.utility.crafting": "工作台",
   "text.backpack_side_gui.utility.furnace": "熔炉",
   "text.backpack_side_gui.utility.anvil": "铁砧",
   "text.backpack_side_gui.utility.smithing": "锻造台",
+  "text.backpack_side_gui.utility.stonecutter": "切石机",
   "text.backpack_side_gui.utility.click_open": "点击使用功能"
 }

@@ -19,15 +19,18 @@
   "text.backpack_side_gui.tooltip.utility.furnace": "Furnace",
   "text.backpack_side_gui.tooltip.utility.anvil": "Anvil",
   "text.backpack_side_gui.tooltip.utility.smithing": "Smithing Table",
+  "text.backpack_side_gui.tooltip.utility.stonecutter": "Stonecutter",
   "text.backpack_side_gui.tooltip.utility.panel_open": "Click to use this utility",
   "text.backpack_side_gui.embedded.crafting": "Crafting Table",
   "text.backpack_side_gui.embedded.furnace": "Furnace",
   "text.backpack_side_gui.embedded.anvil": "Anvil",
   "text.backpack_side_gui.embedded.smithing": "Smithing Table",
+  "text.backpack_side_gui.embedded.stonecutter": "Stonecutter",
   "text.backpack_side_gui.embedded.click_open": "Click to use",
   "text.backpack_side_gui.utility.crafting": "Crafting Table",
   "text.backpack_side_gui.utility.furnace": "Furnace",
   "text.backpack_side_gui.utility.anvil": "Anvil",
   "text.backpack_side_gui.utility.smithing": "Smithing Table",
+  "text.backpack_side_gui.utility.stonecutter": "Stonecutter",
   "text.backpack_side_gui.utility.click_open": "Click to use"
 }

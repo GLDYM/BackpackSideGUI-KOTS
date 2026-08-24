@@ -34,6 +34,16 @@ public final class BackpackOverlaySlot extends Slot {
         g.pose().popPose();
     }
 
+    public void renderHighlightAt(GuiGraphics g, int sx, int sy, double mouseX, double mouseY) {
+        if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18) return;
+        int highlight = 0x70FFF04A;
+        g.fill(sx, sy, sx + 18, sy + 18, highlight);
+        g.fill(sx, sy, sx + 18, sy + 1, 0xD0FFF04A);
+        g.fill(sx, sy + 17, sx + 18, sy + 18, 0xD0FFF04A);
+        g.fill(sx, sy, sx + 1, sy + 18, 0xD0FFF04A);
+        g.fill(sx + 17, sy, sx + 18, sy + 18, 0xD0FFF04A);
+    }
+
     public void render(GuiGraphics g, Minecraft mc, int ox, int oy, int scroll, int visible) {
         int row = index / 9;
         if (row < scroll || row >= scroll + visible)
@@ -64,13 +74,6 @@ public final class BackpackOverlaySlot extends Slot {
         int sx = ox + (index % 9) * 18, sy = oy + (row - scroll) * 18;
         if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
             return;
-        {
-            int highlight = 0x70FFF04A;
-            g.fill(sx, sy, sx + 18, sy + 18, highlight);
-            g.fill(sx, sy, sx + 18, sy + 1, 0xD0FFF04A);
-            g.fill(sx, sy + 17, sx + 18, sy + 18, 0xD0FFF04A);
-            g.fill(sx, sy, sx + 1, sy + 18, 0xD0FFF04A);
-            g.fill(sx + 17, sy, sx + 18, sy + 18, 0xD0FFF04A);
-        }
+        renderHighlightAt(g, sx, sy, mouseX, mouseY);
     }
 }

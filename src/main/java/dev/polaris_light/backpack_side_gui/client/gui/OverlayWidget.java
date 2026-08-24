@@ -41,6 +41,7 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     public void setUtilityFlags(boolean[] flags) {
+        java.util.Arrays.fill(utilityFlags, false);
         System.arraycopy(flags, 0, utilityFlags, 0, Math.min(flags.length, utilityFlags.length));
     }
 
@@ -54,7 +55,7 @@ public final class OverlayWidget extends IOverlayWidget {
 
     private void onUtilityPressed(UtilityOverlayButton clicked) {
         activeUtility = activeUtility == clicked.utilityType() ? null : clicked.utilityType();
-        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible());
+        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
@@ -86,7 +87,7 @@ public final class OverlayWidget extends IOverlayWidget {
         area.setOverlayPosition(x, y - area.buttonOffsetY());
         area.render(s, g, mc);
 
-        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible());
+        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
         if (smithing.isVisible()) {
             smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             smithing.render(s, g, mc);
@@ -113,8 +114,11 @@ public final class OverlayWidget extends IOverlayWidget {
     @Override
     public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {
         area.renderTooltip(g, mx, my);
+        smithing.renderTooltip(g, mx, my);
         moveButton.renderTooltip(g, mc, mx, my);
         visibilityButton.renderTooltip(g, mc, mx, my);
+        for (UtilityOverlayButton button : utilityButtons)
+            button.renderTooltip(g, mc, mx, my);
     }
 
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {

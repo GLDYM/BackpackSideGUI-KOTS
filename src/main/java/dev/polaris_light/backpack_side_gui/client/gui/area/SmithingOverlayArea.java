@@ -72,6 +72,14 @@ public final class SmithingOverlayArea extends IOverlayArea {
         return false;
     }
 
+    public void renderTooltip(GuiGraphics g, double mouseX, double mouseY) {
+        if (!visible) return;
+        slots[0].renderHighlightAt(g, x + layout.firstSlotX, y + layout.slotsY, mouseX, mouseY);
+        slots[1].renderHighlightAt(g, x + layout.secondSlotX, y + layout.slotsY, mouseX, mouseY);
+        slots[2].renderHighlightAt(g, x + layout.thirdSlotX, y + layout.slotsY, mouseX, mouseY);
+        slots[3].renderHighlightAt(g, x + layout.resultSlotX, y + layout.slotsY, mouseX, mouseY);
+    }
+
     public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {
         int panelRight = x + layout.panelWidth - 4;
         int panelBottom = y + layout.panelHeight + 4;

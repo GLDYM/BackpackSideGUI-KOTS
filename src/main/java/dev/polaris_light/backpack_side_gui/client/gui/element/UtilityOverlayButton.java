@@ -13,7 +13,7 @@ public final class UtilityOverlayButton extends BackpackOverlayButton {
 
     public UtilityOverlayButton(UtilityType utilityType, ResourceLocation icon,
             Consumer<UtilityOverlayButton> onPressed) {
-        super(icon, Component.literal("Utility"));
+        super(icon, Component.translatable(utilityType.tooltipKey()));
         this.utilityType = utilityType;
         this.onPressed = onPressed == null ? button -> {
         } : onPressed;

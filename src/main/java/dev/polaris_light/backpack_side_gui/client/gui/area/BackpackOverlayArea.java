@@ -191,6 +191,13 @@ public class BackpackOverlayArea extends IOverlayArea {
     public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
+        int topY = y - 16;
+        searchButton.setBounds(x + 115, topY);
+        sortButton.setBounds(x + 131, topY);
+        sortModeButton.setBounds(x + 147, topY);
+        searchButton.renderTooltip(graphics, Minecraft.getInstance(), mouseX, mouseY);
+        sortButton.renderTooltip(graphics, Minecraft.getInstance(), mouseX, mouseY);
+        sortModeButton.renderTooltip(graphics, Minecraft.getInstance(), mouseX, mouseY);
         int rows = Math.max(1, (slots.size() + Layout.COLUMNS - 1) / Layout.COLUMNS);
         int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
         for (BackpackOverlaySlot slot : slots)
