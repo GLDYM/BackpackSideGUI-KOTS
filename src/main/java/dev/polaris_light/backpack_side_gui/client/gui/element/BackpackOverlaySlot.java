@@ -21,6 +21,19 @@ public final class BackpackOverlaySlot extends Slot {
         return stack;
     }
 
+    public void renderAt(GuiGraphics g, Minecraft mc, int sx, int sy) {
+        g.fill(sx, sy, sx + 18, sy + 18, -872415232);
+        g.fill(sx + 1, sy + 1, sx + 17, sy + 17, -14671840);
+        if (stack.isEmpty()) return;
+        g.renderItem(stack, sx + 1, sy + 1);
+        if (stack.getCount() <= 1) return;
+        String c = CountAbbreviator.abbreviate(stack.getCount());
+        g.pose().pushPose();
+        g.pose().translate(0.0F, 0.0F, 300.0F);
+        g.drawString(mc.font, c, sx + 20 - mc.font.width(c) - 2, sy + 10, 16777215, true);
+        g.pose().popPose();
+    }
+
     public void render(GuiGraphics g, Minecraft mc, int ox, int oy, int scroll, int visible) {
         int row = index / 9;
         if (row < scroll || row >= scroll + visible)

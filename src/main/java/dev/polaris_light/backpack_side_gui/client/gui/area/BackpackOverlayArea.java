@@ -279,9 +279,4 @@ public class BackpackOverlayArea extends IOverlayArea {
     public int buttonOffsetY() {
         return getButtonY() - y;
     }
-
-    public void setOverlayPosition(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
 }

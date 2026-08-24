@@ -13,6 +13,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import java.util.List;
+import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
 
 public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
@@ -22,6 +23,10 @@ public final class SideBackpackClient {
     public static void receiveUtilityFlags(UtilityFlagsPayload payload) {
         OVERLAY.setUtilityFlags(new boolean[] { payload.crafting(), payload.furnace(), payload.anvil(),
                 payload.smithing(), payload.stonecutter() });
+    }
+
+    public static void receiveSmithing(SmithingSyncPayload payload) {
+        OVERLAY.receiveSmithing(payload);
     }
 
     public static boolean shouldBlockContainerInput(

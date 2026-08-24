@@ -15,6 +15,9 @@ import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import dev.polaris_light.backpack_side_gui.server.FlagResolver;
+import net.p3pp3rf1y.sophisticatedbackpacks.upgrades.smithing.SmithingUpgradeWrapper;
+import net.minecraft.world.item.crafting.SmithingRecipeInput;
+import net.minecraft.world.item.crafting.RecipeType;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -46,6 +49,13 @@ public final class ModNetwork {
                         .enqueueWork(() -> SideBackpackClient.receive(payload.title(), payload.items())));
         registrar.playToClient(UtilityFlagsPayload.TYPE, UtilityFlagsPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
+        registrar.playToClient(SmithingSyncPayload.TYPE, SmithingSyncPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveSmithing(payload)));
+        registrar.playToServer(SmithingClickPayload.TYPE, SmithingClickPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer p)
+                        handleSmithingClick(p, payload);
+                }));
         registrar.playToServer(BackpackSlotPayload.TYPE, BackpackSlotPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player)
@@ -72,8 +82,11 @@ public final class ModNetwork {
                                 case 4 -> flags.stonecutter();
                                 default -> false;
                             };
-                            if (allowed)
+                            if (allowed) {
                                 player.containerMenu.broadcastChanges();
+                                if (payload.utilityType() == 3)
+                                    sendSmithing(player, access);
+                            }
                         });
                 }));
     }
@@ -144,6 +157,70 @@ public final class ModNetwork {
 
     public static void requestUtility(int utilityType) {
         PacketDistributor.sendToServer(new UtilityRequestPayload(utilityType), new CustomPacketPayload[0]);
+    }
+
+    public static void requestSmithingClick(int slot, int button, ItemStack carried) {
+        PacketDistributor.sendToServer(new SmithingClickPayload(slot, button, carried.copy()));
+    }
+
+    private static void handleSmithingClick(ServerPlayer player, SmithingClickPayload p) {
+        var access = BackpackResolver.resolve(player);
+        if (access.isEmpty())
+            return;
+        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper
+                .fromStack(access.get().stack()).getUpgradeHandler()
+                .getWrappersThatImplement(SmithingUpgradeWrapper.class);
+        if (wrappers.isEmpty())
+            return;
+        var inv = wrappers.get(0).getInventory();
+        if (p.slot() < 0 || p.slot() > inv.getSlots())
+            return;
+        var carried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(carried, p.carried())) {
+            if (!player.gameMode.isCreative()) return;
+            carried = p.carried().copy();
+            player.containerMenu.setCarried(carried);
+        }
+        if (p.slot() == 3) {
+            var input = new SmithingRecipeInput(inv.getStackInSlot(0).copy(), inv.getStackInSlot(1).copy(),
+                    inv.getStackInSlot(2).copy());
+            var result = player.level().getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, player.level())
+                    .map(h -> h.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
+            if (!result.isEmpty() && carried.isEmpty()) {
+                player.containerMenu.setCarried(result);
+                for (int i = 0; i < 3; i++)
+                    inv.extractItem(i, 1, false);
+            }
+            player.containerMenu.broadcastChanges();
+            PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
+            sendSmithing(player, access.get());
+            return;
+        }
+        var current = inv.getStackInSlot(p.slot());
+        if (carried.isEmpty()) {
+            player.containerMenu.setCarried(
+                    inv.extractItem(p.slot(), p.button() == 1 ? current.getCount() / 2 : current.getCount(), false));
+        } else {
+            player.containerMenu.setCarried(inv.insertItem(p.slot(), carried, false));
+        }
+        access.get().stack().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.ITEM);
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
+        sendSmithing(player, access.get());
+    }
+
+    private static void sendSmithing(ServerPlayer player, BackpackAccess access) {
+        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper.fromStack(access.stack())
+                .getUpgradeHandler().getWrappersThatImplement(SmithingUpgradeWrapper.class);
+        if (wrappers.isEmpty())
+            return;
+        var inv = wrappers.get(0).getInventory();
+        var input = new SmithingRecipeInput(inv.getStackInSlot(0).copy(), inv.getStackInSlot(1).copy(),
+                inv.getStackInSlot(2).copy());
+        var result = player.level().getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, player.level())
+                .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
+        PacketDistributor.sendToPlayer(player,
+                new SmithingSyncPayload(inv.getStackInSlot(0), inv.getStackInSlot(1), inv.getStackInSlot(2), result));
     }
 
     private static void sort(ServerPlayer player, int mode) {

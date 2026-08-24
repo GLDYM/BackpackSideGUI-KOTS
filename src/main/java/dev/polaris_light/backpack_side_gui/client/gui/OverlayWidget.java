@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.util.List;
+import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
 
 public final class OverlayWidget extends IOverlayWidget {
     private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;
@@ -33,6 +34,11 @@ public final class OverlayWidget extends IOverlayWidget {
     private final boolean[] utilityFlags = new boolean[5];
 
     private UtilityType activeUtility;
+    private final dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea smithing = new dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea();
+
+    public void receiveSmithing(SmithingSyncPayload p) {
+        smithing.sync(p.template(), p.base(), p.addition(), p.result());
+    }
 
     public void setUtilityFlags(boolean[] flags) {
         System.arraycopy(flags, 0, utilityFlags, 0, Math.min(flags.length, utilityFlags.length));
@@ -48,6 +54,7 @@ public final class OverlayWidget extends IOverlayWidget {
 
     private void onUtilityPressed(UtilityOverlayButton clicked) {
         activeUtility = activeUtility == clicked.utilityType() ? null : clicked.utilityType();
+        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible());
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
@@ -74,6 +81,17 @@ public final class OverlayWidget extends IOverlayWidget {
 
     @Override
     public void render(Screen s, GuiGraphics g, Minecraft mc) {
+
+        area.prepareLayout(s.width, s.height);
+        area.setOverlayPosition(x, y - area.buttonOffsetY());
+        area.render(s, g, mc);
+
+        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible());
+        if (smithing.isVisible()) {
+            smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
+            smithing.render(s, g, mc);
+        }
+
         moveButton.setBounds(x, y);
         moveButton.render(g, mc);
 
@@ -81,9 +99,6 @@ public final class OverlayWidget extends IOverlayWidget {
         visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
         visibilityButton.render(g, mc);
 
-        area.prepareLayout(s.width, s.height);
-        area.setOverlayPosition(x, y - area.buttonOffsetY());
-        area.render(s, g, mc);
 
         int utilityIndex = 0;
         for (int i = 0; i < utilityButtons.length; i++) {
@@ -105,6 +120,8 @@ public final class OverlayWidget extends IOverlayWidget {
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
         if (area.mousePressed(e))
             return true;
+        if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(e))
+            return true;
         int x = this.x, y = this.y;
         moveButton.setBounds(x, y);
         visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
@@ -118,11 +135,13 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {
-        return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
+        return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height)
+                || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
     }
 
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
-        return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
+        return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
+                || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {
