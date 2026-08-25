@@ -51,6 +51,11 @@ public class BackpackOverlayArea extends IOverlayArea {
     private final SortOverlayButton sortButton = new SortOverlayButton(sortModeButton::mode);
     private String title = "Backpack";
     private String filter = "";
+    private boolean itemDragging;
+    private int dragButton;
+    private final List<Integer> dragSlots = new ArrayList<>();
+    private long lastLeftClickTime;
+    private int lastLeftClickSlot = -1;
 
     public void setContents(String title, List<ItemStack> items) {
         setContents(title, items, filter);
@@ -170,8 +175,28 @@ public class BackpackOverlayArea extends IOverlayArea {
             int clickType = carried.isEmpty()
                     ? (shift ? (event.getButton() == 1 ? 5 : 4) : (event.getButton() == 1 ? 1 : 0))
                     : (event.getButton() == 1 ? 2 : 3);
-            ModNetwork.requestSlot(visibleLogicalSlots.get(display),
-                    clickType, carried);
+            int logicalSlot = visibleLogicalSlots.get(display);
+            long now = net.minecraft.Util.getMillis();
+            boolean doubleClick = event.getButton() == 0 && logicalSlot == lastLeftClickSlot
+                    && now - lastLeftClickTime < 250;
+            if (event.getButton() == 0) {
+                lastLeftClickSlot = logicalSlot;
+                lastLeftClickTime = now;
+            }
+            if (doubleClick) {
+                itemDragging = false;
+                dragSlots.clear();
+                ModNetwork.requestDoubleCollect(logicalSlot, carried);
+                return true;
+            }
+            if (!carried.isEmpty()) {
+                itemDragging = true;
+                dragButton = event.getButton();
+                dragSlots.clear();
+                dragSlots.add(logicalSlot);
+            } else {
+                ModNetwork.requestSlot(logicalSlot, clickType, carried);
+            }
             return true;
         }
         int topY = y - 16;
@@ -202,6 +227,16 @@ public class BackpackOverlayArea extends IOverlayArea {
         int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
         for (BackpackOverlaySlot slot : slots)
             slot.renderHighlight(graphics, x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
+        if (itemDragging)
+            for (int logical : dragSlots) {
+                int display = visibleLogicalSlots.indexOf(logical);
+                if (display < 0)
+                    continue;
+                int row = display / 9, col = display % 9;
+                if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows)
+                    graphics.fill(x + col * 18, y + (row - scrollbar.row()) * 18,
+                            x + col * 18 + 18, y + (row - scrollbar.row()) * 18 + 18, 0x70FFF04A);
+            }
     }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {
@@ -217,6 +252,17 @@ public class BackpackOverlayArea extends IOverlayArea {
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre event) {
+        if (itemDragging && visible && contains(event.getMouseX(), event.getMouseY())) {
+            int row = (int) ((event.getMouseY() - y) / 18) + scrollbar.row();
+            int col = (int) ((event.getMouseX() - x) / 18);
+            int display = row * 9 + col;
+            if (col >= 0 && col < 9 && row >= scrollbar.row() && display >= 0 && display < visibleLogicalSlots.size()) {
+                int logical = visibleLogicalSlots.get(display);
+                if (!dragSlots.contains(logical))
+                    dragSlots.add(logical);
+            }
+            return true;
+        }
         if (scrollbar.drag(event.getMouseY()))
             return true;
         return false;
@@ -225,6 +271,18 @@ public class BackpackOverlayArea extends IOverlayArea {
     public boolean mouseReleased(ScreenEvent.MouseButtonReleased.Pre event) {
         if (scrollbar.release())
             return true;
+        if (itemDragging) {
+            ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
+                    : ItemStack.EMPTY;
+            int n = dragSlots.size();
+            if (n > 1 && !carried.isEmpty())
+                ModNetwork.requestDrag(dragSlots, dragButton, carried);
+            else if (n == 1 && !carried.isEmpty())
+                ModNetwork.requestSlot(dragSlots.get(0), dragButton == 1 ? 2 : 3, carried);
+            itemDragging = false;
+            dragSlots.clear();
+            return true;
+        }
         if (event.getButton() != 0 || !dragging)
             return false;
         dragging = false;

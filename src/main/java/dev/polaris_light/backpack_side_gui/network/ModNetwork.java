@@ -56,7 +56,15 @@ public final class ModNetwork {
         registrar.playToClient(CraftingSyncPayload.TYPE, CraftingSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCrafting(payload)));
         registrar.playToServer(CraftingClickPayload.TYPE, CraftingClickPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> { if (context.player() instanceof ServerPlayer p) handleCraftingClick(p, payload); }));
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer p)
+                        handleCraftingClick(p, payload);
+                }));
+        registrar.playToServer(CraftingDragPayload.TYPE, CraftingDragPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer p)
+                        handleCraftingDrag(p, payload);
+                }));
         registrar.playToServer(SmithingClickPayload.TYPE, SmithingClickPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer p)
@@ -66,6 +74,11 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> {
                     if (context.player() instanceof ServerPlayer player)
                         handleSlot(player, payload);
+                }));
+        registrar.playToServer(BackpackDragPayload.TYPE, BackpackDragPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer player)
+                        handleDrag(player, payload);
                 }));
         registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
@@ -118,7 +131,24 @@ public final class ModNetwork {
         if (player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried()))
             carried = p.carried().copy();
         var slot = new BackpackVirtualSlot(access.get().stack(), p.slot(), player);
-        if (p.clickType() == 4 || p.clickType() == 5) {
+        if (p.clickType() == 6) {
+            ItemStack target = carried.isEmpty() ? slot.getItem() : carried;
+            if (target.isEmpty())
+                return;
+            for (int i = 0; i < access.get().handler().getSlots(); i++) {
+                ItemStack source = access.get().handler().getStackInSlot(i);
+                if (!ItemStack.isSameItemSameComponents(target, source))
+                    continue;
+                int room = target.getMaxStackSize() - carried.getCount();
+                if (room <= 0)
+                    break;
+                int move = Math.min(room, source.getCount());
+                access.get().handler().extractItem(i, move, false);
+                carried = carried.isEmpty() ? source.copyWithCount(move)
+                        : carried.copyWithCount(carried.getCount() + move);
+            }
+            player.containerMenu.setCarried(carried);
+        } else if (p.clickType() == 4 || p.clickType() == 5) {
             if (!carried.isEmpty())
                 return;
             ItemStack picked = slot.getItem().copy();
@@ -143,9 +173,15 @@ public final class ModNetwork {
         } else {
             if (carried.isEmpty() || !slot.mayPlace(carried))
                 return;
-            int amount = p.clickType() == 2 ? 1 : carried.getCount();
+            int amount = p.clickType() == 2 ? 1
+                    : (p.clickType() >= 10 ? Math.min(carried.getCount(), p.clickType() - 10) : carried.getCount());
             ItemStack rest = slot.safeInsert(carried.copyWithCount(amount));
-            player.containerMenu.setCarried(rest.isEmpty() ? ItemStack.EMPTY : rest);
+            // Preserve the portion that was not inserted; never replace the
+            // cursor with an unrelated/empty stack when the slot rejects it.
+            ItemStack remaining = carried.copy();
+            int inserted = amount - rest.getCount();
+            remaining.shrink(inserted);
+            player.containerMenu.setCarried(remaining.isEmpty() ? ItemStack.EMPTY : remaining);
         }
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()),
@@ -211,7 +247,19 @@ public final class ModNetwork {
             player.containerMenu.setCarried(
                     inv.extractItem(p.slot(), p.button() == 1 ? current.getCount() / 2 : current.getCount(), false));
         } else {
-            player.containerMenu.setCarried(inv.insertItem(p.slot(), carried, false));
+            // Vanilla right-click places exactly one item into a smithing input;
+            // left-click places as much as the slot accepts.
+            ItemStack toInsert = p.button() == 1 ? carried.copyWithCount(1) : carried;
+            ItemStack remainder = inv.insertItem(p.slot(), toInsert, false);
+            if (p.button() == 1 && !remainder.isEmpty()) {
+                // Nothing was inserted; preserve the original cursor stack.
+                player.containerMenu.setCarried(carried);
+            } else {
+                int inserted = toInsert.getCount() - remainder.getCount();
+                ItemStack left = carried.copy();
+                left.shrink(inserted);
+                player.containerMenu.setCarried(left.isEmpty() ? ItemStack.EMPTY : left);
+            }
         }
         access.get().stack().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.ITEM);
         player.containerMenu.broadcastChanges();
@@ -233,26 +281,129 @@ public final class ModNetwork {
                 new SmithingSyncPayload(inv.getStackInSlot(0), inv.getStackInSlot(1), inv.getStackInSlot(2), result));
     }
 
+    public static void requestDrag(java.util.List<Integer> slots, int button, ItemStack carried) {
+        PacketDistributor.sendToServer(new BackpackDragPayload(java.util.List.copyOf(slots), button, carried.copy()),
+                new CustomPacketPayload[0]);
+    }
+
+    public static void requestDoubleCollect(int slot, ItemStack carried) {
+        PacketDistributor.sendToServer(new BackpackSlotPayload(slot, 6, carried.copy()), new CustomPacketPayload[0]);
+    }
+
+    private static void handleDrag(ServerPlayer player, BackpackDragPayload p) {
+        var resolved = BackpackResolver.resolve(player);
+        if (resolved.isEmpty() || p.slots().size() < 2)
+            return;
+        ItemStack carried = player.containerMenu.getCarried();
+        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried()))
+            return;
+        if (carried.isEmpty())
+            return;
+        var unique = new java.util.LinkedHashSet<Integer>(p.slots());
+        unique.removeIf(i -> i < 0 || i >= resolved.get().handler().getSlots());
+        if (unique.size() < 2)
+            return;
+        int each = p.button() == 1 ? 1 : carried.getCount() / unique.size();
+        if (each <= 0)
+            return;
+        for (int index : unique) {
+            var slot = new BackpackVirtualSlot(resolved.get().stack(), index, player);
+            if (!slot.mayPlace(carried))
+                continue;
+            ItemStack rest = slot.safeInsert(carried.copyWithCount(Math.min(each, carried.getCount())));
+            carried.shrink(Math.min(each, carried.getCount()) - rest.getCount());
+            if (carried.isEmpty())
+                break;
+        }
+        player.containerMenu.setCarried(carried);
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(carried.copy()), new CustomPacketPayload[0]);
+        PacketDistributor.sendToPlayer(player, snapshot(resolved.get()), new CustomPacketPayload[0]);
+    }
+
     public static void requestCraftingClick(int slot, int button, boolean shift, ItemStack carried) {
         PacketDistributor.sendToServer(new CraftingClickPayload(slot, button, shift, carried.copy()));
     }
 
+    public static void requestCraftingDrag(java.util.List<Integer> slots, int button, ItemStack carried) {
+        PacketDistributor.sendToServer(new CraftingDragPayload(java.util.List.copyOf(slots), button, carried.copy()));
+    }
+
+    private static void handleCraftingDrag(ServerPlayer player, CraftingDragPayload p) {
+        var access = BackpackResolver.resolve(player);
+        if (access.isEmpty() || p.slots().size() < 2)
+            return;
+        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper
+                .fromStack(access.get().stack()).getUpgradeHandler()
+                .getWrappersThatImplement(CraftingUpgradeWrapper.class);
+        if (wrappers.isEmpty())
+            return;
+        var inv = wrappers.get(0).getInventory();
+        ItemStack carried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(carried, p.carried()) || carried.isEmpty())
+            return;
+        var unique = new java.util.LinkedHashSet<Integer>(p.slots());
+        unique.removeIf(i -> i < 0 || i >= 9);
+        int each = p.button() == 1 ? 1 : carried.getCount() / unique.size();
+        if (each <= 0)
+            return;
+        for (int i : unique) {
+            ItemStack rest = inv.insertItem(i, carried.copyWithCount(Math.min(each, carried.getCount())), false);
+            carried.shrink(Math.min(each, carried.getCount()) - rest.getCount());
+            if (carried.isEmpty())
+                break;
+        }
+        player.containerMenu.setCarried(carried);
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(carried.copy()));
+        sendCrafting(player, access.get());
+    }
+
     private static void handleCraftingClick(ServerPlayer player, CraftingClickPayload p) {
-        var access = BackpackResolver.resolve(player); if (access.isEmpty() || p.slot() < 0 || p.slot() > 9) return;
-        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper.fromStack(access.get().stack()).getUpgradeHandler().getWrappersThatImplement(CraftingUpgradeWrapper.class);
-        if (wrappers.isEmpty()) return;
-        var inv = wrappers.get(0).getInventory(); var serverCarried = player.containerMenu.getCarried();
-        if (!ItemStack.matches(serverCarried, p.carried())) { if (!player.gameMode.isCreative()) return; serverCarried = p.carried().copy(); player.containerMenu.setCarried(serverCarried); }
-        if (p.slot() == 9) {
+        var access = BackpackResolver.resolve(player);
+        if (access.isEmpty() || p.slot() < 0 || p.slot() > 9)
+            return;
+        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper
+                .fromStack(access.get().stack()).getUpgradeHandler()
+                .getWrappersThatImplement(CraftingUpgradeWrapper.class);
+        if (wrappers.isEmpty())
+            return;
+        var inv = wrappers.get(0).getInventory();
+        var serverCarried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(serverCarried, p.carried())) {
+            if (!player.gameMode.isCreative())
+                return;
+            serverCarried = p.carried().copy();
+            player.containerMenu.setCarried(serverCarried);
+        }
+        if (p.button() == 6 && p.slot() < 9) {
+            ItemStack target = serverCarried.isEmpty() ? inv.getStackInSlot(p.slot()) : serverCarried;
+            if (!target.isEmpty())
+                for (int i = 0; i < 9; i++) {
+                    ItemStack source = inv.getStackInSlot(i);
+                    if (!ItemStack.isSameItemSameComponents(target, source))
+                        continue;
+                    int room = target.getMaxStackSize() - serverCarried.getCount();
+                    if (room <= 0)
+                        break;
+                    int move = Math.min(room, source.getCount());
+                    inv.extractItem(i, move, false);
+                    serverCarried = serverCarried.isEmpty() ? source.copyWithCount(move)
+                            : serverCarried.copyWithCount(serverCarried.getCount() + move);
+                }
+            player.containerMenu.setCarried(serverCarried);
+        } else if (p.slot() == 9) {
             ItemStack[] inputs = new ItemStack[9];
-            for (int i = 0; i < 9; i++) inputs[i] = inv.getStackInSlot(i).copy();
+            for (int i = 0; i < 9; i++)
+                inputs[i] = inv.getStackInSlot(i).copy();
             var input = CraftingInput.of(3, 3, java.util.Arrays.asList(inputs));
             var result = player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
                     .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
             if (!result.isEmpty()) {
                 if (p.shift()) {
                     while (!result.isEmpty() && canInsertCraftResult(player, result)) {
-                        if (!player.getInventory().add(result.copy())) break;
+                        if (!player.getInventory().add(result.copy()))
+                            break;
                         consumeCraftingInputs(inv);
                         result = getCraftingResult(player, inv);
                     }
@@ -266,18 +417,27 @@ public final class ModNetwork {
                     consumeCraftingInputs(inv);
                 }
             }
-        } else if (serverCarried.isEmpty()) player.containerMenu.setCarried(inv.extractItem(p.slot(), p.button() == 1 ? Math.max(1, inv.getStackInSlot(p.slot()).getCount() / 2) : inv.getStackInSlot(p.slot()).getCount(), false));
-        else player.containerMenu.setCarried(inv.insertItem(p.slot(), serverCarried, false));
-        player.containerMenu.broadcastChanges(); PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy())); sendCrafting(player, access.get());
+        } else if (serverCarried.isEmpty())
+            player.containerMenu.setCarried(
+                    inv.extractItem(p.slot(), p.button() == 1 ? Math.max(1, inv.getStackInSlot(p.slot()).getCount() / 2)
+                            : inv.getStackInSlot(p.slot()).getCount(), false));
+        else
+            player.containerMenu.setCarried(inv.insertItem(p.slot(), serverCarried, false));
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
+        sendCrafting(player, access.get());
     }
 
     private static void consumeCraftingInputs(net.neoforged.neoforge.items.IItemHandler inv) {
-        for (int i = 0; i < 9; i++) if (!inv.getStackInSlot(i).isEmpty()) inv.extractItem(i, 1, false);
+        for (int i = 0; i < 9; i++)
+            if (!inv.getStackInSlot(i).isEmpty())
+                inv.extractItem(i, 1, false);
     }
 
     private static ItemStack getCraftingResult(ServerPlayer player, net.neoforged.neoforge.items.IItemHandler inv) {
         ItemStack[] items = new ItemStack[9];
-        for (int i = 0; i < 9; i++) items[i] = inv.getStackInSlot(i).copy();
+        for (int i = 0; i < 9; i++)
+            items[i] = inv.getStackInSlot(i).copy();
         var input = CraftingInput.of(3, 3, java.util.Arrays.asList(items));
         return player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
                 .map(h -> h.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
@@ -286,9 +446,12 @@ public final class ModNetwork {
     private static boolean canInsertCraftResult(ServerPlayer player, ItemStack result) {
         int capacity = 0;
         for (ItemStack slot : player.getInventory().items) {
-            if (slot.isEmpty()) capacity += result.getMaxStackSize();
-            else if (ItemStack.isSameItemSameComponents(slot, result)) capacity += Math.max(0, slot.getMaxStackSize() - slot.getCount());
-            if (capacity >= result.getCount()) return true;
+            if (slot.isEmpty())
+                capacity += result.getMaxStackSize();
+            else if (ItemStack.isSameItemSameComponents(slot, result))
+                capacity += Math.max(0, slot.getMaxStackSize() - slot.getCount());
+            if (capacity >= result.getCount())
+                return true;
         }
         return false;
     }
@@ -296,10 +459,12 @@ public final class ModNetwork {
     private static void sendCrafting(ServerPlayer player, BackpackAccess access) {
         var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper.fromStack(access.stack())
                 .getUpgradeHandler().getWrappersThatImplement(CraftingUpgradeWrapper.class);
-        if (wrappers.isEmpty()) return;
+        if (wrappers.isEmpty())
+            return;
         var inv = wrappers.get(0).getInventory();
         ItemStack[] items = new ItemStack[10];
-        for (int i = 0; i < 9; i++) items[i] = inv.getStackInSlot(i).copy();
+        for (int i = 0; i < 9; i++)
+            items[i] = inv.getStackInSlot(i).copy();
         var input = CraftingInput.of(3, 3, java.util.Arrays.asList(items).subList(0, 9));
         items[9] = player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
                 .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);

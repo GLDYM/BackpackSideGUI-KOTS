@@ -45,7 +45,10 @@ public final class OverlayWidget extends IOverlayWidget {
     public void receiveSmithing(SmithingSyncPayload p) {
         smithing.sync(p.template(), p.base(), p.addition(), p.result());
     }
-    public void receiveCrafting(CraftingSyncPayload p) { crafting.sync(java.util.Arrays.copyOf(p.items(), 9), p.items()[9]); }
+
+    public void receiveCrafting(CraftingSyncPayload p) {
+        crafting.sync(java.util.Arrays.copyOf(p.items(), 9), p.items()[9]);
+    }
 
     public void setUtilityFlags(boolean[] flags) {
         java.util.Arrays.fill(utilityFlags, false);
@@ -156,7 +159,8 @@ public final class OverlayWidget extends IOverlayWidget {
             return true;
         if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(e))
             return true;
-        if (activeUtility == UtilityType.CRAFTING && crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height))
+        if (activeUtility == UtilityType.CRAFTING && crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
+                e.getScreen().width, e.getScreen().height))
             return crafting.mousePressed(e) || true;
         return false;
     }
@@ -165,7 +169,8 @@ public final class OverlayWidget extends IOverlayWidget {
         return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height)
                 || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
                         e.getScreen().height)
-                || crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height);
+                || crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
+                        e.getScreen().height);
     }
 
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
@@ -185,6 +190,8 @@ public final class OverlayWidget extends IOverlayWidget {
             return true;
         }
         // Scroller
+        if (activeUtility == UtilityType.CRAFTING && crafting.mouseDragged(e))
+            return true;
         return area.mouseDragged(e);
     }
 
@@ -193,6 +200,8 @@ public final class OverlayWidget extends IOverlayWidget {
             dragging = false;
             return true;
         }
+        if (activeUtility == UtilityType.CRAFTING && crafting.mouseReleased(e))
+            return true;
         return area.mouseReleased(e);
     }
 
