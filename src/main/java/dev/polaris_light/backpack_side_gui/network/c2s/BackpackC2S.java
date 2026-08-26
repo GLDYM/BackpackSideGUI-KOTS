@@ -24,17 +24,17 @@ public final class BackpackC2S {
     private BackpackC2S() {
     }
 
-    public static void handleSlot(ServerPlayer player, BackpackSlotPayload p) {
+    public static void handleSlot(ServerPlayer player, BackpackSlotPayload payload) {
         var access = BackpackResolver.resolve(player);
-        if (access.isEmpty() || p.slot() < 0 || p.slot() >= access.get().handler().getSlots())
+        if (access.isEmpty() || payload.slot() < 0 || payload.slot() >= access.get().handler().getSlots())
             return;
         ItemStack carried = player.containerMenu.getCarried();
-        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried()))
+        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
             return;
-        if (player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried()))
-            carried = p.carried().copy();
-        var slot = new BackpackVirtualSlot(access.get().stack(), p.slot(), player);
-        if (p.clickType() == 6) {
+        if (player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
+            carried = payload.carried().copy();
+        var slot = new BackpackVirtualSlot(access.get().stack(), payload.slot(), player);
+        if (payload.clickType() == 6) {
             ItemStack target = carried.isEmpty() ? slot.getItem() : carried;
             if (target.isEmpty())
                 return;
@@ -51,29 +51,29 @@ public final class BackpackC2S {
                         : carried.copyWithCount(carried.getCount() + move);
             }
             player.containerMenu.setCarried(carried);
-        } else if (p.clickType() == 4 || p.clickType() == 5) {
+        } else if (payload.clickType() == 4 || payload.clickType() == 5) {
             if (!carried.isEmpty())
                 return;
             ItemStack picked = slot.getItem().copy();
             int limit = Math.max(1, picked.getMaxStackSize());
-            int amount = p.clickType() == 5 ? Math.min(limit, (picked.getCount() + 1) / 2)
+            int amount = payload.clickType() == 5 ? Math.min(limit, (picked.getCount() + 1) / 2)
                     : Math.min(limit, picked.getCount());
             ItemStack moved = slot.remove(amount);
             if (!player.getInventory().add(moved))
                 slot.set(moved);
-        } else if (p.clickType() <= 1) {
+        } else if (payload.clickType() <= 1) {
             if (!carried.isEmpty())
                 return;
             ItemStack in = slot.getItem();
             int max = Math.min(Math.max(1, in.getMaxStackSize()), in.getCount());
-            int amount = p.clickType() == 1 ? Math.min(max, (in.getCount() + 1) / 2) : max;
+            int amount = payload.clickType() == 1 ? Math.min(max, (in.getCount() + 1) / 2) : max;
             player.containerMenu
                     .setCarried(slot.isInfinite() ? slot.remove(amount) : slot.safeTake(amount, amount, player));
         } else {
             if (carried.isEmpty() || !slot.mayPlace(carried))
                 return;
-            int amount = p.clickType() == 2 ? 1
-                    : (p.clickType() >= 10 ? Math.min(carried.getCount(), p.clickType() - 10) : carried.getCount());
+            int amount = payload.clickType() == 2 ? 1
+                    : (payload.clickType() >= 10 ? Math.min(carried.getCount(), payload.clickType() - 10) : carried.getCount());
             ItemStack rest = slot.safeInsert(carried.copyWithCount(amount));
             ItemStack remaining = carried.copy();
             remaining.shrink(amount - rest.getCount());
@@ -85,16 +85,16 @@ public final class BackpackC2S {
         PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
 
-    public static void handleDrag(ServerPlayer player, BackpackDragPayload p) {
+    public static void handleDrag(ServerPlayer player, BackpackDragPayload payload) {
         var resolved = BackpackResolver.resolve(player);
-        if (resolved.isEmpty() || p.slots().size() < 2)
+        if (resolved.isEmpty() || payload.slots().size() < 2)
             return;
         ItemStack carried = player.containerMenu.getCarried();
-        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, p.carried()))
+        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
             return;
         if (carried.isEmpty())
             return;
-        var unique = new LinkedHashSet<Integer>(p.slots());
+        var unique = new LinkedHashSet<Integer>(payload.slots());
         unique.removeIf(i -> i < 0 || i >= resolved.get().handler().getSlots());
         unique.removeIf(i -> {
             var candidate = new BackpackVirtualSlot(resolved.get().stack(), i, player);
@@ -105,7 +105,7 @@ public final class BackpackC2S {
         });
         if (unique.isEmpty())
             return;
-        int each = p.button() == 1 ? 1 : carried.getCount() / unique.size();
+        int each = payload.button() == 1 ? 1 : carried.getCount() / unique.size();
         if (each <= 0)
             return;
         for (int index : unique) {
@@ -124,20 +124,20 @@ public final class BackpackC2S {
         PacketDistributor.sendToPlayer(player, snapshot(resolved.get()), new CustomPacketPayload[0]);
     }
 
-    public static void handleSort(ServerPlayer player, SortPayload p) {
+    public static void handleSort(ServerPlayer player, SortPayload payload) {
         var access = BackpackResolver.resolve(player);
         if (access.isEmpty() || !(access.get().handler() instanceof IItemHandlerModifiable inv))
             return;
         var stacks = new ArrayList<ItemStack>();
         for (int i = 0; i < inv.getSlots(); i++) {
-            var s = inv.getStackInSlot(i).copy();
-            if (!s.isEmpty())
-                stacks.add(s);
+            var stack = inv.getStackInSlot(i).copy();
+            if (!stack.isEmpty())
+                stacks.add(stack);
             inv.setStackInSlot(i, ItemStack.EMPTY);
         }
         var merged = new ArrayList<ItemStack>();
-        for (var s : stacks) {
-            var left = s.copy();
+        for (var stack : stacks) {
+            var left = stack.copy();
             for (var e : merged)
                 if (ItemStack.isSameItemSameComponents(e, left)) {
                     int n = Math.min(left.getCount(),
@@ -155,12 +155,12 @@ public final class BackpackC2S {
             }
         }
         Comparator<ItemStack> name = Comparator.comparing(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT));
-        if (p.sortMode() == 0)
+        if (payload.sortMode() == 0)
             merged.sort(Comparator.comparingInt(ItemStack::getCount).reversed().thenComparing(name));
-        else if (p.sortMode() == 1)
+        else if (payload.sortMode() == 1)
             merged.sort(Comparator.comparing((ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace())
                     .thenComparing(name));
-        else if (p.sortMode() == 2)
+        else if (payload.sortMode() == 2)
             merged.sort(name);
         else
             merged.sort(Comparator.comparing((ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString())
@@ -170,10 +170,10 @@ public final class BackpackC2S {
         PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
 
-    public static BackpackSyncPayload snapshot(BackpackAccess a) {
+    public static BackpackSyncPayload snapshot(BackpackAccess access) {
         var s = new ArrayList<ItemStack>();
-        for (int i = 0; i < a.handler().getSlots(); i++)
-            s.add(a.handler().getStackInSlot(i).copy());
-        return new BackpackSyncPayload(a.stack().getHoverName().getString(), s);
+        for (int i = 0; i < access.handler().getSlots(); i++)
+            s.add(access.handler().getStackInSlot(i).copy());
+        return new BackpackSyncPayload(access.stack().getHoverName().getString(), s);
     }
 }

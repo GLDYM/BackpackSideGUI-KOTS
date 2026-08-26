@@ -1,23 +1,31 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Arrays;
-import dev.polaris_light.backpack_side_gui.network.payload.*;
+
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
+import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.crafting.CraftingUpgradeWrapper;
 
 public final class CraftingC2S {
     private CraftingC2S() {
     }
 
-    private static net.neoforged.neoforge.items.IItemHandler inv(ServerPlayer player) {
+    private static IItemHandler inv(ServerPlayer player) {
         var access = BackpackResolver.resolve(player);
         if (access.isEmpty())
             return null;
-        var wrappers = net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper
+        var wrappers = BackpackWrapper
                 .fromStack(access.get().stack())
                 .getUpgradeHandler().getWrappersThatImplement(CraftingUpgradeWrapper.class);
         return wrappers.isEmpty() ? null : wrappers.get(0).getInventory();
@@ -97,7 +105,7 @@ public final class CraftingC2S {
         send(player, access.get());
     }
 
-    private static ItemStack result(ServerPlayer player, net.neoforged.neoforge.items.IItemHandler itemHandler) {
+    private static ItemStack result(ServerPlayer player, IItemHandler itemHandler) {
         ItemStack[] x = new ItemStack[9];
         for (int n = 0; n < 9; n++)
             x[n] = itemHandler.getStackInSlot(n).copy();
@@ -106,7 +114,7 @@ public final class CraftingC2S {
                 .map(h -> h.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
     }
 
-    private static void consume(net.neoforged.neoforge.items.IItemHandler itemHandler) {
+    private static void consume(IItemHandler itemHandler) {
         for (int n = 0; n < 9; n++)
             if (!itemHandler.getStackInSlot(n).isEmpty())
                 itemHandler.extractItem(n, 1, false);
@@ -125,7 +133,7 @@ public final class CraftingC2S {
         return false;
     }
 
-    public static void send(ServerPlayer player, dev.polaris_light.backpack_side_gui.server.record.BackpackAccess access) {
+    public static void send(ServerPlayer player, BackpackAccess access) {
         var inventory = inv(player);
         if (inventory == null)
             return;

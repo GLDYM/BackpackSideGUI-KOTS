@@ -20,6 +20,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -56,8 +57,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
     }
 
-    private static void server(net.neoforged.neoforge.network.handling.IPayloadContext c, Runnable a) {
-        if (c.player() instanceof ServerPlayer)
-            a.run();
+    private static void server(IPayloadContext context, Runnable action) {
+        if (context.player() instanceof ServerPlayer)
+            action.run();
     }
 }

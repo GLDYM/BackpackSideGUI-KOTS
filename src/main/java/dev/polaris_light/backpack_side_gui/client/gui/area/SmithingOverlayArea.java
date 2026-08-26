@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class SmithingOverlayArea extends IOverlayArea {
     public static final class Layout {
@@ -58,7 +59,7 @@ public final class SmithingOverlayArea extends IOverlayArea {
         slots[3].renderAt(g, mc, x + layout.resultSlotX, y + layout.slotsY);
     }
 
-    public boolean mousePressed(net.neoforged.neoforge.client.event.ScreenEvent.MouseButtonPressed.Pre e) {
+    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
         if (!visible || e.getMouseY() < y + layout.slotsY || e.getMouseY() >= y + layout.slotsY + layout.slotSize)
             return false;
         int[] slotX = { x + layout.firstSlotX, x + layout.secondSlotX, x + layout.thirdSlotX, x + layout.resultSlotX };

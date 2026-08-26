@@ -5,6 +5,8 @@ import java.util.List;
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayWidget;
 import dev.polaris_light.backpack_side_gui.client.gui.area.BackpackOverlayArea;
+import dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea;
+import dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityType;
@@ -39,8 +41,8 @@ public final class OverlayWidget extends IOverlayWidget {
     private final boolean[] utilityFlags = new boolean[5];
 
     private UtilityType activeUtility;
-    private final dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea crafting = new dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea();
-    private final dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea smithing = new dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea();
+    private final CraftingOverlayArea crafting = new CraftingOverlayArea();
+    private final SmithingOverlayArea smithing = new SmithingOverlayArea();
 
     public void receiveSmithing(SmithingSyncPayload p) {
         smithing.sync(p.template(), p.base(), p.addition(), p.result());
