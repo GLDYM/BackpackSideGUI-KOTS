@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.server;
+package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
