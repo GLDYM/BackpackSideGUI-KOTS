@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 
 /** Crafting utility layout; slot data remains server-owned. */
 public final class CraftingOverlayArea extends IOverlayArea {
@@ -93,7 +93,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
                 if (dbl) {
                     itemDragging = false;
                     dragSlots.clear();
-                    ModNetwork.requestCraftingClick(i, 6, false, carried);
+                    ClientPacketSender.craftingSlot(i, 6, false, carried);
                     return true;
                 }
                 if (i < 9 && !carried.isEmpty()) {
@@ -102,7 +102,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
                     dragSlots.clear();
                     dragSlots.add(i);
                 } else
-                    ModNetwork.requestCraftingClick(i, e.getButton(),
+                    ClientPacketSender.craftingSlot(i, e.getButton(),
                             net.minecraft.client.gui.screens.Screen.hasShiftDown(), carried);
                 return true;
             }
@@ -129,9 +129,9 @@ public final class CraftingOverlayArea extends IOverlayArea {
         ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                 : ItemStack.EMPTY;
         if (dragSlots.size() > 1 && !carried.isEmpty())
-            ModNetwork.requestCraftingDrag(dragSlots, dragButton, carried);
+            ClientPacketSender.craftingDrag(dragSlots, dragButton, carried);
         else if (dragSlots.size() == 1 && !carried.isEmpty())
-            ModNetwork.requestCraftingClick(dragSlots.get(0), dragButton, false, carried);
+            ClientPacketSender.craftingSlot(dragSlots.get(0), dragButton, false, carried);
         itemDragging = false;
         dragSlots.clear();
         return true;
@@ -142,3 +142,4 @@ public final class CraftingOverlayArea extends IOverlayArea {
                 && my >= y - 4 && my < y + layout.panelHeight + 4;
     }
 }
+

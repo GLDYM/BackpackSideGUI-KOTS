@@ -1,6 +1,6 @@
 package dev.polaris_light.backpack_side_gui.client.gui.element;
 
-import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import java.util.function.IntSupplier;
@@ -21,7 +21,7 @@ public final class SortOverlayButton extends BackpackOverlayButton {
     public boolean press(double mouseX, double mouseY) {
         if (!super.press(mouseX, mouseY))
             return false;
-        ModNetwork.requestSort(mode.getAsInt());
+        ClientPacketSender.sort(mode.getAsInt());
         return true;
     }
 }

@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network;
+package dev.polaris_light.backpack_side_gui.network.payload;
 
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiMod;
 import net.minecraft.network.RegistryFriendlyByteBuf;

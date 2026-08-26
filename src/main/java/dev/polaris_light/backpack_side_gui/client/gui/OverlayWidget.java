@@ -7,9 +7,9 @@ import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityType;
-import dev.polaris_light.backpack_side_gui.network.ModNetwork;
-import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
-import dev.polaris_light.backpack_side_gui.network.CraftingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -70,7 +70,7 @@ public final class OverlayWidget extends IOverlayWidget {
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
-            ModNetwork.requestUtility(activeUtility.protocolId());
+            ClientPacketSender.utility(activeUtility.protocolId());
     }
 
     @Override

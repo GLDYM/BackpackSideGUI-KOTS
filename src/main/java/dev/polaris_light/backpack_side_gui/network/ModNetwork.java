@@ -1,26 +1,40 @@
 package dev.polaris_light.backpack_side_gui.network;
 
-import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
 import java.util.ArrayList;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.minecraft.core.registries.BuiltInRegistries;
 import java.util.Comparator;
 import java.util.Locale;
-import net.minecraft.world.item.ItemStack;
+
+import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackDragPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
+import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
+import dev.polaris_light.backpack_side_gui.server.FlagResolver;
 import dev.polaris_light.backpack_side_gui.server.HandlerSlotClicker;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
-import dev.polaris_light.backpack_side_gui.server.FlagResolver;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SmithingRecipeInput;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.p3pp3rf1y.sophisticatedbackpacks.upgrades.smithing.SmithingUpgradeWrapper;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.crafting.CraftingUpgradeWrapper;
-import net.minecraft.world.item.crafting.SmithingRecipeInput;
-import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.CraftingInput;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -113,15 +127,6 @@ public final class ModNetwork {
                 }));
     }
 
-    public static void requestOpen() {
-        PacketDistributor.sendToServer(new OpenBackpackPayload(), new CustomPacketPayload[0]);
-    }
-
-    public static void requestSlot(int slot, int clickType, ItemStack carried) {
-        PacketDistributor.sendToServer(new BackpackSlotPayload(slot, clickType, carried.copy()),
-                new CustomPacketPayload[0]);
-    }
-
     private static void handleSlot(ServerPlayer player, BackpackSlotPayload p) {
         var access = BackpackResolver.resolve(player);
         if (access.isEmpty() || p.slot() < 0 || p.slot() >= access.get().handler().getSlots())
@@ -190,22 +195,10 @@ public final class ModNetwork {
         PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
     }
 
-    public static void requestSort(int mode) {
-        PacketDistributor.sendToServer(new SortPayload(mode), new CustomPacketPayload[0]);
-    }
-
     private static void sendUtilityFlags(ServerPlayer player, BackpackAccess access) {
         var flags = FlagResolver.resolve(access);
         PacketDistributor.sendToPlayer(player, new UtilityFlagsPayload(flags.crafting(), flags.furnace(), flags.anvil(),
                 flags.smithing(), flags.stonecutter()), new CustomPacketPayload[0]);
-    }
-
-    public static void requestUtility(int utilityType) {
-        PacketDistributor.sendToServer(new UtilityRequestPayload(utilityType), new CustomPacketPayload[0]);
-    }
-
-    public static void requestSmithingClick(int slot, int button, ItemStack carried) {
-        PacketDistributor.sendToServer(new SmithingClickPayload(slot, button, carried.copy()));
     }
 
     private static void handleSmithingClick(ServerPlayer player, SmithingClickPayload p) {
@@ -264,15 +257,6 @@ public final class ModNetwork {
                 new SmithingSyncPayload(inv.getStackInSlot(0), inv.getStackInSlot(1), inv.getStackInSlot(2), result));
     }
 
-    public static void requestDrag(java.util.List<Integer> slots, int button, ItemStack carried) {
-        PacketDistributor.sendToServer(new BackpackDragPayload(java.util.List.copyOf(slots), button, carried.copy()),
-                new CustomPacketPayload[0]);
-    }
-
-    public static void requestDoubleCollect(int slot, ItemStack carried) {
-        PacketDistributor.sendToServer(new BackpackSlotPayload(slot, 6, carried.copy()), new CustomPacketPayload[0]);
-    }
-
     private static void handleDrag(ServerPlayer player, BackpackDragPayload p) {
         var resolved = BackpackResolver.resolve(player);
         if (resolved.isEmpty() || p.slots().size() < 2)
@@ -314,14 +298,6 @@ public final class ModNetwork {
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(carried.copy()), new CustomPacketPayload[0]);
         PacketDistributor.sendToPlayer(player, snapshot(resolved.get()), new CustomPacketPayload[0]);
-    }
-
-    public static void requestCraftingClick(int slot, int button, boolean shift, ItemStack carried) {
-        PacketDistributor.sendToServer(new CraftingClickPayload(slot, button, shift, carried.copy()));
-    }
-
-    public static void requestCraftingDrag(java.util.List<Integer> slots, int button, ItemStack carried) {
-        PacketDistributor.sendToServer(new CraftingDragPayload(java.util.List.copyOf(slots), button, carried.copy()));
     }
 
     private static void handleCraftingDrag(ServerPlayer player, CraftingDragPayload p) {

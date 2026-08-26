@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import dev.polaris_light.backpack_side_gui.client.gui.element.OverlayTextInput;
 import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButton;
@@ -186,7 +187,7 @@ public class BackpackOverlayArea extends IOverlayArea {
             if (doubleClick) {
                 itemDragging = false;
                 dragSlots.clear();
-                ModNetwork.requestDoubleCollect(logicalSlot, carried);
+                ClientPacketSender.backpackSlot(logicalSlot, 6, carried);
                 return true;
             }
             if (!carried.isEmpty()) {
@@ -195,7 +196,7 @@ public class BackpackOverlayArea extends IOverlayArea {
                 dragSlots.clear();
                 dragSlots.add(logicalSlot);
             } else {
-                ModNetwork.requestSlot(logicalSlot, clickType, carried);
+                ClientPacketSender.backpackSlot(logicalSlot, clickType, carried);
             }
             return true;
         }
@@ -276,9 +277,9 @@ public class BackpackOverlayArea extends IOverlayArea {
                     : ItemStack.EMPTY;
             int n = dragSlots.size();
             if (n > 1 && !carried.isEmpty())
-                ModNetwork.requestDrag(dragSlots, dragButton, carried);
+                ClientPacketSender.backpackDrag(dragSlots, dragButton, carried);
             else if (n == 1 && !carried.isEmpty())
-                ModNetwork.requestSlot(dragSlots.get(0), dragButton == 1 ? 2 : 3, carried);
+                ClientPacketSender.backpackSlot(dragSlots.get(0), dragButton == 1 ? 2 : 3, carried);
             itemDragging = false;
             dragSlots.clear();
             return true;

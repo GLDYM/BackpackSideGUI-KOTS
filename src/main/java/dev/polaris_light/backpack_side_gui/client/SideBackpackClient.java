@@ -4,8 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import dev.polaris_light.backpack_side_gui.client.gui.BackpackOverlayScreenPolicy;
 import dev.polaris_light.backpack_side_gui.client.gui.OverlayWidget;
-import dev.polaris_light.backpack_side_gui.network.ModNetwork;
-import dev.polaris_light.backpack_side_gui.network.UtilityFlagsPayload;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
+import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -13,8 +15,6 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import java.util.List;
-import dev.polaris_light.backpack_side_gui.network.SmithingSyncPayload;
-import dev.polaris_light.backpack_side_gui.network.CraftingSyncPayload;
 
 public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
@@ -45,7 +45,7 @@ public final class SideBackpackClient {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player != null && ++refreshTicks >= 4) {
             refreshTicks = 0;
-            ModNetwork.requestOpen();
+            ClientPacketSender.open();
         }
     }
 

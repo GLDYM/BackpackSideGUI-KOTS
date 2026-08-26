@@ -2,6 +2,7 @@ package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -66,7 +67,7 @@ public final class SmithingOverlayArea extends IOverlayArea {
             if (e.getMouseX() >= slotX[i] && e.getMouseX() < slotX[i] + layout.slotSize) {
                 ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ModNetwork.requestSmithingClick(i, e.getButton(), carried);
+                ClientPacketSender.smithingSlot(i, e.getButton(), carried);
                 return true;
             }
         }
