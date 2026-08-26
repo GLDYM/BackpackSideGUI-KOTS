@@ -20,6 +20,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public final class ModNetwork {
@@ -27,7 +28,7 @@ public final class ModNetwork {
     }
 
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        PayloadRegistrar registrar = event.registrar("1");
         registrar.playToServer(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> UtilityC2S.open((ServerPlayer) context.player()))));
         registrar.playToServer(BackpackSlotPayload.TYPE, BackpackSlotPayload.STREAM_CODEC,

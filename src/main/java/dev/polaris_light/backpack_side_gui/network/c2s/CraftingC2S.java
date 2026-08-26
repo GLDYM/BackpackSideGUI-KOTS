@@ -1,6 +1,8 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
@@ -22,20 +24,20 @@ public final class CraftingC2S {
     }
 
     private static IItemHandler inv(ServerPlayer player) {
-        var access = BackpackResolver.resolve(player);
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty())
             return null;
-        var wrappers = BackpackWrapper
+        List<CraftingUpgradeWrapper> wrappers = BackpackWrapper
                 .fromStack(access.get().stack())
                 .getUpgradeHandler().getWrappersThatImplement(CraftingUpgradeWrapper.class);
         return wrappers.isEmpty() ? null : wrappers.get(0).getInventory();
     }
 
     public static void handleClick(ServerPlayer player, CraftingClickPayload payload) {
-        var access = BackpackResolver.resolve(player);
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty() || payload.slot() < 0 || payload.slot() > 9)
             return;
-        var inventory = inv(player);
+        IItemHandler inventory = inv(player);
         if (inventory == null)
             return;
         ItemStack carried = player.containerMenu.getCarried();
@@ -89,10 +91,10 @@ public final class CraftingC2S {
     }
 
     public static void handleDrag(ServerPlayer player, CraftingDragPayload payload) {
-        var access = BackpackResolver.resolve(player);
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty() || payload.slots().size() < 2)
             return;
-        var inventory = inv(player);
+        IItemHandler inventory = inv(player);
         if (inventory == null)
             return;
         ItemStack carried = player.containerMenu.getCarried();
@@ -109,7 +111,7 @@ public final class CraftingC2S {
         ItemStack[] x = new ItemStack[9];
         for (int n = 0; n < 9; n++)
             x[n] = itemHandler.getStackInSlot(n).copy();
-        var input = CraftingInput.of(3, 3, Arrays.asList(x));
+        CraftingInput input = CraftingInput.of(3, 3, Arrays.asList(x));
         return player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
                 .map(h -> h.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
     }
@@ -134,7 +136,7 @@ public final class CraftingC2S {
     }
 
     public static void send(ServerPlayer player, BackpackAccess access) {
-        var inventory = inv(player);
+        IItemHandler inventory = inv(player);
         if (inventory == null)
             return;
         ItemStack[] x = new ItemStack[10];

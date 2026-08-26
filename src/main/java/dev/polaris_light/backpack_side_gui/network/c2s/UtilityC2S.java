@@ -1,6 +1,8 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.ArrayList;
+import java.util.Optional;
+import dev.polaris_light.backpack_side_gui.server.record.UpgradeFlags;
 import dev.polaris_light.backpack_side_gui.network.payload.*;
 import dev.polaris_light.backpack_side_gui.server.*;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
@@ -14,13 +16,13 @@ public final class UtilityC2S {
     }
 
     public static void open(ServerPlayer player) {
-        var access = BackpackResolver.resolve(player);
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty()) {
             PacketDistributor.sendToPlayer(player, new BackpackSyncPayload("", java.util.List.of()),
                     new CustomPacketPayload[0]);
         } else {
             sendFlags(player, access.get());
-            var items = new ArrayList<ItemStack>();
+            ArrayList<ItemStack> items = new ArrayList<>();
             for (int slot = 0; slot < access.get().handler().getSlots(); slot++)
                 items.add(access.get().handler().getStackInSlot(slot).copy());
             PacketDistributor.sendToPlayer(player,
@@ -33,7 +35,7 @@ public final class UtilityC2S {
         if (type < 0 || type >= 5)
             return;
         BackpackResolver.resolve(player).ifPresent(access -> {
-            var flags = FlagResolver.resolve(access);
+            UpgradeFlags flags = FlagResolver.resolve(access);
             boolean exist = switch (type) {
                 case 0 -> flags.crafting();
                 case 1 -> flags.furnace();
@@ -53,7 +55,7 @@ public final class UtilityC2S {
     }
 
     public static void sendFlags(ServerPlayer player, BackpackAccess access) {
-        var flags = FlagResolver.resolve(access);
+        UpgradeFlags flags = FlagResolver.resolve(access);
         PacketDistributor.sendToPlayer(player,
                 new UtilityFlagsPayload(flags.crafting(), flags.furnace(), flags.anvil(), flags.smithing(), flags.stonecutter()),
                 new CustomPacketPayload[0]);

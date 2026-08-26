@@ -38,7 +38,7 @@ public final class HandlerSlotClicker {
         ItemStack cursor = carried == null ? ItemStack.EMPTY : carried.copy();
         if (cursor.isEmpty() || selectedSlots == null)
             return cursor;
-        var slots = new LinkedHashSet<Integer>();
+        LinkedHashSet<Integer> slots = new LinkedHashSet<>();
         for (Integer slot : selectedSlots)
             if (slot != null && slot >= 0 && slot < inventory.getSlots())
                 slots.add(slot);

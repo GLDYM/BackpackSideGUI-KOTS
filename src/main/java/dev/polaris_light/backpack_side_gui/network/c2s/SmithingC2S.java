@@ -1,5 +1,8 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
+import java.util.List;
+import java.util.Optional;
+
 import dev.polaris_light.backpack_side_gui.network.payload.*;
 import dev.polaris_light.backpack_side_gui.server.*;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
@@ -16,16 +19,16 @@ public final class SmithingC2S {
     }
 
     private static IItemHandler findInventory(ServerPlayer player) {
-        var access = BackpackResolver.resolve(player);
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty())
             return null;
-        var wrappers = BackpackWrapper.fromStack(access.get().stack()).getUpgradeHandler()
+        List<SmithingUpgradeWrapper> wrappers = BackpackWrapper.fromStack(access.get().stack()).getUpgradeHandler()
                 .getWrappersThatImplement(SmithingUpgradeWrapper.class);
         return wrappers.isEmpty() ? null : wrappers.get(0).getInventory();
     }
 
     public static void handleClick(ServerPlayer player, SmithingClickPayload payload) {
-        var access = BackpackResolver.resolve(player);
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty() || payload.slot() < 0)
             return;
         IItemHandler inventory = findInventory(player);
@@ -54,7 +57,7 @@ public final class SmithingC2S {
     }
 
     private static ItemStack getResult(ServerPlayer player, IItemHandler inventory) {
-        var input = new SmithingRecipeInput(inventory.getStackInSlot(0).copy(), inventory.getStackInSlot(1).copy(),
+        SmithingRecipeInput input = new SmithingRecipeInput(inventory.getStackInSlot(0).copy(), inventory.getStackInSlot(1).copy(),
                 inventory.getStackInSlot(2).copy());
         return player.level().getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, player.level())
                 .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
