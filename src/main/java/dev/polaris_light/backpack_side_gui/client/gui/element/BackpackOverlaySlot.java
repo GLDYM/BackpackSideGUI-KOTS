@@ -48,6 +48,19 @@ public final class BackpackOverlaySlot extends Slot {
         g.pose().popPose();
     }
 
+    public void renderPreview(GuiGraphics g, Minecraft mc, int sx, int sy, ItemStack preview) {
+        if (preview == null || preview.isEmpty())
+            return;
+        g.renderItem(preview, sx + 1, sy + 1);
+        if (preview.getCount() > 1) {
+            String c = CountAbbreviator.abbreviate(preview.getCount());
+            g.pose().pushPose();
+            g.pose().translate(0.0F, 0.0F, 300.0F);
+            g.drawString(mc.font, c, sx + 20 - mc.font.width(c) - 2, sy + 10, 16777215, true);
+            g.pose().popPose();
+        }
+    }
+
     public void renderHighlightAt(GuiGraphics g, int sx, int sy, double mouseX, double mouseY) {
         if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
             return;
@@ -57,6 +70,14 @@ public final class BackpackOverlaySlot extends Slot {
         g.fill(sx, sy + 17, sx + 18, sy + 18, 0xD0FFF04A);
         g.fill(sx, sy, sx + 1, sy + 18, 0xD0FFF04A);
         g.fill(sx + 17, sy, sx + 18, sy + 18, 0xD0FFF04A);
+    }
+
+    public void renderDragHighlight(GuiGraphics g, int sx, int sy) {
+        int color = 0xD0FFFF40;
+        g.fill(sx, sy, sx + 18, sy + 1, color);
+        g.fill(sx, sy + 17, sx + 18, sy + 18, color);
+        g.fill(sx, sy, sx + 1, sy + 18, color);
+        g.fill(sx + 17, sy, sx + 18, sy + 18, color);
     }
 
     public void renderTooltip(GuiGraphics g, Minecraft mc, int sx, int sy, double mouseX, double mouseY) {

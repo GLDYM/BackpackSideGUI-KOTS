@@ -3,6 +3,7 @@ package dev.polaris_light.backpack_side_gui.client.gui.area;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
+import dev.polaris_light.backpack_side_gui.network.c2s.HandlerSlotClicker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,6 +25,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
     private boolean itemDragging;
     private int dragButton;
     private final java.util.List<Integer> dragSlots = new java.util.ArrayList<>();
+    private ItemStack dragCarried = ItemStack.EMPTY;
     private long lastLeftClickTime;
     private int lastLeftClickSlot = -1;
 
@@ -60,9 +62,17 @@ public final class CraftingOverlayArea extends IOverlayArea {
         // g.drawString(mc.font, "=", x + 82, y + 33, 16777215, true);
         slots[9].renderAt(g, mc, x + layout.resultX, y + layout.resultY);
         if (itemDragging)
-            for (int i : dragSlots)
-                g.fill(x + layout.inputX + (i % 3) * 18, y + layout.inputY + (i / 3) * 18,
-                        x + layout.inputX + (i % 3) * 18 + 18, y + layout.inputY + (i / 3) * 18 + 18, 0x70FFF04A);
+            for (int i : dragSlots) {
+                int amount = HandlerSlotClicker.dragAmount(dragCarried, dragButton, dragSlots.size());
+                ItemStack base = stacks[i];
+                if (base.isEmpty() || ItemStack.isSameItemSameComponents(base, dragCarried)) {
+                    slots[i].renderPreview(g, mc, x + layout.inputX + (i % 3) * 18,
+                            y + layout.inputY + (i / 3) * 18,
+                            (base.isEmpty() ? dragCarried : base).copyWithCount(base.getCount() + amount));
+                    slots[i].renderDragHighlight(g, x + layout.inputX + (i % 3) * 18,
+                            y + layout.inputY + (i / 3) * 18);
+                }
+            }
     }
 
     public void renderTooltip(GuiGraphics g, double mx, double my) {
@@ -103,8 +113,10 @@ public final class CraftingOverlayArea extends IOverlayArea {
                 if (i < 9 && !carried.isEmpty()) {
                     itemDragging = true;
                     dragButton = e.getButton();
+                    dragCarried = carried.copy();
                     dragSlots.clear();
                     dragSlots.add(i);
+                    updateDragPreview(e);
                 } else
                     ClientPacketSender.craftingSlot(i, e.getButton(),
                             net.minecraft.client.gui.screens.Screen.hasShiftDown(), carried);
@@ -123,6 +135,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
             int i = row * 3 + col;
             if (!dragSlots.contains(i))
                 dragSlots.add(i);
+            updateDragPreview(e);
         }
         return true;
     }
@@ -130,15 +143,25 @@ public final class CraftingOverlayArea extends IOverlayArea {
     public boolean mouseReleased(ScreenEvent.MouseButtonReleased.Pre e) {
         if (!itemDragging)
             return false;
-        ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
-                : ItemStack.EMPTY;
+        ItemStack carried = dragCarried;
         if (dragSlots.size() > 1 && !carried.isEmpty())
             ClientPacketSender.craftingDrag(dragSlots, dragButton, carried);
         else if (dragSlots.size() == 1 && !carried.isEmpty())
             ClientPacketSender.craftingSlot(dragSlots.get(0), dragButton, false, carried);
         itemDragging = false;
         dragSlots.clear();
+        dragCarried = ItemStack.EMPTY;
         return true;
+    }
+
+    private void updateDragPreview(ScreenEvent.MouseButtonPressed.Pre e) {
+        if (e.getScreen() instanceof AbstractContainerScreen<?> c)
+            c.getMenu().setCarried(HandlerSlotClicker.dragPreviewCursor(dragCarried, dragButton, dragSlots.size()));
+    }
+
+    private void updateDragPreview(ScreenEvent.MouseDragged.Pre e) {
+        if (e.getScreen() instanceof AbstractContainerScreen<?> c)
+            c.getMenu().setCarried(HandlerSlotClicker.dragPreviewCursor(dragCarried, dragButton, dragSlots.size()));
     }
 
     public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {

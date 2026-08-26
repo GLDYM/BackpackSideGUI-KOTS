@@ -11,6 +11,7 @@ import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButto
 import dev.polaris_light.backpack_side_gui.client.gui.element.SortModeOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.SortOverlayButton;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
+import dev.polaris_light.backpack_side_gui.network.c2s.HandlerSlotClicker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -56,6 +57,7 @@ public class BackpackOverlayArea extends IOverlayArea {
     private boolean itemDragging;
     private int dragButton;
     private final List<Integer> dragSlots = new ArrayList<>();
+    private ItemStack dragCarried = ItemStack.EMPTY;
     private long lastLeftClickTime;
     private int lastLeftClickSlot = -1;
 
@@ -210,8 +212,10 @@ public class BackpackOverlayArea extends IOverlayArea {
             if (!carried.isEmpty()) {
                 itemDragging = true;
                 dragButton = event.getButton();
+                dragCarried = carried.copy();
                 dragSlots.clear();
                 dragSlots.add(logicalSlot);
+                updateDragPreview(event);
             } else {
                 ClientPacketSender.backpackSlot(logicalSlot, clickType, carried);
             }
@@ -253,11 +257,21 @@ public class BackpackOverlayArea extends IOverlayArea {
                 if (display < 0)
                     continue;
                 int row = display / 9, col = display % 9;
-                if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows)
-                    graphics.fill(x + col * 18, y + (row - scrollbar.row()) * 18,
-                            x + col * 18 + 18, y + (row - scrollbar.row()) * 18 + 18, 0x70FFF04A);
+                if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows) {
+                    BackpackOverlaySlot slot = slots.get(display);
+                    ItemStack base = slot.stack();
+                    int amount = dragAmount();
+                    if (base.isEmpty() || ItemStack.isSameItemSameComponents(base, dragCarried)) {
+                        ItemStack preview = (base.isEmpty() ? dragCarried : base)
+                                .copyWithCount(Math.min(slot.getMaxStackSize(), base.getCount() + amount));
+                    slot.renderPreview(graphics, Minecraft.getInstance(), x + col * 18,
+                            y + (row - scrollbar.row()) * 18, preview);
+                }
+                slot.renderDragHighlight(graphics, x + col * 18,
+                        y + (row - scrollbar.row()) * 18);
+                }
             }
-    }
+        }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {
         updateBounds(screenWidth, screenHeight);
@@ -280,6 +294,7 @@ public class BackpackOverlayArea extends IOverlayArea {
                 int logical = visibleLogicalSlots.get(display);
                 if (!dragSlots.contains(logical))
                     dragSlots.add(logical);
+                updateDragPreview(event);
             }
             return true;
         }
@@ -292,8 +307,7 @@ public class BackpackOverlayArea extends IOverlayArea {
         if (scrollbar.release())
             return true;
         if (itemDragging) {
-            ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
-                    : ItemStack.EMPTY;
+            ItemStack carried = dragCarried;
             int n = dragSlots.size();
             if (n > 1 && !carried.isEmpty())
                 ClientPacketSender.backpackDrag(dragSlots, dragButton, carried);
@@ -301,6 +315,7 @@ public class BackpackOverlayArea extends IOverlayArea {
                 ClientPacketSender.backpackSlot(dragSlots.get(0), dragButton == 1 ? 2 : 3, carried);
             itemDragging = false;
             dragSlots.clear();
+            dragCarried = ItemStack.EMPTY;
             return true;
         }
         if (event.getButton() != 0 || !dragging)
@@ -313,6 +328,24 @@ public class BackpackOverlayArea extends IOverlayArea {
         if (!visible || !contains(event.getMouseX(), event.getMouseY()))
             return false;
         return scrollbar.scroll(event.getScrollDeltaY());
+    }
+
+    private int dragAmount() {
+        return HandlerSlotClicker.dragAmount(dragCarried, dragButton, dragSlots.size());
+    }
+
+    private void updateDragPreview(ScreenEvent.MouseButtonPressed.Pre event) {
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen))
+            return;
+        screen.getMenu().setCarried(HandlerSlotClicker.dragPreviewCursor(
+                dragCarried, dragButton, dragSlots.size()));
+    }
+
+    private void updateDragPreview(ScreenEvent.MouseDragged.Pre event) {
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen))
+            return;
+        screen.getMenu().setCarried(HandlerSlotClicker.dragPreviewCursor(
+                dragCarried, dragButton, dragSlots.size()));
     }
 
     private void updateBounds(int screenWidth, int screenHeight) {

@@ -11,6 +11,18 @@ public final class HandlerSlotClicker {
     private HandlerSlotClicker() {
     }
 
+    public static int dragAmount(ItemStack carried, int button, int slotCount) {
+        return carried == null || carried.isEmpty() ? 0
+                : button == 1 ? 1 : carried.getCount() / Math.max(1, slotCount);
+    }
+
+    public static ItemStack dragPreviewCursor(ItemStack carried, int button, int slotCount) {
+        if (carried == null || carried.isEmpty())
+            return ItemStack.EMPTY;
+        return carried.copyWithCount(Math.max(0,
+                carried.getCount() - dragAmount(carried, button, slotCount) * slotCount));
+    }
+
     public static ItemStack click(IItemHandler inventory, int slot, int button, ItemStack carried) {
         if (slot < 0 || slot >= inventory.getSlots())
             return carried;
