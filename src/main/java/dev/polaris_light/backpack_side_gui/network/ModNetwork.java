@@ -1,12 +1,12 @@
 package dev.polaris_light.backpack_side_gui.network;
 
 import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
-import dev.polaris_light.backpack_side_gui.BackpackSideGuiMod;
 import dev.polaris_light.backpack_side_gui.network.c2s.BackpackC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.CraftingC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.SmithingC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.UtilityC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.AnvilC2S;
+import dev.polaris_light.backpack_side_gui.network.c2s.FurnaceC2S;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
@@ -23,6 +23,8 @@ import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -52,6 +54,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> AnvilC2S.handleClick((ServerPlayer) context.player(), payload))));
         registrar.playToServer(AnvilRenamePayload.TYPE, AnvilRenamePayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> AnvilC2S.handleRename((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(FurnaceClickPayload.TYPE, FurnaceClickPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context, () -> FurnaceC2S.handleClick((ServerPlayer) context.player(), payload))));
         registrar.playToServer(UtilityRequestPayload.TYPE, UtilityRequestPayload.STREAM_CODEC, 
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> UtilityC2S.request((ServerPlayer) context.player(), payload.utilityType()))));
                 
@@ -67,6 +71,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCrafting(payload)));
         registrar.playToClient(AnvilSyncPayload.TYPE, AnvilSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveAnvil(payload)));
+        registrar.playToClient(FurnaceSyncPayload.TYPE, FurnaceSyncPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveFurnace(payload)));
         registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
     }

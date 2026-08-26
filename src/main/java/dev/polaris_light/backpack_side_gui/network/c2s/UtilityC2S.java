@@ -24,6 +24,8 @@ public final class UtilityC2S {
             sendFlags(player, access.get());
             PacketDistributor.sendToPlayer(player, BackpackC2S.snapshot(access.get(), player),
                     new CustomPacketPayload[0]);
+            if (FlagResolver.resolve(access.get()).furnace())
+                FurnaceC2S.send(player, access.get());
         }
     }
 
@@ -48,6 +50,8 @@ public final class UtilityC2S {
                     CraftingC2S.send(player, access);
                 if (type == 2)
                     AnvilC2S.send(player, access);
+                if (type == 1)
+                    FurnaceC2S.send(player, access);
             }
         });
     }

@@ -67,4 +67,8 @@ public final class ClientPacketSender {
     public static void craftingDrag(List<Integer> slots, int button, ItemStack carried) {
         PacketDistributor.sendToServer(new CraftingDragPayload(List.copyOf(slots), button, carried.copy()));
     }
+
+    public static void furnaceSlot(int slot, int button, ItemStack carried) {
+        PacketDistributor.sendToServer(new dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload(slot, button, carried.copy()));
+    }
 }

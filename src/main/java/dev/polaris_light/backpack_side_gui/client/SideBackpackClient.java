@@ -12,6 +12,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
@@ -37,6 +38,7 @@ public final class SideBackpackClient {
     }
 
     public static void receiveAnvil(AnvilSyncPayload payload) { OVERLAY.receiveAnvil(payload); }
+    public static void receiveFurnace(FurnaceSyncPayload payload) { OVERLAY.receiveFurnace(payload); }
 
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,
@@ -55,7 +57,7 @@ public final class SideBackpackClient {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && ++refreshTicks >= 4) {
+        if (minecraft.player != null && ++refreshTicks >= 1) {
             refreshTicks = 0;
             ClientPacketSender.open();
         }
