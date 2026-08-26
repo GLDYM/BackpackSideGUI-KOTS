@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.Locale;
 import net.minecraft.world.item.ItemStack;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
+import dev.polaris_light.backpack_side_gui.server.HandlerSlotClicker;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import dev.polaris_light.backpack_side_gui.server.FlagResolver;
 import net.p3pp3rf1y.sophisticatedbackpacks.upgrades.smithing.SmithingUpgradeWrapper;
@@ -242,25 +243,7 @@ public final class ModNetwork {
             sendSmithing(player, access.get());
             return;
         }
-        var current = inv.getStackInSlot(p.slot());
-        if (carried.isEmpty()) {
-            player.containerMenu.setCarried(
-                    inv.extractItem(p.slot(), p.button() == 1 ? current.getCount() / 2 : current.getCount(), false));
-        } else {
-            // Vanilla right-click places exactly one item into a smithing input;
-            // left-click places as much as the slot accepts.
-            ItemStack toInsert = p.button() == 1 ? carried.copyWithCount(1) : carried;
-            ItemStack remainder = inv.insertItem(p.slot(), toInsert, false);
-            if (p.button() == 1 && !remainder.isEmpty()) {
-                // Nothing was inserted; preserve the original cursor stack.
-                player.containerMenu.setCarried(carried);
-            } else {
-                int inserted = toInsert.getCount() - remainder.getCount();
-                ItemStack left = carried.copy();
-                left.shrink(inserted);
-                player.containerMenu.setCarried(left.isEmpty() ? ItemStack.EMPTY : left);
-            }
-        }
+        player.containerMenu.setCarried(HandlerSlotClicker.click(inv, p.slot(), p.button(), carried));
         access.get().stack().getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.ITEM);
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
@@ -301,7 +284,19 @@ public final class ModNetwork {
             return;
         var unique = new java.util.LinkedHashSet<Integer>(p.slots());
         unique.removeIf(i -> i < 0 || i >= resolved.get().handler().getSlots());
-        if (unique.size() < 2)
+        // A slot that cannot take one item must not participate in the share.
+        unique.removeIf(i -> {
+            var candidate = new BackpackVirtualSlot(resolved.get().stack(), i, player);
+            ItemStack existing = candidate.getItem();
+            // The capability handler can report that its generic storage has
+            // room even when this StorageInventorySlot will refuse a
+            // differently typed existing stack. Check the visible slot
+            // stack first so incompatible stacks never affect the divisor.
+            return (!existing.isEmpty() && !ItemStack.isSameItemSameComponents(existing, carried))
+                    || !candidate.mayPlace(carried)
+                    || !resolved.get().handler().insertItem(i, carried.copyWithCount(1), true).isEmpty();
+        });
+        if (unique.isEmpty())
             return;
         int each = p.button() == 1 ? 1 : carried.getCount() / unique.size();
         if (each <= 0)
@@ -342,17 +337,7 @@ public final class ModNetwork {
         ItemStack carried = player.containerMenu.getCarried();
         if (!ItemStack.matches(carried, p.carried()) || carried.isEmpty())
             return;
-        var unique = new java.util.LinkedHashSet<Integer>(p.slots());
-        unique.removeIf(i -> i < 0 || i >= 9);
-        int each = p.button() == 1 ? 1 : carried.getCount() / unique.size();
-        if (each <= 0)
-            return;
-        for (int i : unique) {
-            ItemStack rest = inv.insertItem(i, carried.copyWithCount(Math.min(each, carried.getCount())), false);
-            carried.shrink(Math.min(each, carried.getCount()) - rest.getCount());
-            if (carried.isEmpty())
-                break;
-        }
+        carried = HandlerSlotClicker.distribute(inv, p.slots(), p.button(), carried);
         player.containerMenu.setCarried(carried);
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(carried.copy()));
@@ -417,12 +402,8 @@ public final class ModNetwork {
                     consumeCraftingInputs(inv);
                 }
             }
-        } else if (serverCarried.isEmpty())
-            player.containerMenu.setCarried(
-                    inv.extractItem(p.slot(), p.button() == 1 ? Math.max(1, inv.getStackInSlot(p.slot()).getCount() / 2)
-                            : inv.getStackInSlot(p.slot()).getCount(), false));
-        else
-            player.containerMenu.setCarried(inv.insertItem(p.slot(), serverCarried, false));
+        } else
+            player.containerMenu.setCarried(HandlerSlotClicker.click(inv, p.slot(), p.button(), serverCarried));
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         sendCrafting(player, access.get());
