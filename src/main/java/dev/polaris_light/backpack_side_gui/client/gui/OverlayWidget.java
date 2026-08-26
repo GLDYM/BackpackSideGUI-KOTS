@@ -27,8 +27,6 @@ public final class OverlayWidget extends IOverlayWidget {
     private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;
     // Keep the anchor usable even when the panel is dragged near a screen edge.
     private static final int ANCHOR_MARGIN = 4;
-    private static final int RESERVED_RIGHT = 190;
-    private static final int RESERVED_BOTTOM = 105;
 
     private final BackpackOverlayArea area = new BackpackOverlayArea();
     private boolean dragging;
@@ -252,8 +250,8 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     private void clampAnchor(int screenWidth, int screenHeight) {
-        int maxX = Math.max(ANCHOR_MARGIN, screenWidth - RESERVED_RIGHT);
-        int maxY = Math.max(ANCHOR_MARGIN, screenHeight - RESERVED_BOTTOM);
+        int maxX = Math.max(ANCHOR_MARGIN, screenWidth - MoveOverlayButton.SIZE);
+        int maxY = Math.max(ANCHOR_MARGIN, screenHeight - MoveOverlayButton.SIZE);
         x = Math.max(ANCHOR_MARGIN, Math.min(maxX, x));
         y = Math.max(ANCHOR_MARGIN, Math.min(maxY, y));
     }

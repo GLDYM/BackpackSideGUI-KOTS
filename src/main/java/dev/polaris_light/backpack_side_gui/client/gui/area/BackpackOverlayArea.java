@@ -325,7 +325,7 @@ public class BackpackOverlayArea extends IOverlayArea {
             x = screenWidth / 2 + Layout.DEFAULT_SIDE_OFFSET;
             y = Math.max(4, (screenHeight - fullHeight) / 2 + Layout.SLOT_SIZE);
         }
-        clamp(screenWidth, screenHeight);
+        // clamp(screenWidth, screenHeight);
     }
 
     protected int getButtonY() {
