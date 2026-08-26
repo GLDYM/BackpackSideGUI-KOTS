@@ -30,6 +30,8 @@
   "text.backpack_side_gui.utility.crafting": "工作台",
   "text.backpack_side_gui.utility.furnace": "熔炉",
   "text.backpack_side_gui.utility.anvil": "铁砧",
+  "text.backpack_side_gui.anvil.rename_hint": "输入名称",
+  "text.backpack_side_gui.anvil.cost": "等级消耗: %s",
   "text.backpack_side_gui.utility.smithing": "锻造台",
   "text.backpack_side_gui.utility.stonecutter": "切石机",
   "text.backpack_side_gui.utility.click_open": "点击使用功能"

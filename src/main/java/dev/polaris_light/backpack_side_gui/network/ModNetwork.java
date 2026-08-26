@@ -5,6 +5,7 @@ import dev.polaris_light.backpack_side_gui.network.c2s.BackpackC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.CraftingC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.SmithingC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.UtilityC2S;
+import dev.polaris_light.backpack_side_gui.network.c2s.AnvilC2S;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
@@ -18,6 +19,9 @@ import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -43,6 +47,10 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> CraftingC2S.handleDrag((ServerPlayer) context.player(), payload))));
         registrar.playToServer(SmithingClickPayload.TYPE, SmithingClickPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> SmithingC2S.handleClick((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(AnvilClickPayload.TYPE, AnvilClickPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context, () -> AnvilC2S.handleClick((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(AnvilRenamePayload.TYPE, AnvilRenamePayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context, () -> AnvilC2S.handleRename((ServerPlayer) context.player(), payload))));
         registrar.playToServer(UtilityRequestPayload.TYPE, UtilityRequestPayload.STREAM_CODEC, 
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> UtilityC2S.request((ServerPlayer) context.player(), payload.utilityType()))));
                 
@@ -54,6 +62,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveSmithing(payload)));
         registrar.playToClient(CraftingSyncPayload.TYPE, CraftingSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCrafting(payload)));
+        registrar.playToClient(AnvilSyncPayload.TYPE, AnvilSyncPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveAnvil(payload)));
         registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
     }

@@ -6,6 +6,7 @@ import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayWidget;
 import dev.polaris_light.backpack_side_gui.client.gui.area.BackpackOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea;
+import dev.polaris_light.backpack_side_gui.client.gui.area.AnvilOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
@@ -14,6 +15,7 @@ import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayB
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,6 +45,7 @@ public final class OverlayWidget extends IOverlayWidget {
     private UtilityType activeUtility;
     private final CraftingOverlayArea crafting = new CraftingOverlayArea();
     private final SmithingOverlayArea smithing = new SmithingOverlayArea();
+    private final AnvilOverlayArea anvil = new AnvilOverlayArea();
 
     public void receiveSmithing(SmithingSyncPayload p) {
         smithing.sync(p.template(), p.base(), p.addition(), p.result());
@@ -51,6 +54,8 @@ public final class OverlayWidget extends IOverlayWidget {
     public void receiveCrafting(CraftingSyncPayload p) {
         crafting.sync(java.util.Arrays.copyOf(p.items(), 9), p.items()[9]);
     }
+
+    public void receiveAnvil(AnvilSyncPayload p) { anvil.sync(p.first(), p.second(), p.result(), p.cost(), p.name()); }
 
     public void setUtilityFlags(boolean[] flags) {
         java.util.Arrays.fill(utilityFlags, false);
@@ -69,6 +74,7 @@ public final class OverlayWidget extends IOverlayWidget {
         activeUtility = activeUtility == clicked.utilityType() ? null : clicked.utilityType();
         smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
         crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
+        anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
@@ -103,6 +109,7 @@ public final class OverlayWidget extends IOverlayWidget {
 
         smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
         crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
+        anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         if (smithing.isVisible()) {
             smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             smithing.render(s, g, mc);
@@ -110,6 +117,10 @@ public final class OverlayWidget extends IOverlayWidget {
         if (crafting.isVisible()) {
             crafting.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             crafting.render(s, g, mc);
+        }
+        if (anvil.isVisible()) {
+            anvil.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
+            anvil.render(s, g, mc);
         }
 
         moveButton.setBounds(x, y);
@@ -134,6 +145,7 @@ public final class OverlayWidget extends IOverlayWidget {
         area.renderTooltip(g, mx, my);
         smithing.renderTooltip(g, mx, my);
         crafting.renderTooltip(g, mx, my);
+        anvil.renderTooltip(g, mx, my);
         moveButton.renderTooltip(g, mc, mx, my);
         visibilityButton.renderTooltip(g, mc, mx, my);
         for (UtilityOverlayButton button : utilityButtons)
@@ -164,6 +176,9 @@ public final class OverlayWidget extends IOverlayWidget {
         if (activeUtility == UtilityType.CRAFTING && crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
                 e.getScreen().width, e.getScreen().height))
             return crafting.mousePressed(e) || true;
+        if (activeUtility == UtilityType.ANVIL && anvil.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
+                e.getScreen().width, e.getScreen().height))
+            return anvil.mousePressed(e) || true;
         return false;
     }
 
@@ -172,13 +187,16 @@ public final class OverlayWidget extends IOverlayWidget {
                 || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
                         e.getScreen().height)
                 || crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
+                        e.getScreen().height)
+                || anvil.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
                         e.getScreen().height);
     }
 
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
         return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
                 || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
-                || crafting.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
+                || crafting.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
+                || anvil.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {
@@ -212,11 +230,11 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     public boolean keyPressed(int key) {
-        return area.keyPressed(key);
+        return area.keyPressed(key) || anvil.keyPressed(key);
     }
 
     public boolean charTyped(char c) {
-        return area.charTyped(c);
+        return area.charTyped(c) || anvil.charTyped(c);
     }
 
     private void saveAnchorPosition(Screen screen) {

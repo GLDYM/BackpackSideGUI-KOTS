@@ -8,6 +8,8 @@ import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -48,6 +50,14 @@ public final class ClientPacketSender {
 
     public static void smithingSlot(int slot, int button, ItemStack carried) {
         PacketDistributor.sendToServer(new SmithingClickPayload(slot, button, carried.copy()));
+    }
+
+    public static void anvilSlot(int slot, int button, ItemStack carried) {
+        PacketDistributor.sendToServer(new AnvilClickPayload(slot, button, carried.copy()));
+    }
+
+    public static void anvilRename(String name) {
+        PacketDistributor.sendToServer(new AnvilRenamePayload(name == null ? "" : name));
     }
 
     public static void craftingSlot(int slot, int button, boolean shift, ItemStack carried) {

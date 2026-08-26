@@ -50,6 +50,8 @@ public final class UtilityC2S {
                     SmithingC2S.send(player, access);
                 if (type == 0)
                     CraftingC2S.send(player, access);
+                if (type == 2)
+                    AnvilC2S.send(player, access);
             }
         });
     }
