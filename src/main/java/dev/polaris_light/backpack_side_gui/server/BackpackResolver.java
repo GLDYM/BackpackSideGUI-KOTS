@@ -1,5 +1,7 @@
 package dev.polaris_light.backpack_side_gui.server;
 
+import dev.polaris_light.backpack_side_gui.BackpackSideGuiMod;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +120,9 @@ public final class BackpackResolver {
         }
 
         IBackpackWrapper wrapper = BackpackWrapper.fromStack(stack);
+        // Sophisticated's StorageInventorySlot compares the storage-wide
+        // limit with the item's own max stack size.  Keep this value even for
+        // stacks whose current count is <= 64.
         int stackLimit = StackUpgradeItem.getInventorySlotLimit(wrapper);
         return Optional.of(new BackpackAccess(slot, stack, handler, stackLimit, curiosHandler, curiosSlot));
     }

@@ -51,6 +51,8 @@ public class BackpackOverlayArea extends IOverlayArea {
     private final SortOverlayButton sortButton = new SortOverlayButton(sortModeButton::mode);
     private String title = "Backpack";
     private String filter = "";
+    private int stackLimit = 64;
+    private List<Integer> slotLimits = java.util.List.of();
     private boolean itemDragging;
     private int dragButton;
     private final List<Integer> dragSlots = new ArrayList<>();
@@ -58,7 +60,16 @@ public class BackpackOverlayArea extends IOverlayArea {
     private int lastLeftClickSlot = -1;
 
     public void setContents(String title, List<ItemStack> items) {
-        setContents(title, items, filter);
+        setContents(title, items, filter, stackLimit);
+    }
+
+    public void setContents(String title, List<ItemStack> items, int stackLimit) {
+        this.stackLimit = Math.max(1, stackLimit);
+        setContents(title, items, filter, this.stackLimit);
+    }
+    public void setContents(String title, List<ItemStack> items, List<Integer> limits) {
+        this.slotLimits = limits == null ? java.util.List.of() : new ArrayList<>(limits);
+        setContents(title, items, filter, this.stackLimit);
     }
 
     public void setFilter(String filter) {
@@ -66,6 +77,11 @@ public class BackpackOverlayArea extends IOverlayArea {
     }
 
     public void setContents(String title, List<ItemStack> items, String filter) {
+        setContents(title, items, filter, stackLimit);
+    }
+
+    public void setContents(String title, List<ItemStack> items, String filter, int stackLimit) {
+        this.stackLimit = Math.max(1, stackLimit);
         this.title = title == null || title.isBlank() ? "Backpack" : title;
         this.filter = filter == null ? "" : filter;
         List<ItemStack> source = new ArrayList<>(items);
@@ -77,8 +93,10 @@ public class BackpackOverlayArea extends IOverlayArea {
         for (int i = 0; i < source.size(); i++) {
             ItemStack stack = source.get(i);
             if (needle.isEmpty()
-                    || stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(needle))
-                slots.add(new BackpackOverlaySlot(visibleLogicalSlots.size(), stack));
+                    || stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(needle)) {
+                int limit = i < slotLimits.size() ? slotLimits.get(i) : stackLimit;
+                slots.add(new BackpackOverlaySlot(visibleLogicalSlots.size(), stack, limit));
+            }
             visibleLogicalSlots.add(i);
         }
     }
@@ -227,6 +245,8 @@ public class BackpackOverlayArea extends IOverlayArea {
         int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
         for (BackpackOverlaySlot slot : slots)
             slot.renderHighlight(graphics, x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
+        for (BackpackOverlaySlot slot : slots)
+            slot.renderTooltip(graphics, Minecraft.getInstance(), x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
         if (itemDragging)
             for (int logical : dragSlots) {
                 int display = visibleLogicalSlots.indexOf(logical);

@@ -83,6 +83,9 @@ public final class SmithingOverlayArea extends IOverlayArea {
         slots[1].renderHighlightAt(g, x + layout.secondSlotX, y + layout.slotsY, mouseX, mouseY);
         slots[2].renderHighlightAt(g, x + layout.thirdSlotX, y + layout.slotsY, mouseX, mouseY);
         slots[3].renderHighlightAt(g, x + layout.resultSlotX, y + layout.slotsY, mouseX, mouseY);
+        int[] tooltipX = { layout.firstSlotX, layout.secondSlotX, layout.thirdSlotX, layout.resultSlotX };
+        for (int i = 0; i < slots.length; i++)
+            slots[i].renderTooltip(g, Minecraft.getInstance(), x + tooltipX[i], y + layout.slotsY, mouseX, mouseY);
     }
 
     public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {

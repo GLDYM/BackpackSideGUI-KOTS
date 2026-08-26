@@ -104,6 +104,8 @@ public final class AnvilOverlayArea extends IOverlayArea {
         int[] xs = { layout.firstSlotX, layout.secondSlotX, layout.resultSlotX };
         for (int i = 0; i < slots.length; i++)
             slots[i].renderHighlightAt(g, x + xs[i], y + layout.slotsY, mx, my);
+        for (int i = 0; i < slots.length; i++)
+            slots[i].renderTooltip(g, Minecraft.getInstance(), x + xs[i], y + layout.slotsY, mx, my);
     }
 
     public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {

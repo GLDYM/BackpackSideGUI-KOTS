@@ -22,11 +22,7 @@ public final class UtilityC2S {
                     new CustomPacketPayload[0]);
         } else {
             sendFlags(player, access.get());
-            ArrayList<ItemStack> items = new ArrayList<>();
-            for (int slot = 0; slot < access.get().handler().getSlots(); slot++)
-                items.add(access.get().handler().getStackInSlot(slot).copy());
-            PacketDistributor.sendToPlayer(player,
-                    new BackpackSyncPayload(access.get().stack().getHoverName().getString(), items),
+            PacketDistributor.sendToPlayer(player, BackpackC2S.snapshot(access.get(), player),
                     new CustomPacketPayload[0]);
         }
     }

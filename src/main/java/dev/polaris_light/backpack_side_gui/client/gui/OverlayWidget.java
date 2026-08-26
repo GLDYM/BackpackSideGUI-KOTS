@@ -92,6 +92,13 @@ public final class OverlayWidget extends IOverlayWidget {
         area.setContents(title, items);
     }
 
+    public void setContents(String title, List<ItemStack> items, int stackLimit) {
+        area.setContents(title, items, stackLimit);
+    }
+    public void setContents(String title, List<ItemStack> items, List<Integer> limits) {
+        area.setContents(title, items, limits);
+    }
+
     public void setAnchorPosition(int x, int y) {
         if (!dragging) {
             this.x = x;

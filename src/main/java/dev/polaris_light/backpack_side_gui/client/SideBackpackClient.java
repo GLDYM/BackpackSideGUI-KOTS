@@ -45,6 +45,11 @@ public final class SideBackpackClient {
                 && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
     }
 
+    public static boolean shouldBlockContainerTooltip(AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
+        return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
+                && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
+    }
+
     private SideBackpackClient() {
     }
 
@@ -61,6 +66,11 @@ public final class SideBackpackClient {
         if (!hasBackpack)
             return;
         OVERLAY.setContents(name, stacks);
+    }
+
+    public static void receive(String name, List<ItemStack> stacks, List<Integer> limits) {
+        hasBackpack = name != null && !name.isBlank();
+        if (hasBackpack) OVERLAY.setContents(name, stacks, limits);
     }
 
     public static void receiveCarried(ItemStack carried) {

@@ -14,6 +14,8 @@ import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import net.p3pp3rf1y.sophisticatedcore.inventory.InventoryHandler;
+import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -83,7 +85,7 @@ public final class BackpackC2S {
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()),
                 new CustomPacketPayload[0]);
-        PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
+        PacketDistributor.sendToPlayer(player, snapshot(access.get(), player), new CustomPacketPayload[0]);
     }
 
     public static void handleDrag(ServerPlayer player, BackpackDragPayload payload) {
@@ -122,7 +124,7 @@ public final class BackpackC2S {
         player.containerMenu.setCarried(carried);
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(carried.copy()), new CustomPacketPayload[0]);
-        PacketDistributor.sendToPlayer(player, snapshot(resolved.get()), new CustomPacketPayload[0]);
+        PacketDistributor.sendToPlayer(player, snapshot(resolved.get(), player), new CustomPacketPayload[0]);
     }
 
     public static void handleSort(ServerPlayer player, SortPayload payload) {
@@ -168,13 +170,18 @@ public final class BackpackC2S {
                     .thenComparing(name));
         for (int i = 0; i < merged.size() && i < inv.getSlots(); i++)
             inv.setStackInSlot(i, merged.get(i));
-        PacketDistributor.sendToPlayer(player, snapshot(access.get()), new CustomPacketPayload[0]);
+        PacketDistributor.sendToPlayer(player, snapshot(access.get(), player), new CustomPacketPayload[0]);
     }
 
-    public static BackpackSyncPayload snapshot(BackpackAccess access) {
+    public static BackpackSyncPayload snapshot(BackpackAccess access, ServerPlayer player) {
         ArrayList<ItemStack> s = new ArrayList<>();
-        for (int i = 0; i < access.handler().getSlots(); i++)
-            s.add(access.handler().getStackInSlot(i).copy());
-        return new BackpackSyncPayload(access.stack().getHoverName().getString(), s);
+        ArrayList<Integer> limits = new ArrayList<>();
+        for (int i = 0; i < access.handler().getSlots(); i++) {
+            ItemStack item = access.handler().getStackInSlot(i).copy();
+            s.add(item);
+            BackpackVirtualSlot virtualSlot = new BackpackVirtualSlot(access.stack(), i, player);
+            limits.add(virtualSlot.getMaxStackSize(item));
+        }
+        return new BackpackSyncPayload(access.stack().getHoverName().getString(), s, limits);
     }
 }

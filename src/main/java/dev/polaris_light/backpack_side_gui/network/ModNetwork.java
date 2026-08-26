@@ -1,6 +1,7 @@
 package dev.polaris_light.backpack_side_gui.network;
 
 import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
+import dev.polaris_light.backpack_side_gui.BackpackSideGuiMod;
 import dev.polaris_light.backpack_side_gui.network.c2s.BackpackC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.CraftingC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.SmithingC2S;
@@ -55,7 +56,9 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> UtilityC2S.request((ServerPlayer) context.player(), payload.utilityType()))));
                 
         registrar.playToClient(BackpackSyncPayload.TYPE, BackpackSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receive(payload.title(), payload.items())));
+                (payload, context) -> context.enqueueWork(() -> {
+                    SideBackpackClient.receive(payload.title(), payload.items(), payload.slotLimits());
+                }));
         registrar.playToClient(UtilityFlagsPayload.TYPE, UtilityFlagsPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
         registrar.playToClient(SmithingSyncPayload.TYPE, SmithingSyncPayload.STREAM_CODEC,

@@ -5,17 +5,29 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
 import net.p3pp3rf1y.sophisticatedcore.util.CountAbbreviator;
 
 public final class BackpackOverlaySlot extends Slot {
     private final int index;
     private final ItemStack stack;
+    private final int stackLimit;
 
     public BackpackOverlaySlot(int index, ItemStack stack) {
         super(new SimpleContainer(1), 0, 0, 0);
         this.index = index;
         this.stack = stack == null ? ItemStack.EMPTY : stack;
+        this.stackLimit = 64;
     }
+
+    public BackpackOverlaySlot(int index, ItemStack stack, int stackLimit) {
+        super(new SimpleContainer(1), 0, 0, 0);
+        this.index = index;
+        this.stack = stack == null ? ItemStack.EMPTY : stack;
+        this.stackLimit = Math.max(1, stackLimit);
+    }
+
+    @Override public int getMaxStackSize() { return stackLimit; }
 
     public ItemStack stack() {
         return stack;
@@ -45,6 +57,29 @@ public final class BackpackOverlaySlot extends Slot {
         g.fill(sx, sy + 17, sx + 18, sy + 18, 0xD0FFF04A);
         g.fill(sx, sy, sx + 1, sy + 18, 0xD0FFF04A);
         g.fill(sx + 17, sy, sx + 18, sy + 18, 0xD0FFF04A);
+    }
+
+    public void renderTooltip(GuiGraphics g, Minecraft mc, int sx, int sy, double mouseX, double mouseY) {
+        if (!stack.isEmpty() && mouseX >= sx && mouseX < sx + 18 && mouseY >= sy && mouseY < sy + 18) {
+            java.util.List<Component> lines = new java.util.ArrayList<>(stack.getTooltipLines(
+                    mc.level == null ? net.minecraft.world.item.Item.TooltipContext.EMPTY
+                            : net.minecraft.world.item.Item.TooltipContext.of(mc.level), mc.player,
+                    net.minecraft.world.item.TooltipFlag.NORMAL));
+            // Stupid Codex!
+            if (stack.getCount() > stack.getMaxStackSize() || stackLimit > stack.getMaxStackSize()) {
+                net.minecraft.network.chat.MutableComponent count = Component.literal(java.text.NumberFormat.getNumberInstance().format(stack.getCount()))
+                        .withStyle(net.minecraft.ChatFormatting.DARK_AQUA);
+                Component max = Component.literal(java.text.NumberFormat.getNumberInstance().format(stackLimit))
+                        .withStyle(net.minecraft.ChatFormatting.DARK_AQUA);
+                Component value = count.append(Component.literal(" /").withStyle(net.minecraft.ChatFormatting.GRAY)).append(max);
+                lines.add(Component.translatable("gui.sophisticatedcore.tooltip.stack_count", value)
+                        .withStyle(net.minecraft.ChatFormatting.GRAY));
+            }
+            java.util.List<net.minecraft.util.FormattedCharSequence> wrapped = new java.util.ArrayList<>();
+            for (Component line : lines)
+                wrapped.addAll(mc.font.split(line, 300));
+            g.renderTooltip(mc.font, wrapped, (int) mouseX, (int) mouseY);
+        }
     }
 
     public void render(GuiGraphics g, Minecraft mc, int ox, int oy, int scroll, int visible) {
@@ -78,5 +113,13 @@ public final class BackpackOverlaySlot extends Slot {
         if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
             return;
         renderHighlightAt(g, sx, sy, mouseX, mouseY);
+    }
+
+    public void renderTooltip(GuiGraphics g, Minecraft mc, int ox, int oy, int scroll, int visible,
+            double mouseX, double mouseY) {
+        int row = index / 9;
+        if (row < scroll || row >= scroll + visible)
+            return;
+        renderTooltip(g, mc, ox + (index % 9) * 18, oy + (row - scroll) * 18, mouseX, mouseY);
     }
 }
