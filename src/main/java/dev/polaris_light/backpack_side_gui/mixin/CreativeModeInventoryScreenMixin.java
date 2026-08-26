@@ -1,11 +1,12 @@
 package dev.polaris_light.backpack_side_gui.mixin;
 
-import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
-import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin {

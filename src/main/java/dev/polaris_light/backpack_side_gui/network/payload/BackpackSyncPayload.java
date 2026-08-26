@@ -1,8 +1,9 @@
 package dev.polaris_light.backpack_side_gui.network.payload;
 
-import dev.polaris_light.backpack_side_gui.BackpackSideGuiMod;
 import java.util.ArrayList;
 import java.util.List;
+
+import dev.polaris_light.backpack_side_gui.BackpackSideGuiMod;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;

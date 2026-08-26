@@ -1,14 +1,13 @@
 package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
-import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
+import net.minecraft.world.item.ItemStack;
 
 public final class SmithingOverlayArea extends IOverlayArea {
     public static final class Layout {

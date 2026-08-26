@@ -2,9 +2,9 @@ package dev.polaris_light.backpack_side_gui.client.gui.element;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.p3pp3rf1y.sophisticatedcore.util.CountAbbreviator;
 
 public final class BackpackOverlaySlot extends Slot {

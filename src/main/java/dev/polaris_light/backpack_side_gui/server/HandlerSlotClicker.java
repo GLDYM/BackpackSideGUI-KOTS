@@ -1,9 +1,10 @@
 package dev.polaris_light.backpack_side_gui.server;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
-import java.util.LinkedHashSet;
-import java.util.Collection;
 
 /** Shared primary/secondary click logic for real item handlers. */
 public final class HandlerSlotClicker {

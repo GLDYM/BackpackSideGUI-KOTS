@@ -10,8 +10,8 @@ import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**

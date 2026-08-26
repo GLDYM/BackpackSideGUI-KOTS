@@ -1,10 +1,11 @@
 package dev.polaris_light.backpack_side_gui.client.gui.element;
 
+import java.util.function.Consumer;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import java.util.function.Consumer;
 
 public final class UtilityOverlayButton extends BackpackOverlayButton {
     private final UtilityType utilityType;

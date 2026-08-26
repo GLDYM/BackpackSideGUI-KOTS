@@ -1,22 +1,22 @@
 package dev.polaris_light.backpack_side_gui.server;
 
-import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.IBackpackWrapper;
-import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.stack.StackUpgradeItem;
 import top.theillusivec4.curios.api.CuriosApi;
-import net.minecraft.server.level.ServerPlayer;
-
-import java.util.List;
 
 /** Owns the per-player active backpack cache and its validity checks. */
 public final class BackpackResolver {

@@ -1,7 +1,10 @@
 package dev.polaris_light.backpack_side_gui.client;
 
+import java.util.List;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import dev.polaris_light.backpack_side_gui.client.gui.BackpackOverlayScreenPolicy;
 import dev.polaris_light.backpack_side_gui.client.gui.OverlayWidget;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
@@ -10,11 +13,9 @@ import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.minecraft.world.item.ItemStack;
-import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
-import java.util.List;
 
 public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
@@ -29,7 +30,10 @@ public final class SideBackpackClient {
     public static void receiveSmithing(SmithingSyncPayload payload) {
         OVERLAY.receiveSmithing(payload);
     }
-    public static void receiveCrafting(CraftingSyncPayload payload) { OVERLAY.receiveCrafting(payload); }
+
+    public static void receiveCrafting(CraftingSyncPayload payload) {
+        OVERLAY.receiveCrafting(payload);
+    }
 
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,

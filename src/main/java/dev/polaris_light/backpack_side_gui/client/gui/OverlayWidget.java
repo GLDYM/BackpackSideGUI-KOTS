@@ -1,23 +1,23 @@
 package dev.polaris_light.backpack_side_gui.client.gui;
 
+import java.util.List;
+
 import dev.polaris_light.backpack_side_gui.BackpackSideGuiConfig;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayWidget;
 import dev.polaris_light.backpack_side_gui.client.gui.area.BackpackOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
-import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityType;
+import dev.polaris_light.backpack_side_gui.client.gui.element.VisibilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-
-import java.util.List;
 
 public final class OverlayWidget extends IOverlayWidget {
     private static final int BUTTON_SIZE = 16, BUTTON_GAP = 3;

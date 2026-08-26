@@ -6,19 +6,18 @@ import java.util.List;
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlayScrollbar;
 import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
+import dev.polaris_light.backpack_side_gui.client.gui.element.OverlayTextInput;
+import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.SortModeOverlayButton;
+import dev.polaris_light.backpack_side_gui.client.gui.element.SortOverlayButton;
+import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import dev.polaris_light.backpack_side_gui.network.ModNetwork;
-import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import dev.polaris_light.backpack_side_gui.client.gui.element.OverlayTextInput;
-import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButton;
-import dev.polaris_light.backpack_side_gui.client.gui.element.SortOverlayButton;
-import dev.polaris_light.backpack_side_gui.client.gui.element.SortModeOverlayButton;
 
 /**
  * Backpack Render
