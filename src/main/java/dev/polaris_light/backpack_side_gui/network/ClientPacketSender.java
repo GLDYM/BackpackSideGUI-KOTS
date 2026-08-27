@@ -2,15 +2,17 @@ package dev.polaris_light.backpack_side_gui.network;
 
 import java.util.List;
 
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
-import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
-import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.StonecutterClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.item.ItemStack;
@@ -69,6 +71,10 @@ public final class ClientPacketSender {
     }
 
     public static void furnaceSlot(int slot, int button, ItemStack carried) {
-        PacketDistributor.sendToServer(new dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload(slot, button, carried.copy()));
+        PacketDistributor.sendToServer(new FurnaceClickPayload(slot, button, carried.copy()));
+    }
+
+    public static void stonecutterSlot(int slot, int button, int recipe, boolean shift, ItemStack carried) {
+        PacketDistributor.sendToServer(new StonecutterClickPayload(slot, button, recipe, shift, carried.copy()));
     }
 }

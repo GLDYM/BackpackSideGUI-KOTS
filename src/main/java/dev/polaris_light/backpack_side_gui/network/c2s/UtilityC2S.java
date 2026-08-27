@@ -1,6 +1,5 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import dev.polaris_light.backpack_side_gui.server.record.UpgradeFlags;
 import dev.polaris_light.backpack_side_gui.network.payload.*;
@@ -8,7 +7,6 @@ import dev.polaris_light.backpack_side_gui.server.*;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class UtilityC2S {
@@ -52,6 +50,8 @@ public final class UtilityC2S {
                     AnvilC2S.send(player, access);
                 if (type == 1)
                     FurnaceC2S.send(player, access);
+                if (type == 4)
+                    StonecutterC2S.send(player, access);
             }
         });
     }

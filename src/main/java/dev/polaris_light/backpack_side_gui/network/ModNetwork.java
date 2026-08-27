@@ -7,6 +7,7 @@ import dev.polaris_light.backpack_side_gui.network.c2s.SmithingC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.UtilityC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.AnvilC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.FurnaceC2S;
+import dev.polaris_light.backpack_side_gui.network.c2s.StonecutterC2S;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
@@ -29,6 +30,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import dev.polaris_light.backpack_side_gui.network.payload.StonecutterClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload;
 
 public final class ModNetwork {
     private ModNetwork() {
@@ -56,6 +59,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> AnvilC2S.handleRename((ServerPlayer) context.player(), payload))));
         registrar.playToServer(FurnaceClickPayload.TYPE, FurnaceClickPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> FurnaceC2S.handleClick((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(StonecutterClickPayload.TYPE, StonecutterClickPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context, () -> StonecutterC2S.handleClick((ServerPlayer) context.player(), payload))));
         registrar.playToServer(UtilityRequestPayload.TYPE, UtilityRequestPayload.STREAM_CODEC, 
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> UtilityC2S.request((ServerPlayer) context.player(), payload.utilityType()))));
                 
@@ -73,6 +78,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveAnvil(payload)));
         registrar.playToClient(FurnaceSyncPayload.TYPE, FurnaceSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveFurnace(payload)));
+        registrar.playToClient(StonecutterSyncPayload.TYPE, StonecutterSyncPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveStonecutter(payload)));
         registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
     }

@@ -9,6 +9,7 @@ import dev.polaris_light.backpack_side_gui.client.gui.area.BackpackOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.area.CraftingOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.area.FurnaceOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.area.SmithingOverlayArea;
+import dev.polaris_light.backpack_side_gui.client.gui.area.StonecutterOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.element.MoveOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.UtilityType;
@@ -47,9 +48,15 @@ public final class OverlayWidget extends IOverlayWidget {
     private final SmithingOverlayArea smithing = new SmithingOverlayArea();
     private final AnvilOverlayArea anvil = new AnvilOverlayArea();
     private final FurnaceOverlayArea furnace = new FurnaceOverlayArea();
+    private final StonecutterOverlayArea stonecutter = new StonecutterOverlayArea();
 
-    public void receiveFurnace(FurnaceSyncPayload p) { 
-        furnace.sync(p.input(), p.fuel(), p.output(), p.burnFinish(), p.burnTotal(), p.cookFinish(), p.cookTotal(), p.cooking()); 
+    public void receiveStonecutter(dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload p) {
+        stonecutter.sync(p.input(), p.output(), p.recipes(), p.selected());
+    }
+
+    public void receiveFurnace(FurnaceSyncPayload p) {
+        furnace.sync(p.input(), p.fuel(), p.output(), p.burnFinish(), p.burnTotal(), p.cookFinish(), p.cookTotal(),
+                p.cooking());
     }
 
     public void receiveSmithing(SmithingSyncPayload p) {
@@ -60,8 +67,8 @@ public final class OverlayWidget extends IOverlayWidget {
         crafting.sync(java.util.Arrays.copyOf(p.items(), 9), p.items()[9]);
     }
 
-    public void receiveAnvil(AnvilSyncPayload p) { 
-        anvil.sync(p.first(), p.second(), p.result(), p.cost(), p.name()); 
+    public void receiveAnvil(AnvilSyncPayload p) {
+        anvil.sync(p.first(), p.second(), p.result(), p.cost(), p.name());
     }
 
     public void setUtilityFlags(boolean[] flags) {
@@ -83,6 +90,8 @@ public final class OverlayWidget extends IOverlayWidget {
         crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
         anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         furnace.setVisible(activeUtility == UtilityType.FURNACE && area.isVisible() && utilityButtons[1].isVisible());
+        stonecutter.setVisible(
+                activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
@@ -103,6 +112,7 @@ public final class OverlayWidget extends IOverlayWidget {
     public void setContents(String title, List<ItemStack> items, int stackLimit) {
         area.setContents(title, items, stackLimit);
     }
+
     public void setContents(String title, List<ItemStack> items, List<Integer> limits) {
         area.setContents(title, items, limits);
     }
@@ -126,6 +136,8 @@ public final class OverlayWidget extends IOverlayWidget {
         crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
         anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         furnace.setVisible(activeUtility == UtilityType.FURNACE && area.isVisible() && utilityButtons[1].isVisible());
+        stonecutter.setVisible(
+                activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
         if (smithing.isVisible()) {
             smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             smithing.render(s, g, mc);
@@ -138,9 +150,13 @@ public final class OverlayWidget extends IOverlayWidget {
             anvil.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             anvil.render(s, g, mc);
         }
-        if (furnace.isVisible()) { 
+        if (furnace.isVisible()) {
             furnace.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
             furnace.render(s, g, mc);
+        }
+        if (stonecutter.isVisible()) {
+            stonecutter.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
+            stonecutter.render(s, g, mc);
         }
 
         moveButton.setBounds(x, y);
@@ -167,6 +183,7 @@ public final class OverlayWidget extends IOverlayWidget {
         crafting.renderTooltip(g, mx, my);
         anvil.renderTooltip(g, mx, my);
         furnace.renderTooltip(g, mx, my);
+        stonecutter.renderTooltip(g, mx, my);
         moveButton.renderTooltip(g, mc, mx, my);
         visibilityButton.renderTooltip(g, mc, mx, my);
         for (UtilityOverlayButton button : utilityButtons)
@@ -200,7 +217,12 @@ public final class OverlayWidget extends IOverlayWidget {
         if (activeUtility == UtilityType.ANVIL && anvil.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
                 e.getScreen().width, e.getScreen().height))
             return anvil.mousePressed(e) || true;
-        if (activeUtility == UtilityType.FURNACE && furnace.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height)) return furnace.mousePressed(e) || true;
+        if (activeUtility == UtilityType.FURNACE && furnace.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
+                e.getScreen().width, e.getScreen().height))
+            return furnace.mousePressed(e) || true;
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.panelInteractiveContains(e.getMouseX(),
+                e.getMouseY(), e.getScreen().width, e.getScreen().height))
+            return stonecutter.mousePressed(e) || true;
         return false;
     }
 
@@ -213,6 +235,8 @@ public final class OverlayWidget extends IOverlayWidget {
                 || anvil.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
                         e.getScreen().height)
                 || furnace.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
+                        e.getScreen().height)
+                || stonecutter.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
                         e.getScreen().height);
     }
 
@@ -221,7 +245,8 @@ public final class OverlayWidget extends IOverlayWidget {
                 || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
                 || crafting.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
                 || anvil.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
-                || furnace.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
+                || furnace.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
+                || stonecutter.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
     }
 
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {
@@ -237,6 +262,8 @@ public final class OverlayWidget extends IOverlayWidget {
         // Scroller
         if (activeUtility == UtilityType.CRAFTING && crafting.mouseDragged(e))
             return true;
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseDragged(e))
+            return true;
         return area.mouseDragged(e);
     }
 
@@ -247,10 +274,14 @@ public final class OverlayWidget extends IOverlayWidget {
         }
         if (activeUtility == UtilityType.CRAFTING && crafting.mouseReleased(e))
             return true;
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseReleased(e))
+            return true;
         return area.mouseReleased(e);
     }
 
     public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre e) {
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseScrolled(e))
+            return true;
         return area.mouseScrolled(e);
     }
 

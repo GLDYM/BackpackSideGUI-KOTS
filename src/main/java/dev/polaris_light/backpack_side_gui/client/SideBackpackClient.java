@@ -13,6 +13,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
@@ -37,8 +38,17 @@ public final class SideBackpackClient {
         OVERLAY.receiveCrafting(payload);
     }
 
-    public static void receiveAnvil(AnvilSyncPayload payload) { OVERLAY.receiveAnvil(payload); }
-    public static void receiveFurnace(FurnaceSyncPayload payload) { OVERLAY.receiveFurnace(payload); }
+    public static void receiveAnvil(AnvilSyncPayload payload) {
+        OVERLAY.receiveAnvil(payload);
+    }
+
+    public static void receiveFurnace(FurnaceSyncPayload payload) {
+        OVERLAY.receiveFurnace(payload);
+    }
+
+    public static void receiveStonecutter(StonecutterSyncPayload payload) {
+        OVERLAY.receiveStonecutter(payload);
+    }
 
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,
@@ -72,7 +82,8 @@ public final class SideBackpackClient {
 
     public static void receive(String name, List<ItemStack> stacks, List<Integer> limits) {
         hasBackpack = name != null && !name.isBlank();
-        if (hasBackpack) OVERLAY.setContents(name, stacks, limits);
+        if (hasBackpack)
+            OVERLAY.setContents(name, stacks, limits);
     }
 
     public static void receiveCarried(ItemStack carried) {
