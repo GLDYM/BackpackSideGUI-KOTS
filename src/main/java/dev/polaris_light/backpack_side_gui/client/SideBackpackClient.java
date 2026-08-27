@@ -19,11 +19,14 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
+import dev.polaris_light.backpack_side_gui.compat.JeiReflectionCompat;
+import com.mojang.blaze3d.platform.InputConstants;
 
 public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
     private static int refreshTicks;
     private static boolean hasBackpack;
+    private static double lastMouseX, lastMouseY;
 
     public static void receiveUtilityFlags(UtilityFlagsPayload payload) {
         OVERLAY.setUtilityFlags(new boolean[] { payload.crafting(), payload.furnace(), payload.anvil(),
@@ -37,6 +40,11 @@ public final class SideBackpackClient {
     public static void receiveCrafting(CraftingSyncPayload payload) {
         OVERLAY.receiveCrafting(payload);
     }
+
+    public static boolean isCraftingUtilityVisible() {
+        return hasBackpack && OVERLAY.isCraftingVisible();
+    }
+    public static boolean isSmithingUtilityVisible() { return hasBackpack && OVERLAY.isSmithingVisible(); }
 
     public static void receiveAnvil(AnvilSyncPayload payload) {
         OVERLAY.receiveAnvil(payload);
@@ -93,6 +101,7 @@ public final class SideBackpackClient {
     }
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
+        lastMouseX = event.getMouseX(); lastMouseY = event.getMouseY();
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         if (!hasBackpack)
@@ -151,6 +160,11 @@ public final class SideBackpackClient {
     }
 
     public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+        if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen())) {
+            ItemStack hovered = OVERLAY.stackAt(lastMouseX, lastMouseY);
+            if (!hovered.isEmpty() && event.getKeyCode() == InputConstants.KEY_R) { if (JeiReflectionCompat.showItemRecipes(hovered)) { event.setCanceled(true); return; } }
+            if (!hovered.isEmpty() && event.getKeyCode() == InputConstants.KEY_U) { if (JeiReflectionCompat.showItemUses(hovered)) { event.setCanceled(true); return; } }
+        }
         if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen())
                 && OVERLAY.keyPressed(event.getKeyCode()))
             event.setCanceled(true);

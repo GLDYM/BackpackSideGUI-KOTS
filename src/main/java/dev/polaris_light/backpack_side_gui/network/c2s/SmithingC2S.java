@@ -6,6 +6,7 @@ import java.util.Optional;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiSmithingFillPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
@@ -57,6 +58,15 @@ public final class SmithingC2S {
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         send(player, inventory);
+    }
+    public static void handleJeiFill(ServerPlayer player, JeiSmithingFillPayload payload) {
+        IItemHandler inv = findInventory(player); if (inv == null) return;
+        for (int i=0;i<Math.min(3,payload.ingredients().size());i++) if (inv.getStackInSlot(i).isEmpty()) for (ItemStack o: payload.ingredients().get(i)) { if (o==null||o.isEmpty()) continue; ItemStack f=find(player,o); if(!f.isEmpty()){inv.insertItem(i,f,false);break;} }
+        player.containerMenu.broadcastChanges(); send(player, (BackpackAccess)null);
+    }
+    private static ItemStack find(ServerPlayer p, ItemStack w) {
+        for (int i=0;i<p.getInventory().items.size();i++){ItemStack s=p.getInventory().items.get(i);if(ItemStack.isSameItemSameComponents(s,w)){ItemStack o=s.copyWithCount(1);s.shrink(1);return o;}}
+        for (BackpackAccess a: BackpackResolver.getAllBackpacks(p)) for(int i=0;i<a.handler().getSlots();i++){ItemStack s=a.handler().getStackInSlot(i);if(ItemStack.isSameItemSameComponents(s,w)) return a.handler().extractItem(i,1,false);} return ItemStack.EMPTY;
     }
 
     private static ItemStack getResult(ServerPlayer player, IItemHandler inventory) {

@@ -8,6 +8,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayloa
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,8 +19,11 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.crafting.CraftingUpgradeWrapper;
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
 
 public final class CraftingC2S {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private CraftingC2S() {
     }
 
@@ -106,6 +110,51 @@ public final class CraftingC2S {
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(carried.copy()));
         send(player, access.get());
+    }
+
+    public static void handleJeiFill(ServerPlayer player, JeiCraftingFillPayload payload) {
+        LOGGER.info("JEI crafting fill player={} slots={} max={}", player.getGameProfile().getName(), payload.ingredients().size(), payload.maxTransfer());
+        IItemHandler inventory = inv(player);
+        if (inventory == null || payload.ingredients() == null)
+            return;
+        int limit = Math.min(9, payload.ingredients().size());
+        for (int slot = 0; slot < limit; slot++) {
+            if (!inventory.getStackInSlot(slot).isEmpty())
+                continue;
+            for (ItemStack option : payload.ingredients().get(slot)) {
+                if (option == null || option.isEmpty())
+                    continue;
+                ItemStack found = findAndExtract(player, option, payload.maxTransfer());
+                LOGGER.info("JEI crafting slot={} wanted={} found={}", slot, option, found);
+                if (!found.isEmpty()) {
+                    inventory.insertItem(slot, found, false);
+                    break;
+                }
+            }
+        }
+        player.containerMenu.broadcastChanges();
+        send(player, BackpackResolver.resolve(player).orElse(null));
+    }
+
+    private static ItemStack findAndExtract(ServerPlayer player, ItemStack wanted, boolean max) {
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            ItemStack stack = player.getInventory().items.get(i);
+            if (ItemStack.isSameItemSameComponents(stack, wanted)) {
+                int amount = max ? Math.min(stack.getCount(), wanted.getMaxStackSize()) : 1;
+                ItemStack out = stack.copyWithCount(amount);
+                stack.shrink(amount);
+                return out;
+            }
+        }
+        for (BackpackAccess access : BackpackResolver.getAllBackpacks(player)) {
+            IItemHandler handler = access.handler();
+            for (int i = 0; i < handler.getSlots(); i++) {
+                ItemStack stack = handler.getStackInSlot(i);
+                if (ItemStack.isSameItemSameComponents(stack, wanted))
+                    return handler.extractItem(i, max ? Math.min(handler.getStackInSlot(i).getCount(), wanted.getMaxStackSize()) : 1, false);
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     private static ItemStack result(ServerPlayer player, IItemHandler itemHandler) {

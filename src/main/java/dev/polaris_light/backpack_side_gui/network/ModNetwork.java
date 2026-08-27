@@ -20,6 +20,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
@@ -28,6 +29,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.StonecutterClickPaylo
 import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiSmithingFillPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -57,6 +59,11 @@ public final class ModNetwork {
         registrar.playToServer(CraftingDragPayload.TYPE, CraftingDragPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
                         () -> server(context, () -> CraftingC2S.handleDrag((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(JeiCraftingFillPayload.TYPE, JeiCraftingFillPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context,
+                        () -> CraftingC2S.handleJeiFill((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(JeiSmithingFillPayload.TYPE, JeiSmithingFillPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context, () -> SmithingC2S.handleJeiFill((ServerPlayer) context.player(), payload))));
         registrar.playToServer(SmithingClickPayload.TYPE, SmithingClickPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context,
                         () -> SmithingC2S.handleClick((ServerPlayer) context.player(), payload))));
@@ -77,7 +84,7 @@ public final class ModNetwork {
                         () -> UtilityC2S.request((ServerPlayer) context.player(), payload.utilityType()))));
 
         registrar.playToClient(BackpackSyncPayload.TYPE, BackpackSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receive(payload.title(), payload.items(), payload.slotLimits());));
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receive(payload.title(), payload.items(), payload.slotLimits())));
         registrar.playToClient(UtilityFlagsPayload.TYPE, UtilityFlagsPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
         registrar.playToClient(SmithingSyncPayload.TYPE, SmithingSyncPayload.STREAM_CODEC,

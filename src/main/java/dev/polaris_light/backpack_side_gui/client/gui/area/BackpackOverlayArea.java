@@ -383,6 +383,16 @@ public class BackpackOverlayArea extends IOverlayArea {
         return handled;
     }
 
+    public ItemStack stackAt(double mouseX, double mouseY) {
+        if (!visible || mouseX < x || mouseX >= x + Layout.SLOT_AREA_WIDTH || mouseY < y || mouseY >= y + height)
+            return ItemStack.EMPTY;
+        int row = (int) ((mouseY - y) / 18) + scrollbar.row();
+        int col = (int) ((mouseX - x) / 18);
+        int display = row * 9 + col;
+        if (col < 0 || col >= 9 || display < 0 || display >= slots.size()) return ItemStack.EMPTY;
+        return slots.get(display).stack().copy();
+    }
+
     public boolean charTyped(char character) {
         boolean handled = searchInput.charTyped(character);
         if (handled)

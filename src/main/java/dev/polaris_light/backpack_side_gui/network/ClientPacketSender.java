@@ -9,11 +9,13 @@ import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.StonecutterClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityRequestPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiSmithingFillPayload;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -69,6 +71,11 @@ public final class ClientPacketSender {
     public static void craftingDrag(List<Integer> slots, int button, ItemStack carried) {
         PacketDistributor.sendToServer(new CraftingDragPayload(List.copyOf(slots), button, carried.copy()));
     }
+
+    public static void jeiCraftingFill(List<List<ItemStack>> ingredients, boolean maxTransfer) {
+        PacketDistributor.sendToServer(new JeiCraftingFillPayload(ingredients, maxTransfer));
+    }
+    public static void jeiSmithingFill(List<List<ItemStack>> ingredients, boolean maxTransfer) { PacketDistributor.sendToServer(new JeiSmithingFillPayload(ingredients, maxTransfer)); }
 
     public static void furnaceSlot(int slot, int button, ItemStack carried) {
         PacketDistributor.sendToServer(new FurnaceClickPayload(slot, button, carried.copy()));

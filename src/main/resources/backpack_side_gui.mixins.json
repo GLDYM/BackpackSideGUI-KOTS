@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "dev.polaris_light.backpack_side_gui.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["AbstractContainerScreenMixin", "CreativeModeInventoryScreenMixin"],
+  "client": ["AbstractContainerScreenMixin", "CreativeModeInventoryScreenMixin", "JeiRecipeTransferButtonMixin"],
   "injectors": {"defaultRequire": 1}
 }
