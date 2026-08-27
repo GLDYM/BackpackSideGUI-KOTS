@@ -2,10 +2,10 @@ package dev.polaris_light.backpack_side_gui.client.gui.element;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.chat.Component;
 import net.p3pp3rf1y.sophisticatedcore.util.CountAbbreviator;
 
 public final class BackpackOverlaySlot extends Slot {
@@ -27,120 +27,128 @@ public final class BackpackOverlaySlot extends Slot {
         this.stackLimit = Math.max(1, stackLimit);
     }
 
-    @Override public int getMaxStackSize() { return stackLimit; }
+    @Override
+    public int getMaxStackSize() {
+        return stackLimit;
+    }
 
     public ItemStack stack() {
         return stack;
     }
 
-    public void renderAt(GuiGraphics g, Minecraft mc, int sx, int sy) {
-        g.fill(sx, sy, sx + 18, sy + 18, -872415232);
-        g.fill(sx + 1, sy + 1, sx + 17, sy + 17, -14671840);
+    public void renderAt(GuiGraphics graphics, Minecraft minecraft, int screenX, int screenY) {
+        graphics.fill(screenX, screenY, screenX + 18, screenY + 18, -872415232);
+        graphics.fill(screenX + 1, screenY + 1, screenX + 17, screenY + 17, -14671840);
         if (stack.isEmpty())
             return;
-        g.renderItem(stack, sx + 1, sy + 1);
+        graphics.renderItem(stack, screenX + 1, screenY + 1);
         if (stack.getCount() <= 1)
             return;
         String c = CountAbbreviator.abbreviate(stack.getCount());
-        g.pose().pushPose();
-        g.pose().translate(0.0F, 0.0F, 300.0F);
-        g.drawString(mc.font, c, sx + 20 - mc.font.width(c) - 2, sy + 10, 16777215, true);
-        g.pose().popPose();
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 300.0F);
+        graphics.drawString(minecraft.font, c, screenX + 20 - minecraft.font.width(c) - 2, screenY + 10, 16777215,
+                true);
+        graphics.pose().popPose();
     }
 
-    public void renderPreview(GuiGraphics g, Minecraft mc, int sx, int sy, ItemStack preview) {
+    public void renderPreview(GuiGraphics graphics, Minecraft minecraft, int sx, int sy, ItemStack preview) {
         if (preview == null || preview.isEmpty())
             return;
-        g.renderItem(preview, sx + 1, sy + 1);
+        graphics.renderItem(preview, sx + 1, sy + 1);
         if (preview.getCount() > 1) {
             String c = CountAbbreviator.abbreviate(preview.getCount());
-            g.pose().pushPose();
-            g.pose().translate(0.0F, 0.0F, 300.0F);
-            g.drawString(mc.font, c, sx + 20 - mc.font.width(c) - 2, sy + 10, 16777215, true);
-            g.pose().popPose();
+            graphics.pose().pushPose();
+            graphics.pose().translate(0.0F, 0.0F, 300.0F);
+            graphics.drawString(minecraft.font, c, sx + 20 - minecraft.font.width(c) - 2, sy + 10, 16777215, true);
+            graphics.pose().popPose();
         }
     }
 
-    public void renderHighlightAt(GuiGraphics g, int sx, int sy, double mouseX, double mouseY) {
+    public void renderHighlightAt(GuiGraphics graphics, int sx, int sy, double mouseX, double mouseY) {
         if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
             return;
         int highlight = 0x70FFF04A;
-        g.fill(sx, sy, sx + 18, sy + 18, highlight);
-        g.fill(sx, sy, sx + 18, sy + 1, 0xD0FFF04A);
-        g.fill(sx, sy + 17, sx + 18, sy + 18, 0xD0FFF04A);
-        g.fill(sx, sy, sx + 1, sy + 18, 0xD0FFF04A);
-        g.fill(sx + 17, sy, sx + 18, sy + 18, 0xD0FFF04A);
+        graphics.fill(sx, sy, sx + 18, sy + 18, highlight);
+        graphics.fill(sx, sy, sx + 18, sy + 1, 0xD0FFF04A);
+        graphics.fill(sx, sy + 17, sx + 18, sy + 18, 0xD0FFF04A);
+        graphics.fill(sx, sy, sx + 1, sy + 18, 0xD0FFF04A);
+        graphics.fill(sx + 17, sy, sx + 18, sy + 18, 0xD0FFF04A);
     }
 
-    public void renderDragHighlight(GuiGraphics g, int sx, int sy) {
+    public void renderDragHighlight(GuiGraphics graphics, int sx, int sy) {
         int color = 0xD0FFFF40;
-        g.fill(sx, sy, sx + 18, sy + 1, color);
-        g.fill(sx, sy + 17, sx + 18, sy + 18, color);
-        g.fill(sx, sy, sx + 1, sy + 18, color);
-        g.fill(sx + 17, sy, sx + 18, sy + 18, color);
+        graphics.fill(sx, sy, sx + 18, sy + 1, color);
+        graphics.fill(sx, sy + 17, sx + 18, sy + 18, color);
+        graphics.fill(sx, sy, sx + 1, sy + 18, color);
+        graphics.fill(sx + 17, sy, sx + 18, sy + 18, color);
     }
 
-    public void renderTooltip(GuiGraphics g, Minecraft mc, int sx, int sy, double mouseX, double mouseY) {
+    public void renderTooltip(GuiGraphics graphics, Minecraft minecraft, int sx, int sy, double mouseX, double mouseY) {
         if (!stack.isEmpty() && mouseX >= sx && mouseX < sx + 18 && mouseY >= sy && mouseY < sy + 18) {
             java.util.List<Component> lines = new java.util.ArrayList<>(stack.getTooltipLines(
-                    mc.level == null ? net.minecraft.world.item.Item.TooltipContext.EMPTY
-                            : net.minecraft.world.item.Item.TooltipContext.of(mc.level), mc.player,
+                    minecraft.level == null ? net.minecraft.world.item.Item.TooltipContext.EMPTY
+                            : net.minecraft.world.item.Item.TooltipContext.of(minecraft.level),
+                    minecraft.player,
                     net.minecraft.world.item.TooltipFlag.NORMAL));
             // Stupid Codex!
             if (stack.getCount() > stack.getMaxStackSize() || stackLimit > stack.getMaxStackSize()) {
-                net.minecraft.network.chat.MutableComponent count = Component.literal(java.text.NumberFormat.getNumberInstance().format(stack.getCount()))
+                net.minecraft.network.chat.MutableComponent count = Component
+                        .literal(java.text.NumberFormat.getNumberInstance().format(stack.getCount()))
                         .withStyle(net.minecraft.ChatFormatting.DARK_AQUA);
                 Component max = Component.literal(java.text.NumberFormat.getNumberInstance().format(stackLimit))
                         .withStyle(net.minecraft.ChatFormatting.DARK_AQUA);
-                Component value = count.append(Component.literal(" /").withStyle(net.minecraft.ChatFormatting.GRAY)).append(max);
+                Component value = count.append(Component.literal(" /").withStyle(net.minecraft.ChatFormatting.GRAY))
+                        .append(max);
                 lines.add(Component.translatable("gui.sophisticatedcore.tooltip.stack_count", value)
                         .withStyle(net.minecraft.ChatFormatting.GRAY));
             }
             java.util.List<net.minecraft.util.FormattedCharSequence> wrapped = new java.util.ArrayList<>();
             for (Component line : lines)
-                wrapped.addAll(mc.font.split(line, 300));
-            g.renderTooltip(mc.font, wrapped, (int) mouseX, (int) mouseY);
+                wrapped.addAll(minecraft.font.split(line, 300));
+            graphics.renderTooltip(minecraft.font, wrapped, (int) mouseX, (int) mouseY);
         }
     }
 
-    public void render(GuiGraphics g, Minecraft mc, int ox, int oy, int scroll, int visible) {
+    public void render(GuiGraphics graphics, Minecraft minecraft, int ox, int oy, int scroll, int visible) {
         int row = index / 9;
         if (row < scroll || row >= scroll + visible)
             return;
         int sx = ox + (index % 9) * 18, sy = oy + (row - scroll) * 18;
-        g.fill(sx, sy, sx + 18, sy + 18, -872415232);
-        g.fill(sx + 1, sy + 1, sx + 17, sy + 17, -14671840);
+        graphics.fill(sx, sy, sx + 18, sy + 18, -872415232);
+        graphics.fill(sx + 1, sy + 1, sx + 17, sy + 17, -14671840);
         // Do not read through the vanilla SimpleContainer-backed Slot here:
         // vanilla container paths normalize oversized stacks to 64. The sync
         // payload already carries the real Sophisticated count.
         ItemStack shown = stack;
         if (shown.isEmpty())
             return;
-        g.renderItem(shown, sx + 1, sy + 1);
+        graphics.renderItem(shown, sx + 1, sy + 1);
         if (shown.getCount() <= 1)
             return;
         String c = CountAbbreviator.abbreviate(shown.getCount());
-        g.pose().pushPose();
-        g.pose().translate(0.0F, 0.0F, 300.0F);
-        g.drawString(mc.font, c, sx + 20 - mc.font.width(c) - 2, sy + 10, 16777215, true);
-        g.pose().popPose();
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 300.0F);
+        graphics.drawString(minecraft.font, c, sx + 20 - minecraft.font.width(c) - 2, sy + 10, 16777215, true);
+        graphics.pose().popPose();
     }
 
-    public void renderHighlight(GuiGraphics g, int ox, int oy, int scroll, int visible, double mouseX, double mouseY) {
+    public void renderHighlight(GuiGraphics graphics, int ox, int oy, int scroll, int visible, double mouseX,
+            double mouseY) {
         int row = index / 9;
         if (row < scroll || row >= scroll + visible)
             return;
         int sx = ox + (index % 9) * 18, sy = oy + (row - scroll) * 18;
         if (mouseX < sx || mouseX >= sx + 18 || mouseY < sy || mouseY >= sy + 18)
             return;
-        renderHighlightAt(g, sx, sy, mouseX, mouseY);
+        renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
     }
 
-    public void renderTooltip(GuiGraphics g, Minecraft mc, int ox, int oy, int scroll, int visible,
+    public void renderTooltip(GuiGraphics graphics, Minecraft minecraft, int ox, int oy, int scroll, int visible,
             double mouseX, double mouseY) {
         int row = index / 9;
         if (row < scroll || row >= scroll + visible)
             return;
-        renderTooltip(g, mc, ox + (index % 9) * 18, oy + (row - scroll) * 18, mouseX, mouseY);
+        renderTooltip(graphics, minecraft, ox + (index % 9) * 18, oy + (row - scroll) * 18, mouseX, mouseY);
     }
 }

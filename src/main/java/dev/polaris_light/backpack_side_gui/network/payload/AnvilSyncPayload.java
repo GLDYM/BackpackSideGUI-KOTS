@@ -11,13 +11,15 @@ public record AnvilSyncPayload(ItemStack first, ItemStack second, ItemStack resu
         implements CustomPacketPayload {
     public static final Type<AnvilSyncPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "anvil_sync"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, AnvilSyncPayload> STREAM_CODEC = StreamCodec.of((b, p) -> {
-        writeStack(b, p.first);
-        writeStack(b, p.second);
-        writeStack(b, p.result);
-        b.writeVarInt(p.cost);
-        b.writeUtf(p.name, 50);
-    }, b -> new AnvilSyncPayload(readStack(b), readStack(b), readStack(b), b.readVarInt(), b.readUtf(50)));
+    public static final StreamCodec<RegistryFriendlyByteBuf, AnvilSyncPayload> STREAM_CODEC = StreamCodec
+            .of((buffer, payload) -> {
+                writeStack(buffer, payload.first);
+                writeStack(buffer, payload.second);
+                writeStack(buffer, payload.result);
+                buffer.writeVarInt(payload.cost);
+                buffer.writeUtf(payload.name, 50);
+            }, buffer -> new AnvilSyncPayload(readStack(buffer), readStack(buffer), readStack(buffer),
+                    buffer.readVarInt(), buffer.readUtf(50)));
 
     private static void writeStack(RegistryFriendlyByteBuf buffer, ItemStack stack) {
         boolean present = stack != null && !stack.isEmpty();

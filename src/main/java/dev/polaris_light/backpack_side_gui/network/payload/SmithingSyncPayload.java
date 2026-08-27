@@ -12,23 +12,24 @@ public record SmithingSyncPayload(ItemStack template, ItemStack base, ItemStack 
     public static final Type<SmithingSyncPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "smithing_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, SmithingSyncPayload> STREAM_CODEC = StreamCodec.of(
-            (b, p) -> {
-                writeStack(b, p.template);
-                writeStack(b, p.base);
-                writeStack(b, p.addition);
-                writeStack(b, p.result);
+            (buffer, payload) -> {
+                writeStack(buffer, payload.template);
+                writeStack(buffer, payload.base);
+                writeStack(buffer, payload.addition);
+                writeStack(buffer, payload.result);
             },
-            b -> new SmithingSyncPayload(readStack(b), readStack(b), readStack(b), readStack(b)));
+            buffer -> new SmithingSyncPayload(readStack(buffer), readStack(buffer), readStack(buffer),
+                    readStack(buffer)));
 
-    private static void writeStack(RegistryFriendlyByteBuf b, ItemStack stack) {
+    private static void writeStack(RegistryFriendlyByteBuf buffer, ItemStack stack) {
         boolean present = stack != null && !stack.isEmpty();
-        b.writeBoolean(present);
+        buffer.writeBoolean(present);
         if (present)
-            ItemStack.STREAM_CODEC.encode(b, stack);
+            ItemStack.STREAM_CODEC.encode(buffer, stack);
     }
 
-    private static ItemStack readStack(RegistryFriendlyByteBuf b) {
-        return b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY;
+    private static ItemStack readStack(RegistryFriendlyByteBuf buffer) {
+        return buffer.readBoolean() ? ItemStack.STREAM_CODEC.decode(buffer) : ItemStack.EMPTY;
     }
 
     @Override

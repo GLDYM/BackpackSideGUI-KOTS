@@ -11,11 +11,12 @@ public record FurnaceClickPayload(int slot, int button, ItemStack carried) imple
     public static final Type<FurnaceClickPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "furnace_click"));
     public static final StreamCodec<RegistryFriendlyByteBuf, FurnaceClickPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                b.writeVarInt(p.slot);
-                b.writeVarInt(p.button);
-                ItemStack.OPTIONAL_STREAM_CODEC.encode(b, p.carried);
-            }, b -> new FurnaceClickPayload(b.readVarInt(), b.readVarInt(), ItemStack.OPTIONAL_STREAM_CODEC.decode(b)));
+            .of((buffer, payload) -> {
+                buffer.writeVarInt(payload.slot);
+                buffer.writeVarInt(payload.button);
+                ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, payload.carried);
+            }, buffer -> new FurnaceClickPayload(buffer.readVarInt(), buffer.readVarInt(),
+                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer)));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

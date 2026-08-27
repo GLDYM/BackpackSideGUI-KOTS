@@ -11,17 +11,17 @@ public record CraftingSyncPayload(ItemStack[] items) implements CustomPacketPayl
     public static final Type<CraftingSyncPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "crafting_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CraftingSyncPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
+            .of((buffer, payload) -> {
                 for (int i = 0; i < 10; i++) {
-                    ItemStack s = p.items[i];
-                    b.writeBoolean(!s.isEmpty());
+                    ItemStack s = payload.items[i];
+                    buffer.writeBoolean(!s.isEmpty());
                     if (!s.isEmpty())
-                        ItemStack.STREAM_CODEC.encode(b, s);
+                        ItemStack.STREAM_CODEC.encode(buffer, s);
                 }
-            }, b -> {
+            }, buffer -> {
                 ItemStack[] a = new ItemStack[10];
                 for (int i = 0; i < 10; i++)
-                    a[i] = b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY;
+                    a[i] = buffer.readBoolean() ? ItemStack.STREAM_CODEC.decode(buffer) : ItemStack.EMPTY;
                 return new CraftingSyncPayload(a);
             });
 

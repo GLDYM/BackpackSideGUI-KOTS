@@ -1,8 +1,11 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Optional;
-import dev.polaris_light.backpack_side_gui.network.payload.*;
-import dev.polaris_light.backpack_side_gui.server.*;
+
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
+import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -53,6 +56,7 @@ public final class FurnaceC2S {
         PacketDistributor.sendToPlayer(p,
                 new FurnaceSyncPayload(i.getStackInSlot(0), i.getStackInSlot(1), i.getStackInSlot(2),
                         Math.max(0, w.getBurnTimeFinish() - p.level().getGameTime()), w.getBurnTimeTotal(),
-                        Math.max(0, w.getCookTimeFinish() - p.level().getGameTime()), w.getCookTimeTotal(), w.isCooking()));
+                        Math.max(0, w.getCookTimeFinish() - p.level().getGameTime()), w.getCookTimeTotal(),
+                        w.isCooking()));
     }
 }

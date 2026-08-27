@@ -12,10 +12,11 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class FurnaceOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int inputX = 0, inputY = 15, fuelX = 0, fuelY = 43, outputX = 54, outputY = 29;
-        public int progressX = 24, progressY = 36, progressWidth = 24, burnX = 1, burnY = 36, burnWidth = 16;
-        public int slotSize = 18, panelWidth = 80, panelHeight = 68;
+        public int INPUT_X = 0, INPUT_Y = 15, FUEL_X = 0, FUEL_Y = 43, OUTPUT_X = 54, OUTPUT_Y = 29;
+        public int PROGRESS_X = 24, PROGRESS_Y = 36, PROGRESS_WIDTH = 24, BURN_X = 1, BURN_Y = 36, BURN_WIDTH = 16;
+        public int SLOT_SIZE = 18, PANEL_WIDTH = 80, PANEL_HEIGHT = 68;
     }
+
     public final Layout layout = new Layout();
     private final ItemStack[] stacks = { ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY };
     private final BackpackOverlaySlot[] slots = { new BackpackOverlaySlot(0, ItemStack.EMPTY),
@@ -24,7 +25,8 @@ public final class FurnaceOverlayArea extends IOverlayArea {
     private int burnTotal, cookTotal;
     private boolean cooking;
 
-    public void sync(ItemStack input, ItemStack fuel, ItemStack output, long bf, int bt, long cf, int ct, boolean active) {
+    public void sync(ItemStack input, ItemStack fuel, ItemStack output, long bf, int bt, long cf, int ct,
+            boolean active) {
         ItemStack[] a = { input, fuel, output };
         for (int i = 0; i < 3; i++) {
             stacks[i] = a[i] == null ? ItemStack.EMPTY : a[i].copy();
@@ -35,63 +37,69 @@ public final class FurnaceOverlayArea extends IOverlayArea {
         cookFinish = cf;
         cookTotal = ct;
         cooking = active;
-        width = layout.panelWidth;
-        height = layout.panelHeight;
+        width = layout.PANEL_WIDTH;
+        height = layout.PANEL_HEIGHT;
         visible = true;
     }
 
     @Override
-    public void render(Screen s, GuiGraphics g, Minecraft mc) {
+    public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
-        g.fill(x - 4, y - 4, x + layout.panelWidth - 4, y + layout.panelHeight + 4, -871362544);
-        g.fill(x - 4, y - 4, x + layout.panelWidth - 4, y - 3, -11184811);
-        g.drawString(mc.font, "Furnace", x + 4, y + 3, 16777215, true);
-        slots[0].renderAt(g, mc, x + layout.inputX, y + layout.inputY);
-        slots[1].renderAt(g, mc, x + layout.fuelX, y + layout.fuelY);
-        slots[2].renderAt(g, mc, x + layout.outputX, y + layout.outputY);
-        int cook = !cooking || cookFinish <= 0 || cookTotal <= 0 ? 0 : Math.min(layout.progressWidth,
-                Math.max(0, (int) (cookTotal - Math.max(0, cookFinish)) * layout.progressWidth / cookTotal));
-        int burn = burnTotal <= 0 ? 0 : Math.min(layout.burnWidth,
-                Math.max(0, (int) Math.max(0, burnFinish) * layout.burnWidth / burnTotal));
+        graphics.fill(x - 4, y - 4, x + layout.PANEL_WIDTH - 4, y + layout.PANEL_HEIGHT + 4, -871362544);
+        graphics.fill(x - 4, y - 4, x + layout.PANEL_WIDTH - 4, y - 3, -11184811);
+        graphics.drawString(minecraft.font, "Furnace", x + 4, y + 3, 16777215, true);
+        slots[0].renderAt(graphics, minecraft, x + layout.INPUT_X, y + layout.INPUT_Y);
+        slots[1].renderAt(graphics, minecraft, x + layout.FUEL_X, y + layout.FUEL_Y);
+        slots[2].renderAt(graphics, minecraft, x + layout.OUTPUT_X, y + layout.OUTPUT_Y);
+        int cook = !cooking || cookFinish <= 0 || cookTotal <= 0 ? 0
+                : Math.min(layout.PROGRESS_WIDTH,
+                        Math.max(0, (int) (cookTotal - Math.max(0, cookFinish)) * layout.PROGRESS_WIDTH / cookTotal));
+        int burn = burnTotal <= 0 ? 0
+                : Math.min(layout.BURN_WIDTH,
+                        Math.max(0, (int) Math.max(0, burnFinish) * layout.BURN_WIDTH / burnTotal));
         // Burning and cooking are independent: cooking progress can remain
         // visible (and decrease) after fuel runs out, while the flame hides.
         if (cook > 0) {
-            g.fill(x + layout.progressX, y + layout.progressY,
-                    x + layout.progressX + cook, y + layout.progressY + 4, -256);
+            graphics.fill(x + layout.PROGRESS_X, y + layout.PROGRESS_Y,
+                    x + layout.PROGRESS_X + cook, y + layout.PROGRESS_Y + 4, -256);
         }
         if (burn > 0) {
-            g.fill(x + layout.burnX, y + layout.burnY,
-                    x + layout.burnX + burn, y + layout.burnY + 4, -65536);
+            graphics.fill(x + layout.BURN_X, y + layout.BURN_Y,
+                    x + layout.BURN_X + burn, y + layout.BURN_Y + 4, -65536);
         }
     }
 
-    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
+    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
         if (!visible)
             return false;
         for (int i = 0; i < 3; i++) {
-            int sx = x + (i == 0 ? layout.inputX : i == 1 ? layout.fuelX : layout.outputX), sy = y + (i == 0 ? layout.inputY : i == 1 ? layout.fuelY : layout.outputY);
-            if (e.getMouseX() >= sx && e.getMouseX() < sx + 18 && e.getMouseY() >= sy && e.getMouseY() < sy + 18) {
-                ItemStack c = e.getScreen() instanceof AbstractContainerScreen<?> a ? a.getMenu().getCarried()
+            int sx = x + (i == 0 ? layout.INPUT_X : i == 1 ? layout.FUEL_X : layout.OUTPUT_X),
+                    sy = y + (i == 0 ? layout.INPUT_Y : i == 1 ? layout.FUEL_Y : layout.OUTPUT_Y);
+            if (event.getMouseX() >= sx && event.getMouseX() < sx + 18 && event.getMouseY() >= sy
+                    && event.getMouseY() < sy + 18) {
+                ItemStack c = event.getScreen() instanceof AbstractContainerScreen<?> a ? a.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ClientPacketSender.furnaceSlot(i, e.getButton(), c);
+                ClientPacketSender.furnaceSlot(i, event.getButton(), c);
                 return true;
             }
         }
         return false;
     }
 
-    public void renderTooltip(GuiGraphics g, double mx, double my) {
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         for (int i = 0; i < 3; i++) {
-            int sx = x + (i == 0 ? layout.inputX : i == 1 ? layout.fuelX : layout.outputX), sy = y + (i == 0 ? layout.inputY : i == 1 ? layout.fuelY : layout.outputY);
-            slots[i].renderHighlightAt(g, sx, sy, mx, my);
-            slots[i].renderTooltip(g, Minecraft.getInstance(), sx, sy, mx, my);
+            int sx = x + (i == 0 ? layout.INPUT_X : i == 1 ? layout.FUEL_X : layout.OUTPUT_X),
+                    sy = y + (i == 0 ? layout.INPUT_Y : i == 1 ? layout.FUEL_Y : layout.OUTPUT_Y);
+            slots[i].renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
+            slots[i].renderTooltip(graphics, Minecraft.getInstance(), sx, sy, mouseX, mouseY);
         }
     }
 
-    public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {
-        return visible && mx >= x - 4 && mx < x + layout.panelWidth - 4 && my >= y - 4 && my < y + layout.panelHeight + 4;
+    public boolean panelInteractiveContains(double mouseX, double mouseY, int sw, int sh) {
+        return visible && mouseX >= x - 4 && mouseX < x + layout.PANEL_WIDTH - 4 && mouseY >= y - 4
+                && mouseY < y + layout.PANEL_HEIGHT + 4;
     }
 }

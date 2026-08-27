@@ -10,7 +10,8 @@ public record UtilityRequestPayload(int utilityType) implements CustomPacketPayl
     public static final Type<UtilityRequestPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "utility_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, UtilityRequestPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> b.writeVarInt(p.utilityType()), b -> new UtilityRequestPayload(b.readVarInt()));
+            .of((buffer, payload) -> buffer.writeVarInt(payload.utilityType()),
+                    buffer -> new UtilityRequestPayload(buffer.readVarInt()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

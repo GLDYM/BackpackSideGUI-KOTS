@@ -69,6 +69,7 @@ public class BackpackOverlayArea extends IOverlayArea {
         this.stackLimit = Math.max(1, stackLimit);
         setContents(title, items, filter, this.stackLimit);
     }
+
     public void setContents(String title, List<ItemStack> items, List<Integer> limits) {
         this.slotLimits = limits == null ? java.util.List.of() : new ArrayList<>(limits);
         setContents(title, items, filter, this.stackLimit);
@@ -264,14 +265,14 @@ public class BackpackOverlayArea extends IOverlayArea {
                     if (base.isEmpty() || ItemStack.isSameItemSameComponents(base, dragCarried)) {
                         ItemStack preview = (base.isEmpty() ? dragCarried : base)
                                 .copyWithCount(Math.min(slot.getMaxStackSize(), base.getCount() + amount));
-                    slot.renderPreview(graphics, Minecraft.getInstance(), x + col * 18,
-                            y + (row - scrollbar.row()) * 18, preview);
-                }
-                slot.renderDragHighlight(graphics, x + col * 18,
-                        y + (row - scrollbar.row()) * 18);
+                        slot.renderPreview(graphics, Minecraft.getInstance(), x + col * 18,
+                                y + (row - scrollbar.row()) * 18, preview);
+                    }
+                    slot.renderDragHighlight(graphics, x + col * 18,
+                            y + (row - scrollbar.row()) * 18);
                 }
             }
-        }
+    }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {
         updateBounds(screenWidth, screenHeight);
@@ -382,8 +383,8 @@ public class BackpackOverlayArea extends IOverlayArea {
         return handled;
     }
 
-    public boolean charTyped(char c) {
-        boolean handled = searchInput.charTyped(c);
+    public boolean charTyped(char character) {
+        boolean handled = searchInput.charTyped(character);
         if (handled)
             setFilter(searchInput.value());
         return handled;

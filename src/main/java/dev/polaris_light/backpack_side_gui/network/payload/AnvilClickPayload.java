@@ -11,14 +11,14 @@ public record AnvilClickPayload(int slot, int button, ItemStack carried) impleme
     public static final Type<AnvilClickPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "anvil_click"));
     public static final StreamCodec<RegistryFriendlyByteBuf, AnvilClickPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                b.writeVarInt(p.slot);
-                b.writeVarInt(p.button);
-                b.writeBoolean(!p.carried.isEmpty());
-                if (!p.carried.isEmpty())
-                    ItemStack.STREAM_CODEC.encode(b, p.carried);
-            }, b -> new AnvilClickPayload(b.readVarInt(), b.readVarInt(),
-                    b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY));
+            .of((buffer, payload) -> {
+                buffer.writeVarInt(payload.slot);
+                buffer.writeVarInt(payload.button);
+                buffer.writeBoolean(!payload.carried.isEmpty());
+                if (!payload.carried.isEmpty())
+                    ItemStack.STREAM_CODEC.encode(buffer, payload.carried);
+            }, buffer -> new AnvilClickPayload(buffer.readVarInt(), buffer.readVarInt(),
+                    buffer.readBoolean() ? ItemStack.STREAM_CODEC.decode(buffer) : ItemStack.EMPTY));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

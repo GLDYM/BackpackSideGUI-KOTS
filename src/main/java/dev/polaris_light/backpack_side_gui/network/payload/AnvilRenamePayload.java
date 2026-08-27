@@ -10,7 +10,8 @@ public record AnvilRenamePayload(String name) implements CustomPacketPayload {
     public static final Type<AnvilRenamePayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "anvil_rename"));
     public static final StreamCodec<RegistryFriendlyByteBuf, AnvilRenamePayload> STREAM_CODEC = StreamCodec.of(
-            (b, p) -> b.writeUtf(p.name == null ? "" : p.name, 50), b -> new AnvilRenamePayload(b.readUtf(50)));
+            (buffer, payload) -> buffer.writeUtf(payload.name == null ? "" : payload.name, 50),
+            buffer -> new AnvilRenamePayload(buffer.readUtf(50)));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

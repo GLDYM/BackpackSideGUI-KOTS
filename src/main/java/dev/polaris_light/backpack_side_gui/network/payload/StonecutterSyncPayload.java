@@ -12,30 +12,30 @@ public record StonecutterSyncPayload(ItemStack input, ItemStack output, ItemStac
     public static final Type<StonecutterSyncPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "stonecutter_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, StonecutterSyncPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                write(b, p.input);
-                write(b, p.output);
-                b.writeVarInt(p.recipes.length);
-                for (ItemStack s : p.recipes)
-                    write(b, s);
-                b.writeVarInt(p.selected);
-            }, b -> {
-                ItemStack i = read(b), o = read(b);
-                int n = b.readVarInt();
+            .of((buffer, payload) -> {
+                write(buffer, payload.input);
+                write(buffer, payload.output);
+                buffer.writeVarInt(payload.recipes.length);
+                for (ItemStack s : payload.recipes)
+                    write(buffer, s);
+                buffer.writeVarInt(payload.selected);
+            }, buffer -> {
+                ItemStack i = read(buffer), o = read(buffer);
+                int n = buffer.readVarInt();
                 ItemStack[] r = new ItemStack[n];
                 for (int x = 0; x < n; x++)
-                    r[x] = read(b);
-                return new StonecutterSyncPayload(i, o, r, b.readVarInt());
+                    r[x] = read(buffer);
+                return new StonecutterSyncPayload(i, o, r, buffer.readVarInt());
             });
 
-    private static void write(RegistryFriendlyByteBuf b, ItemStack s) {
-        b.writeBoolean(!s.isEmpty());
+    private static void write(RegistryFriendlyByteBuf buffer, ItemStack s) {
+        buffer.writeBoolean(!s.isEmpty());
         if (!s.isEmpty())
-            ItemStack.STREAM_CODEC.encode(b, s);
+            ItemStack.STREAM_CODEC.encode(buffer, s);
     }
 
-    private static ItemStack read(RegistryFriendlyByteBuf b) {
-        return b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY;
+    private static ItemStack read(RegistryFriendlyByteBuf buffer) {
+        return buffer.readBoolean() ? ItemStack.STREAM_CODEC.decode(buffer) : ItemStack.EMPTY;
     }
 
     @Override

@@ -11,13 +11,14 @@ public record BackpackCarriedPayload(ItemStack carried) implements CustomPacketP
     public static final Type<BackpackCarriedPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "backpack_carried"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BackpackCarriedPayload> STREAM_CODEC = StreamCodec.of(
-            (b, p) -> {
-                boolean present = p.carried() != null && !p.carried().isEmpty();
-                b.writeBoolean(present);
+            (buffer, payload) -> {
+                boolean present = payload.carried() != null && !payload.carried().isEmpty();
+                buffer.writeBoolean(present);
                 if (present)
-                    ItemStack.STREAM_CODEC.encode(b, p.carried());
+                    ItemStack.STREAM_CODEC.encode(buffer, payload.carried());
             },
-            b -> new BackpackCarriedPayload(b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY));
+            buffer -> new BackpackCarriedPayload(
+                    buffer.readBoolean() ? ItemStack.STREAM_CODEC.decode(buffer) : ItemStack.EMPTY));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

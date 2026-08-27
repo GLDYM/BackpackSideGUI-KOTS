@@ -3,12 +3,15 @@ package dev.polaris_light.backpack_side_gui.network.c2s;
 import java.util.List;
 import java.util.Optional;
 
-import dev.polaris_light.backpack_side_gui.network.payload.*;
-import dev.polaris_light.backpack_side_gui.server.*;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
+import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
@@ -57,7 +60,8 @@ public final class SmithingC2S {
     }
 
     private static ItemStack getResult(ServerPlayer player, IItemHandler inventory) {
-        SmithingRecipeInput input = new SmithingRecipeInput(inventory.getStackInSlot(0).copy(), inventory.getStackInSlot(1).copy(),
+        SmithingRecipeInput input = new SmithingRecipeInput(inventory.getStackInSlot(0).copy(),
+                inventory.getStackInSlot(1).copy(),
                 inventory.getStackInSlot(2).copy());
         return player.level().getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, player.level())
                 .map(holder -> holder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);

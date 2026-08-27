@@ -38,9 +38,9 @@ public class BackpackOverlayButton extends IOverlayElement {
         visible = !visible;
     }
 
-    public void setBounds(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public void setBounds(int screenX, int screenY) {
+        this.x = screenX;
+        this.y = screenY;
     }
 
     protected int getX() {
@@ -55,22 +55,22 @@ public class BackpackOverlayButton extends IOverlayElement {
         return icon;
     }
 
-    public boolean press(double mx, double my) {
-        if (!visible || mx < x || mx >= x + SIZE || my < y || my >= y + SIZE)
+    public boolean press(double mouseX, double mouseY) {
+        if (!visible || mouseX < x || mouseX >= x + SIZE || mouseY < y || mouseY >= y + SIZE)
             return false;
         return true;
     }
 
-    public void render(GuiGraphics g, Minecraft mc) {
+    public void render(GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
-        g.fill(x, y, x + SIZE, y + SIZE, -872415232);
-        g.fill(x + 1, y + 1, x + SIZE - 1, y + SIZE - 1, -14013910);
-        g.blit(icon, x + 2, y + 2, 0, 0, 12, 12, 12, 12);
+        graphics.fill(x, y, x + SIZE, y + SIZE, -872415232);
+        graphics.fill(x + 1, y + 1, x + SIZE - 1, y + SIZE - 1, -14013910);
+        graphics.blit(icon, x + 2, y + 2, 0, 0, 12, 12, 12, 12);
     }
 
-    public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {
-        if (visible && mx >= x && mx < x + SIZE && my >= y && my < y + SIZE)
-            g.renderTooltip(mc.font, label, (int) mx, (int) my);
+    public void renderTooltip(GuiGraphics graphics, Minecraft minecraft, double mouseX, double mouseY) {
+        if (visible && mouseX >= x && mouseX < x + SIZE && mouseY >= y && mouseY < y + SIZE)
+            graphics.renderTooltip(minecraft.font, label, (int) mouseX, (int) mouseY);
     }
 }

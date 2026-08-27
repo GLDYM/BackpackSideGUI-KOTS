@@ -2,15 +2,19 @@ package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.List;
 import java.util.Optional;
-import dev.polaris_light.backpack_side_gui.network.payload.*;
+
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
+import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
@@ -99,7 +103,8 @@ public final class AnvilC2S {
             return new Calculation(vanillaResult, menu.getCost(), consumed);
         }
 
-        // Fallback for the upgrade's persisted name when vanilla has no change to apply.
+        // Fallback for the upgrade's persisted name when vanilla has no change to
+        // apply.
         ItemStack result = left.copy();
         int cost = 0;
         if (name != null && !name.isBlank() && !name.equals(left.getHoverName().getString())) {

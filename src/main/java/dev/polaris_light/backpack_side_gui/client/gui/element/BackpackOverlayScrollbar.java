@@ -64,11 +64,11 @@ public final class BackpackOverlayScrollbar {
         return true;
     }
 
-    public void render(GuiGraphics g) {
+    public void render(GuiGraphics graphics) {
         if (maxRow == 0)
             return;
-        g.fill(x, y, x + 6, y + height, -14671840);
-        g.fill(x + 1, thumbY, x + 5, thumbY + thumbHeight, -6645094);
+        graphics.fill(x, y, x + 6, y + height, -14671840);
+        graphics.fill(x + 1, thumbY, x + 5, thumbY + thumbHeight, -6645094);
     }
 
     private void setFromMouse(double mouseY) {
@@ -76,7 +76,7 @@ public final class BackpackOverlayScrollbar {
         row = (int) Math.round(Math.max(0, Math.min(1, (mouseY - y) / travel)) * maxRow);
     }
 
-    private boolean contains(double mx, double my) {
-        return mx >= x && mx < x + 6 && my >= y && my < y + height;
+    private boolean contains(double mouseX, double mouseY) {
+        return mouseX >= x && mouseX < x + 6 && mouseY >= y && mouseY < y + height;
     }
 }

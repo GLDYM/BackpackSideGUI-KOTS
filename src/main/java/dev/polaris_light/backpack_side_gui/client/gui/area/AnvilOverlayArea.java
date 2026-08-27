@@ -15,13 +15,13 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 /** Anvil utility area: name input above, two inputs and one result below. */
 public final class AnvilOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int inputBoxX = 0, inputBoxY = 15, inputBoxWidth = 90;
-        public int firstSlotX = 0, secondSlotX = 36, resultSlotX = 72;
-        public int slotsY = 35, slotSize = 18, panelWidth = 98, panelHeight = 68;
+        public int INPUT_BOX_X = 0, INPUT_BOX_Y = 15, INPUT_BOX_WIDTH = 90;
+        public int FIRST_SLOT_X = 0, SECOND_SLOT_X = 36, RESULT_SLOT_X = 72;
+        public int SLOTS_Y = 35, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 68;
     }
 
     public final Layout layout = new Layout();
-    private final OverlayTextInput nameInput = new OverlayTextInput(layout.inputBoxWidth);
+    private final OverlayTextInput nameInput = new OverlayTextInput(layout.INPUT_BOX_WIDTH);
     private final ItemStack[] stacks = { ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY };
     private final BackpackOverlaySlot[] slots = { new BackpackOverlaySlot(0, ItemStack.EMPTY),
             new BackpackOverlaySlot(1, ItemStack.EMPTY), new BackpackOverlaySlot(2, ItemStack.EMPTY) };
@@ -35,8 +35,8 @@ public final class AnvilOverlayArea extends IOverlayArea {
             slots[i] = new BackpackOverlaySlot(i, stacks[i]);
         nameInput.setValue(name);
         this.cost = Math.max(0, cost);
-        width = layout.panelWidth;
-        height = layout.panelHeight;
+        width = layout.PANEL_WIDTH;
+        height = layout.PANEL_HEIGHT;
         visible = true;
         nameInput.setVisible(true);
     }
@@ -47,36 +47,39 @@ public final class AnvilOverlayArea extends IOverlayArea {
         nameInput.setVisible(visible);
     }
 
-    public void render(Screen screen, GuiGraphics g, Minecraft mc) {
+    public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
-        int right = x + layout.panelWidth - 4, bottom = y + layout.panelHeight + 4;
-        g.fill(x - 4, y - 4, right, bottom, -871362544);
-        g.fill(x - 4, y - 4, right, y - 3, -11184811);
-        g.drawString(mc.font, Component.translatable("text.backpack_side_gui.utility.anvil"), x + 4, y + 3, 16777215,
+        int right = x + layout.PANEL_WIDTH - 4, bottom = y + layout.PANEL_HEIGHT + 4;
+        graphics.fill(x - 4, y - 4, right, bottom, -871362544);
+        graphics.fill(x - 4, y - 4, right, y - 3, -11184811);
+        graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.anvil"), x + 4,
+                y + 3, 16777215,
                 true);
-        nameInput.setBounds(x + layout.inputBoxX, y + layout.inputBoxY);
-        nameInput.render(g, mc, Component.translatable("text.backpack_side_gui.anvil.rename_hint"));
-        int[] xs = { layout.firstSlotX, layout.secondSlotX, layout.resultSlotX };
+        nameInput.setBounds(x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y);
+        nameInput.render(graphics, minecraft, Component.translatable("text.backpack_side_gui.anvil.rename_hint"));
+        int[] xs = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderAt(g, mc, x + xs[i], y + layout.slotsY);
+            slots[i].renderAt(graphics, minecraft, x + xs[i], y + layout.SLOTS_Y);
         if (cost > 0)
-            g.drawString(mc.font, Component.translatable("text.backpack_side_gui.anvil.cost", cost), x + 2,
-                    y + layout.slotsY + layout.slotSize + 4, 8454016, true);
+            graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.anvil.cost", cost),
+                    x + 2,
+                    y + layout.SLOTS_Y + layout.SLOT_SIZE + 4, 8454016, true);
     }
 
-    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
+    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
         if (!visible)
             return false;
-        if (nameInput.mousePressed(e.getMouseX(), e.getMouseY()))
+        if (nameInput.mousePressed(event.getMouseX(), event.getMouseY()))
             return true;
-        int[] xs = { layout.firstSlotX, layout.secondSlotX, layout.resultSlotX };
+        int[] xs = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.RESULT_SLOT_X };
         for (int i = 0; i < xs.length; i++)
-            if (e.getMouseX() >= x + xs[i] && e.getMouseX() < x + xs[i] + layout.slotSize
-                    && e.getMouseY() >= y + layout.slotsY && e.getMouseY() < y + layout.slotsY + layout.slotSize) {
-                ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
+            if (event.getMouseX() >= x + xs[i] && event.getMouseX() < x + xs[i] + layout.SLOT_SIZE
+                    && event.getMouseY() >= y + layout.SLOTS_Y
+                    && event.getMouseY() < y + layout.SLOTS_Y + layout.SLOT_SIZE) {
+                ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ClientPacketSender.anvilSlot(i, e.getButton(), carried);
+                ClientPacketSender.anvilSlot(i, event.getButton(), carried);
                 return true;
             }
         return false;
@@ -90,26 +93,26 @@ public final class AnvilOverlayArea extends IOverlayArea {
         return handled;
     }
 
-    public boolean charTyped(char c) {
+    public boolean charTyped(char character) {
         String before = nameInput.value();
-        boolean handled = visible && nameInput.charTyped(c);
+        boolean handled = visible && nameInput.charTyped(character);
         if (handled && !before.equals(nameInput.value()))
             ClientPacketSender.anvilRename(nameInput.value());
         return handled;
     }
 
-    public void renderTooltip(GuiGraphics g, double mx, double my) {
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
-        int[] xs = { layout.firstSlotX, layout.secondSlotX, layout.resultSlotX };
+        int[] xs = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderHighlightAt(g, x + xs[i], y + layout.slotsY, mx, my);
+            slots[i].renderHighlightAt(graphics, x + xs[i], y + layout.SLOTS_Y, mouseX, mouseY);
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderTooltip(g, Minecraft.getInstance(), x + xs[i], y + layout.slotsY, mx, my);
+            slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + xs[i], y + layout.SLOTS_Y, mouseX, mouseY);
     }
 
-    public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {
-        return visible && mx >= x - 4 && mx < x + layout.panelWidth - 4 && my >= y - 4
-                && my < y + layout.panelHeight + 4;
+    public boolean panelInteractiveContains(double mouseX, double mouseY, int sw, int sh) {
+        return visible && mouseX >= x - 4 && mouseX < x + layout.PANEL_WIDTH - 4 && mouseY >= y - 4
+                && mouseY < y + layout.PANEL_HEIGHT + 4;
     }
 }

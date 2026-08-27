@@ -37,16 +37,16 @@ public class OverlayTextInput extends IOverlayElement {
             focused = true;
     }
 
-    public void render(GuiGraphics g, Minecraft mc, Component hint) {
+    public void render(GuiGraphics graphics, Minecraft minecraft, Component hint) {
         if (!visible)
             return;
-        g.fill(x, y, x + width, y + 16, -872415232);
-        g.fill(x + 1, y + 1, x + width - 1, y + 15, -14671840);
+        graphics.fill(x, y, x + width, y + 16, -872415232);
+        graphics.fill(x + 1, y + 1, x + width - 1, y + 15, -14671840);
         String text = value.isEmpty() ? hint.getString() : value;
-        g.drawString(mc.font, text, x + 4, y + 4, value.isEmpty() ? 7829367 : 16777215, true);
+        graphics.drawString(minecraft.font, text, x + 4, y + 4, value.isEmpty() ? 7829367 : 16777215, true);
         if (focused && (System.currentTimeMillis() / 500L) % 2L == 0L) {
-            int cursorX = x + 3 + mc.font.width(value);
-            g.drawString(mc.font, "|", cursorX, y + 4, 16777215, true);
+            int cursorX = x + 3 + minecraft.font.width(value);
+            graphics.drawString(minecraft.font, "|", cursorX, y + 4, 16777215, true);
         }
     }
 

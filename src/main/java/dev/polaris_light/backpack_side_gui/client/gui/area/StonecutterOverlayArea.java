@@ -1,8 +1,8 @@
 package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
-import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
 import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlayScrollbar;
+import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,13 +13,13 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class StonecutterOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int inputBoxX = 0, inputBoxY = 15;
-        public int outputBoxX = 54, outputBoxY = 15;
-        public int recipeBoxX = 0, recipeBoxY = 33;
-        public int recipeColumns = 4, recipeRows = 3;
-        public int recipeSlotCount = recipeColumns * recipeRows;
-        public int scrollerX = 78, scrollerY = 33, scrollerWidth = 6, scrollerHeight = 54;
-        public int slotSize = 18, panelWidth = 98, panelHeight = 89;
+        public int INPUT_BOX_X = 0, INPUT_BOX_Y = 15;
+        public int OUTPUT_BOX_X = 54, OUTPUT_BOX_Y = 15;
+        public int RECIPE_BOX_X = 0, RECIPE_BOX_Y = 33;
+        public int RECIPE_COLUMNS = 4, RECIPE_ROWS = 3;
+        public int RECIPE_SLOT_COUNT = RECIPE_COLUMNS * RECIPE_ROWS;
+        public int SCROLLER_X = 78, SCROLLER_Y = 33, SCROLLER_WIDTH = 6, SCROLLER_HEIGHT = 54;
+        public int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 89;
     }
 
     public final Layout layout = new Layout();
@@ -28,130 +28,136 @@ public final class StonecutterOverlayArea extends IOverlayArea {
     private int selected;
     private final BackpackOverlayScrollbar scrollbar = new BackpackOverlayScrollbar();
 
-    public void sync(ItemStack i, ItemStack o, ItemStack[] r, int s) {
-        input = i.copy();
-        output = o.copy();
-        recipes = r == null ? new ItemStack[0] : r;
-        selected = s;
+    public void sync(ItemStack input, ItemStack output, ItemStack[] recipes, int selected) {
+        this.input = input.copy();
+        this.output = output.copy();
+        this.recipes = recipes == null ? new ItemStack[0] : recipes;
+        this.selected = selected;
         visible = true;
-        width = layout.panelWidth;
-        height = layout.panelHeight;
-        scrollbar.update(x + layout.scrollerX, y + layout.scrollerY, layout.recipeRows, totalRows());
+        width = layout.PANEL_WIDTH;
+        height = layout.PANEL_HEIGHT;
+        scrollbar.update(x + layout.SCROLLER_X, y + layout.SCROLLER_Y, layout.RECIPE_ROWS, totalRows());
     }
 
-    public void render(Screen s, GuiGraphics g, Minecraft mc) {
+    public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
-        g.fill(x - 4, y - 4, x + layout.panelWidth - 4, y + layout.panelHeight + 4, -871362544);
-        g.fill(x - 4, y - 4, x + layout.panelWidth - 4, y - 3, -11184811);
-        g.drawString(mc.font, "Stonecutter", x + 4, y + 3, 16777215, true);
-        new BackpackOverlaySlot(0, input).renderAt(g, mc, x + layout.inputBoxX, y + layout.inputBoxY);
-        new BackpackOverlaySlot(1, output).renderAt(g, mc, x + layout.outputBoxX, y + layout.outputBoxY);
-        scrollbar.update(x + layout.scrollerX, y + layout.scrollerY, layout.recipeRows, totalRows());
-        int firstRecipe = scrollbar.row() * layout.recipeColumns;
-        for (int n = 0; n < layout.recipeSlotCount && firstRecipe + n < recipes.length; n++) {
+        graphics.fill(x - 4, y - 4, x + layout.PANEL_WIDTH - 4, y + layout.PANEL_HEIGHT + 4, -871362544);
+        graphics.fill(x - 4, y - 4, x + layout.PANEL_WIDTH - 4, y - 3, -11184811);
+        graphics.drawString(minecraft.font, "Stonecutter", x + 4, y + 3, 16777215, true);
+        new BackpackOverlaySlot(0, input).renderAt(graphics, minecraft, x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y);
+        new BackpackOverlaySlot(1, output).renderAt(graphics, minecraft, x + layout.OUTPUT_BOX_X,
+                y + layout.OUTPUT_BOX_Y);
+        scrollbar.update(x + layout.SCROLLER_X, y + layout.SCROLLER_Y, layout.RECIPE_ROWS, totalRows());
+        int firstRecipe = scrollbar.row() * layout.RECIPE_COLUMNS;
+        for (int n = 0; n < layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
             int i = firstRecipe + n;
-            new BackpackOverlaySlot(i, recipes[i]).renderAt(g, mc,
-                    x + layout.recipeBoxX + (n % layout.recipeColumns) * layout.slotSize,
-                    y + layout.recipeBoxY + (n / layout.recipeColumns) * layout.slotSize);
+            new BackpackOverlaySlot(i, recipes[i]).renderAt(graphics, minecraft,
+                    x + layout.RECIPE_BOX_X + (n % layout.RECIPE_COLUMNS) * layout.SLOT_SIZE,
+                    y + layout.RECIPE_BOX_Y + (n / layout.RECIPE_COLUMNS) * layout.SLOT_SIZE);
             if (i == selected)
-                new BackpackOverlaySlot(i, recipes[i]).renderDragHighlight(g,
-                        x + layout.recipeBoxX + (n % layout.recipeColumns) * layout.slotSize,
-                        y + layout.recipeBoxY + (n / layout.recipeColumns) * layout.slotSize);
+                new BackpackOverlaySlot(i, recipes[i]).renderDragHighlight(graphics,
+                        x + layout.RECIPE_BOX_X + (n % layout.RECIPE_COLUMNS) * layout.SLOT_SIZE,
+                        y + layout.RECIPE_BOX_Y + (n / layout.RECIPE_COLUMNS) * layout.SLOT_SIZE);
         }
-        scrollbar.render(g);
+        scrollbar.render(graphics);
     }
 
-    private boolean mousePressedSlots(ScreenEvent.MouseButtonPressed.Pre e) {
+    private boolean mousePressedSlots(ScreenEvent.MouseButtonPressed.Pre event) {
         if (!visible)
             return false;
-        int mx = (int) e.getMouseX() - x, my = (int) e.getMouseY() - y;
-        if (mx >= layout.inputBoxX && mx < layout.inputBoxX + layout.slotSize && my >= layout.inputBoxY
-                && my < layout.inputBoxY + layout.slotSize) {
-            ClientPacketSender.stonecutterSlot(0, e.getButton(), selected, false, carried(e));
+        int mouseX = (int) event.getMouseX() - x, mouseY = (int) event.getMouseY() - y;
+        if (mouseX >= layout.INPUT_BOX_X && mouseX < layout.INPUT_BOX_X + layout.SLOT_SIZE
+                && mouseY >= layout.INPUT_BOX_Y
+                && mouseY < layout.INPUT_BOX_Y + layout.SLOT_SIZE) {
+            ClientPacketSender.stonecutterSlot(0, event.getButton(), selected, false, carried(event));
             return true;
         }
-        if (mx >= layout.outputBoxX && mx < layout.outputBoxX + layout.slotSize && my >= layout.outputBoxY
-                && my < layout.outputBoxY + layout.slotSize) {
-            ClientPacketSender.stonecutterSlot(2, e.getButton(), selected, Screen.hasShiftDown(), carried(e));
+        if (mouseX >= layout.OUTPUT_BOX_X && mouseX < layout.OUTPUT_BOX_X + layout.SLOT_SIZE
+                && mouseY >= layout.OUTPUT_BOX_Y
+                && mouseY < layout.OUTPUT_BOX_Y + layout.SLOT_SIZE) {
+            ClientPacketSender.stonecutterSlot(2, event.getButton(), selected, Screen.hasShiftDown(), carried(event));
             return true;
         }
-        if (my >= layout.recipeBoxY && my < layout.recipeBoxY + layout.recipeRows * layout.slotSize
-                && mx >= layout.recipeBoxX && mx < layout.recipeBoxX + layout.recipeColumns * layout.slotSize) {
-            int n = (my - layout.recipeBoxY) / layout.slotSize * layout.recipeColumns
-                    + ((mx - layout.recipeBoxX) / layout.slotSize);
-            int firstRecipe = scrollbar.row() * layout.recipeColumns;
-            if (n < layout.recipeSlotCount && firstRecipe + n < recipes.length) {
+        if (mouseY >= layout.RECIPE_BOX_Y && mouseY < layout.RECIPE_BOX_Y + layout.RECIPE_ROWS * layout.SLOT_SIZE
+                && mouseX >= layout.RECIPE_BOX_X
+                && mouseX < layout.RECIPE_BOX_X + layout.RECIPE_COLUMNS * layout.SLOT_SIZE) {
+            int n = (mouseY - layout.RECIPE_BOX_Y) / layout.SLOT_SIZE * layout.RECIPE_COLUMNS
+                    + ((mouseX - layout.RECIPE_BOX_X) / layout.SLOT_SIZE);
+            int firstRecipe = scrollbar.row() * layout.RECIPE_COLUMNS;
+            if (n < layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length) {
                 selected = firstRecipe + n;
-                ClientPacketSender.stonecutterSlot(1, 0, selected, false, carried(e));
+                ClientPacketSender.stonecutterSlot(1, 0, selected, false, carried(event));
             }
             return true;
         }
-        return panelInteractiveContains(e.getMouseX(), e.getMouseY(), 0, 0);
+        return panelInteractiveContains(event.getMouseX(), event.getMouseY(), 0, 0);
     }
 
-    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
+    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
         if (!visible)
             return false;
-        if (scrollbar.press(e.getMouseX(), e.getMouseY()))
+        if (scrollbar.press(event.getMouseX(), event.getMouseY()))
             return true;
-        return mousePressedSlots(e);
+        return mousePressedSlots(event);
     }
 
-    public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {
-        return scrollbar.drag(e.getMouseY());
+    public boolean mouseDragged(ScreenEvent.MouseDragged.Pre event) {
+        return scrollbar.drag(event.getMouseY());
     }
 
-    public boolean mouseReleased(ScreenEvent.MouseButtonReleased.Pre e) {
+    public boolean mouseReleased(ScreenEvent.MouseButtonReleased.Pre event) {
         return scrollbar.release();
     }
 
-    public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre e) {
+    public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
         if (!visible)
             return false;
-        double mx = e.getMouseX() - x;
-        double my = e.getMouseY() - y;
-        boolean overRecipeArea = mx >= layout.recipeBoxX
-                && mx < layout.recipeBoxX + layout.recipeColumns * layout.slotSize
-                && my >= layout.recipeBoxY
-                && my < layout.recipeBoxY + layout.recipeRows * layout.slotSize;
-        boolean overScroller = mx >= layout.scrollerX
-                && mx < layout.scrollerX + layout.scrollerWidth
-                && my >= layout.scrollerY
-                && my < layout.scrollerY + layout.scrollerHeight;
-        return (overRecipeArea || overScroller) && scrollbar.scroll(e.getScrollDeltaY());
+        double mouseX = event.getMouseX() - x;
+        double mouseY = event.getMouseY() - y;
+        boolean overRecipeArea = mouseX >= layout.RECIPE_BOX_X
+                && mouseX < layout.RECIPE_BOX_X + layout.RECIPE_COLUMNS * layout.SLOT_SIZE
+                && mouseY >= layout.RECIPE_BOX_Y
+                && mouseY < layout.RECIPE_BOX_Y + layout.RECIPE_ROWS * layout.SLOT_SIZE;
+        boolean overScroller = mouseX >= layout.SCROLLER_X
+                && mouseX < layout.SCROLLER_X + layout.SCROLLER_WIDTH
+                && mouseY >= layout.SCROLLER_Y
+                && mouseY < layout.SCROLLER_Y + layout.SCROLLER_HEIGHT;
+        return (overRecipeArea || overScroller) && scrollbar.scroll(event.getScrollDeltaY());
     }
 
     private int totalRows() {
-        return Math.max(1, (recipes.length + layout.recipeColumns - 1) / layout.recipeColumns);
+        return Math.max(1, (recipes.length + layout.RECIPE_COLUMNS - 1) / layout.RECIPE_COLUMNS);
     }
 
-    private ItemStack carried(ScreenEvent.MouseButtonPressed.Pre e) {
-        return e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried() : ItemStack.EMPTY;
+    private ItemStack carried(ScreenEvent.MouseButtonPressed.Pre event) {
+        return event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried() : ItemStack.EMPTY;
     }
 
-    public void renderTooltip(GuiGraphics g, double mx, double my) {
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         BackpackOverlaySlot inputSlot = new BackpackOverlaySlot(0, input);
         BackpackOverlaySlot outputSlot = new BackpackOverlaySlot(1, output);
-        inputSlot.renderHighlightAt(g, x + layout.inputBoxX, y + layout.inputBoxY, mx, my);
-        outputSlot.renderHighlightAt(g, x + layout.outputBoxX, y + layout.outputBoxY, mx, my);
-        inputSlot.renderTooltip(g, Minecraft.getInstance(), x + layout.inputBoxX, y + layout.inputBoxY, mx, my);
-        outputSlot.renderTooltip(g, Minecraft.getInstance(), x + layout.outputBoxX, y + layout.outputBoxY, mx, my);
-        int firstRecipe = scrollbar.row() * layout.recipeColumns;
-        for (int n = 0; n < layout.recipeSlotCount && firstRecipe + n < recipes.length; n++) {
+        inputSlot.renderHighlightAt(graphics, x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y, mouseX, mouseY);
+        outputSlot.renderHighlightAt(graphics, x + layout.OUTPUT_BOX_X, y + layout.OUTPUT_BOX_Y, mouseX, mouseY);
+        inputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y,
+                mouseX, mouseY);
+        outputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + layout.OUTPUT_BOX_X, y + layout.OUTPUT_BOX_Y,
+                mouseX, mouseY);
+        int firstRecipe = scrollbar.row() * layout.RECIPE_COLUMNS;
+        for (int n = 0; n < layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
             int i = firstRecipe + n;
-            int sx = x + layout.recipeBoxX + (n % layout.recipeColumns) * layout.slotSize;
-            int sy = y + layout.recipeBoxY + (n / layout.recipeColumns) * layout.slotSize;
+            int sx = x + layout.RECIPE_BOX_X + (n % layout.RECIPE_COLUMNS) * layout.SLOT_SIZE;
+            int sy = y + layout.RECIPE_BOX_Y + (n / layout.RECIPE_COLUMNS) * layout.SLOT_SIZE;
             BackpackOverlaySlot slot = new BackpackOverlaySlot(i, recipes[i]);
-            slot.renderHighlightAt(g, sx, sy, mx, my);
-            slot.renderTooltip(g, Minecraft.getInstance(), sx, sy, mx, my);
+            slot.renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
+            slot.renderTooltip(graphics, Minecraft.getInstance(), sx, sy, mouseX, mouseY);
         }
     }
 
-    public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {
-        return visible && mx >= x - 4 && mx < x + layout.panelWidth - 4 && my >= y - 4
-                && my < y + layout.panelHeight + 4;
+    public boolean panelInteractiveContains(double mouseX, double mouseY, int sw, int sh) {
+        return visible && mouseX >= x - 4 && mouseX < x + layout.PANEL_WIDTH - 4 && mouseY >= y - 4
+                && mouseY < y + layout.PANEL_HEIGHT + 4;
     }
 }

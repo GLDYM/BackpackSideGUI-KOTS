@@ -34,7 +34,7 @@ public final class OverlayWidget extends IOverlayWidget {
     private final BackpackOverlayArea area = new BackpackOverlayArea();
     private boolean dragging;
     private int dragOffsetX, dragOffsetY;
-    private int x, y;
+    private int anchorX, anchorY;
 
     private final MoveOverlayButton moveButton = new MoveOverlayButton(icon("move"));
     private final VisibilityOverlayButton visibilityButton = new VisibilityOverlayButton(area, icon("show"),
@@ -45,36 +45,10 @@ public final class OverlayWidget extends IOverlayWidget {
 
     private UtilityType activeUtility;
     private final CraftingOverlayArea crafting = new CraftingOverlayArea();
-    private final SmithingOverlayArea smithing = new SmithingOverlayArea();
-    private final AnvilOverlayArea anvil = new AnvilOverlayArea();
     private final FurnaceOverlayArea furnace = new FurnaceOverlayArea();
+    private final AnvilOverlayArea anvil = new AnvilOverlayArea();
+    private final SmithingOverlayArea smithing = new SmithingOverlayArea();
     private final StonecutterOverlayArea stonecutter = new StonecutterOverlayArea();
-
-    public void receiveStonecutter(dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload p) {
-        stonecutter.sync(p.input(), p.output(), p.recipes(), p.selected());
-    }
-
-    public void receiveFurnace(FurnaceSyncPayload p) {
-        furnace.sync(p.input(), p.fuel(), p.output(), p.burnFinish(), p.burnTotal(), p.cookFinish(), p.cookTotal(),
-                p.cooking());
-    }
-
-    public void receiveSmithing(SmithingSyncPayload p) {
-        smithing.sync(p.template(), p.base(), p.addition(), p.result());
-    }
-
-    public void receiveCrafting(CraftingSyncPayload p) {
-        crafting.sync(java.util.Arrays.copyOf(p.items(), 9), p.items()[9]);
-    }
-
-    public void receiveAnvil(AnvilSyncPayload p) {
-        anvil.sync(p.first(), p.second(), p.result(), p.cost(), p.name());
-    }
-
-    public void setUtilityFlags(boolean[] flags) {
-        java.util.Arrays.fill(utilityFlags, false);
-        System.arraycopy(flags, 0, utilityFlags, 0, Math.min(flags.length, utilityFlags.length));
-    }
 
     {
         UtilityType[] types = UtilityType.values();
@@ -84,14 +58,41 @@ public final class OverlayWidget extends IOverlayWidget {
         }
     }
 
+    public void receiveCrafting(CraftingSyncPayload payload) {
+        crafting.sync(java.util.Arrays.copyOf(payload.items(), 9), payload.items()[9]);
+    }
+
+    public void receiveFurnace(FurnaceSyncPayload payload) {
+        furnace.sync(payload.input(), payload.fuel(), payload.output(), payload.burnFinish(), payload.burnTotal(),
+                payload.cookFinish(), payload.cookTotal(),
+                payload.cooking());
+    }
+
+    public void receiveAnvil(AnvilSyncPayload payload) {
+        anvil.sync(payload.first(), payload.second(), payload.result(), payload.cost(), payload.name());
+    }
+
+    public void receiveSmithing(SmithingSyncPayload payload) {
+        smithing.sync(payload.template(), payload.base(), payload.addition(), payload.result());
+    }
+
+    public void receiveStonecutter(dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload payload) {
+        stonecutter.sync(payload.input(), payload.output(), payload.recipes(), payload.selected());
+    }
+
+    public void setUtilityFlags(boolean[] flags) {
+        java.util.Arrays.fill(utilityFlags, false);
+        System.arraycopy(flags, 0, utilityFlags, 0, Math.min(flags.length, utilityFlags.length));
+    }
+
     private void onUtilityPressed(UtilityOverlayButton clicked) {
         activeUtility = activeUtility == clicked.utilityType() ? null : clicked.utilityType();
-        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
         crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
-        anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         furnace.setVisible(activeUtility == UtilityType.FURNACE && area.isVisible() && utilityButtons[1].isVisible());
-        stonecutter.setVisible(
-                activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
+        anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
+        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
+        stonecutter.setVisible(activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
+
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
         if (activeUtility != null)
@@ -99,10 +100,10 @@ public final class OverlayWidget extends IOverlayWidget {
     }
 
     @Override
-    public void beginDragging(double mx, double my) {
+    public void beginDragging(double mouseX, double mouseY) {
         dragging = true;
-        dragOffsetX = (int) mx - x;
-        dragOffsetY = (int) my - y;
+        dragOffsetX = (int) mouseX - anchorX;
+        dragOffsetY = (int) mouseY - anchorY;
     }
 
     public void setContents(String title, List<ItemStack> items) {
@@ -117,197 +118,200 @@ public final class OverlayWidget extends IOverlayWidget {
         area.setContents(title, items, limits);
     }
 
-    public void setAnchorPosition(int x, int y) {
+    public void setAnchorPosition(int anchorX, int anchorY) {
         if (!dragging) {
-            this.x = x;
-            this.y = y;
+            this.anchorX = anchorX;
+            this.anchorY = anchorY;
         }
     }
 
     @Override
-    public void render(Screen s, GuiGraphics g, Minecraft mc) {
-        clampAnchor(s.width, s.height);
+    public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
+        clampAnchor(screen.width, screen.height);
 
-        area.prepareLayout(s.width, s.height);
-        area.setOverlayPosition(x, y - area.buttonOffsetY());
-        area.render(s, g, mc);
+        area.prepareLayout(screen.width, screen.height);
+        area.setOverlayPosition(anchorX, anchorY - area.buttonOffsetY());
+        area.render(screen, graphics, minecraft);
 
-        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
         crafting.setVisible(activeUtility == UtilityType.CRAFTING && area.isVisible() && utilityButtons[0].isVisible());
-        anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         furnace.setVisible(activeUtility == UtilityType.FURNACE && area.isVisible() && utilityButtons[1].isVisible());
-        stonecutter.setVisible(
-                activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
-        if (smithing.isVisible()) {
-            smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
-            smithing.render(s, g, mc);
-        }
+        anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
+        smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
+        stonecutter.setVisible(activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
+
         if (crafting.isVisible()) {
             crafting.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
-            crafting.render(s, g, mc);
-        }
-        if (anvil.isVisible()) {
-            anvil.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
-            anvil.render(s, g, mc);
+            crafting.render(screen, graphics, minecraft);
         }
         if (furnace.isVisible()) {
             furnace.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
-            furnace.render(s, g, mc);
+            furnace.render(screen, graphics, minecraft);
+        }
+        if (anvil.isVisible()) {
+            anvil.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
+            anvil.render(screen, graphics, minecraft);
+        }
+        if (smithing.isVisible()) {
+            smithing.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
+            smithing.render(screen, graphics, minecraft);
         }
         if (stonecutter.isVisible()) {
             stonecutter.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
-            stonecutter.render(s, g, mc);
+            stonecutter.render(screen, graphics, minecraft);
         }
 
-        moveButton.setBounds(x, y);
-        moveButton.render(g, mc);
+        moveButton.setBounds(anchorX, anchorY);
+        moveButton.render(graphics, minecraft);
 
         visibilityButton.updateState();
-        visibilityButton.setBounds(x + BUTTON_SIZE + BUTTON_GAP, y);
-        visibilityButton.render(g, mc);
+        visibilityButton.setBounds(anchorX + BUTTON_SIZE + BUTTON_GAP, anchorY);
+        visibilityButton.render(graphics, minecraft);
 
         int utilityIndex = 0;
         for (int i = 0; i < utilityButtons.length; i++) {
-            UtilityOverlayButton b = utilityButtons[i];
-            b.setVisible(area.isVisible() && utilityFlags[i]);
+            UtilityOverlayButton button = utilityButtons[i];
+            button.setVisible(area.isVisible() && utilityFlags[i]);
             if (utilityFlags[i])
-                b.setBounds(x + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++), y);
-            b.render(g, mc);
+                button.setBounds(anchorX + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++), anchorY);
+            button.render(graphics, minecraft);
         }
     }
 
     @Override
-    public void renderTooltip(GuiGraphics g, Minecraft mc, double mx, double my) {
-        area.renderTooltip(g, mx, my);
-        smithing.renderTooltip(g, mx, my);
-        crafting.renderTooltip(g, mx, my);
-        anvil.renderTooltip(g, mx, my);
-        furnace.renderTooltip(g, mx, my);
-        stonecutter.renderTooltip(g, mx, my);
-        moveButton.renderTooltip(g, mc, mx, my);
-        visibilityButton.renderTooltip(g, mc, mx, my);
+    public void renderTooltip(GuiGraphics graphics, Minecraft minecraft, double mouseX, double mouseY) {
+        area.renderTooltip(graphics, mouseX, mouseY);
+        crafting.renderTooltip(graphics, mouseX, mouseY);
+        furnace.renderTooltip(graphics, mouseX, mouseY);
+        anvil.renderTooltip(graphics, mouseX, mouseY);
+        smithing.renderTooltip(graphics, mouseX, mouseY);
+        stonecutter.renderTooltip(graphics, mouseX, mouseY);
+        moveButton.renderTooltip(graphics, minecraft, mouseX, mouseY);
+        visibilityButton.renderTooltip(graphics, minecraft, mouseX, mouseY);
         for (UtilityOverlayButton button : utilityButtons)
-            button.renderTooltip(g, mc, mx, my);
+            button.renderTooltip(graphics, minecraft, mouseX, mouseY);
     }
 
-    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
-        // Buttons own their pixels even when a panel extends behind them.
-        clampAnchor(e.getScreen().width, e.getScreen().height);
-        moveButton.setBounds(this.x, this.y);
-        visibilityButton.setBounds(this.x + BUTTON_SIZE + BUTTON_GAP, this.y);
-        if (moveButton.press(this, e.getMouseX(), e.getMouseY())
-                || visibilityButton.press(e.getMouseX(), e.getMouseY()))
+    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
+        clampAnchor(event.getScreen().width, event.getScreen().height);
+        moveButton.setBounds(this.anchorX, this.anchorY);
+        visibilityButton.setBounds(this.anchorX + BUTTON_SIZE + BUTTON_GAP, this.anchorY);
+        if (moveButton.press(this, event.getMouseX(), event.getMouseY())
+                || visibilityButton.press(event.getMouseX(), event.getMouseY()))
             return true;
 
         int utilityIndex = 0;
         for (int i = 0; i < utilityButtons.length; i++)
             if (utilityButtons[i].isVisible()) {
-                utilityButtons[i].setBounds(this.x + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++), this.y);
-                if (utilityButtons[i].press(e.getMouseX(), e.getMouseY()))
+                utilityButtons[i].setBounds(this.anchorX + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++),
+                        this.anchorY);
+                if (utilityButtons[i].press(event.getMouseX(), event.getMouseY()))
                     return true;
             }
 
-        if (area.mousePressed(e))
+        if (area.mousePressed(event))
             return true;
-        if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(e))
+        if (activeUtility == UtilityType.CRAFTING
+                && crafting.panelInteractiveContains(event.getMouseX(), event.getMouseY(),
+                        event.getScreen().width, event.getScreen().height))
+            return crafting.mousePressed(event) || true;
+        if (activeUtility == UtilityType.FURNACE
+                && furnace.panelInteractiveContains(event.getMouseX(), event.getMouseY(),
+                        event.getScreen().width, event.getScreen().height))
+            return furnace.mousePressed(event) || true;
+        if (activeUtility == UtilityType.ANVIL && anvil.panelInteractiveContains(event.getMouseX(), event.getMouseY(),
+                event.getScreen().width, event.getScreen().height))
+            return anvil.mousePressed(event) || true;
+        if (activeUtility == UtilityType.SMITHING && smithing.mousePressed(event))
             return true;
-        if (activeUtility == UtilityType.CRAFTING && crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
-                e.getScreen().width, e.getScreen().height))
-            return crafting.mousePressed(e) || true;
-        if (activeUtility == UtilityType.ANVIL && anvil.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
-                e.getScreen().width, e.getScreen().height))
-            return anvil.mousePressed(e) || true;
-        if (activeUtility == UtilityType.FURNACE && furnace.panelInteractiveContains(e.getMouseX(), e.getMouseY(),
-                e.getScreen().width, e.getScreen().height))
-            return furnace.mousePressed(e) || true;
-        if (activeUtility == UtilityType.STONECUTTER && stonecutter.panelInteractiveContains(e.getMouseX(),
-                e.getMouseY(), e.getScreen().width, e.getScreen().height))
-            return stonecutter.mousePressed(e) || true;
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.panelInteractiveContains(event.getMouseX(),
+                event.getMouseY(), event.getScreen().width, event.getScreen().height))
+            return stonecutter.mousePressed(event) || true;
         return false;
     }
 
-    public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre e) {
-        return area.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width, e.getScreen().height)
-                || smithing.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
-                        e.getScreen().height)
-                || crafting.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
-                        e.getScreen().height)
-                || anvil.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
-                        e.getScreen().height)
-                || furnace.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
-                        e.getScreen().height)
-                || stonecutter.panelInteractiveContains(e.getMouseX(), e.getMouseY(), e.getScreen().width,
-                        e.getScreen().height);
+    public boolean panelInteractiveContains(ScreenEvent.MouseButtonPressed.Pre event) {
+        return area.panelInteractiveContains(event.getMouseX(), event.getMouseY(), event.getScreen().width,
+                event.getScreen().height)
+                || crafting.panelInteractiveContains(event.getMouseX(), event.getMouseY(), event.getScreen().width,
+                        event.getScreen().height)
+                || furnace.panelInteractiveContains(event.getMouseX(), event.getMouseY(), event.getScreen().width,
+                        event.getScreen().height)
+                || anvil.panelInteractiveContains(event.getMouseX(), event.getMouseY(), event.getScreen().width,
+                        event.getScreen().height)
+                || smithing.panelInteractiveContains(event.getMouseX(), event.getMouseY(), event.getScreen().width,
+                        event.getScreen().height)
+                || stonecutter.panelInteractiveContains(event.getMouseX(), event.getMouseY(), event.getScreen().width,
+                        event.getScreen().height);
     }
 
     public boolean panelInteractiveContains(Screen screen, double mouseX, double mouseY) {
         return area.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
-                || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
                 || crafting.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
-                || anvil.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
                 || furnace.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
+                || anvil.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
+                || smithing.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height)
                 || stonecutter.panelInteractiveContains(mouseX, mouseY, screen.width, screen.height);
     }
 
-    public boolean mouseDragged(ScreenEvent.MouseDragged.Pre e) {
+    public boolean mouseDragged(ScreenEvent.MouseDragged.Pre event) {
         // Move
-        if (dragging && e.getMouseButton() == 0) {
-            x = (int) e.getMouseX() - dragOffsetX;
-            y = (int) e.getMouseY() - dragOffsetY;
-            clampAnchor(e.getScreen().width, e.getScreen().height);
-            area.setOverlayPosition(x, y - area.buttonOffsetY());
-            saveAnchorPosition(e.getScreen());
+        if (dragging && event.getMouseButton() == 0) {
+            anchorX = (int) event.getMouseX() - dragOffsetX;
+            anchorY = (int) event.getMouseY() - dragOffsetY;
+            clampAnchor(event.getScreen().width, event.getScreen().height);
+            area.setOverlayPosition(anchorX, anchorY - area.buttonOffsetY());
+            saveAnchorPosition(event.getScreen());
             return true;
         }
         // Scroller
-        if (activeUtility == UtilityType.CRAFTING && crafting.mouseDragged(e))
+        if (activeUtility == UtilityType.CRAFTING && crafting.mouseDragged(event))
             return true;
-        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseDragged(e))
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseDragged(event))
             return true;
-        return area.mouseDragged(e);
+        return area.mouseDragged(event);
     }
 
-    public boolean mouseReleased(ScreenEvent.MouseButtonReleased.Pre e) {
-        if (e.getButton() == 0 && dragging) {
+    public boolean mouseReleased(ScreenEvent.MouseButtonReleased.Pre event) {
+        if (event.getButton() == 0 && dragging) {
             dragging = false;
             return true;
         }
-        if (activeUtility == UtilityType.CRAFTING && crafting.mouseReleased(e))
+        if (activeUtility == UtilityType.CRAFTING && crafting.mouseReleased(event))
             return true;
-        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseReleased(e))
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseReleased(event))
             return true;
-        return area.mouseReleased(e);
+        return area.mouseReleased(event);
     }
 
-    public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre e) {
-        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseScrolled(e))
+    public boolean mouseScrolled(ScreenEvent.MouseScrolled.Pre event) {
+        if (activeUtility == UtilityType.STONECUTTER && stonecutter.mouseScrolled(event))
             return true;
-        return area.mouseScrolled(e);
+        return area.mouseScrolled(event);
     }
 
     public boolean keyPressed(int key) {
         return area.keyPressed(key) || anvil.keyPressed(key);
     }
 
-    public boolean charTyped(char c) {
-        return area.charTyped(c) || anvil.charTyped(c);
+    public boolean charTyped(char character) {
+        return area.charTyped(character) || anvil.charTyped(character);
     }
 
     private void saveAnchorPosition(Screen screen) {
         clampAnchor(screen.width, screen.height);
-        BackpackSideGuiConfig.OVERLAY_X.set(x - screen.width / 2);
-        BackpackSideGuiConfig.OVERLAY_Y.set(y - screen.height / 2);
+        BackpackSideGuiConfig.OVERLAY_X.set(anchorX - screen.width / 2);
+        BackpackSideGuiConfig.OVERLAY_Y.set(anchorY - screen.height / 2);
         BackpackSideGuiConfig.CLIENT_SPEC.save();
     }
 
     private void clampAnchor(int screenWidth, int screenHeight) {
         int maxX = Math.max(ANCHOR_MARGIN, screenWidth - MoveOverlayButton.SIZE);
         int maxY = Math.max(ANCHOR_MARGIN, screenHeight - MoveOverlayButton.SIZE);
-        x = Math.max(ANCHOR_MARGIN, Math.min(maxX, x));
-        y = Math.max(ANCHOR_MARGIN, Math.min(maxY, y));
+        anchorX = Math.max(ANCHOR_MARGIN, Math.min(maxX, anchorX));
+        anchorY = Math.max(ANCHOR_MARGIN, Math.min(maxY, anchorY));
     }
 
-    private static ResourceLocation icon(String n) {
-        return ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/" + n + ".png");
+    private static ResourceLocation icon(String iconName) {
+        return ResourceLocation.fromNamespaceAndPath("backpack_side_gui", "textures/gui/" + iconName + ".png");
     }
 }

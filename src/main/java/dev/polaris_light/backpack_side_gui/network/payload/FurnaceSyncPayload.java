@@ -8,22 +8,25 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 public record FurnaceSyncPayload(ItemStack input, ItemStack fuel, ItemStack output,
-        long burnFinish, int burnTotal, long cookFinish, int cookTotal, boolean cooking) implements CustomPacketPayload {
+        long burnFinish, int burnTotal, long cookFinish, int cookTotal, boolean cooking)
+        implements CustomPacketPayload {
     public static final Type<FurnaceSyncPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "furnace_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, FurnaceSyncPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                ItemStack.OPTIONAL_STREAM_CODEC.encode(b, p.input);
-                ItemStack.OPTIONAL_STREAM_CODEC.encode(b, p.fuel);
-                ItemStack.OPTIONAL_STREAM_CODEC.encode(b, p.output);
-                b.writeVarLong(p.burnFinish);
-                b.writeVarInt(p.burnTotal);
-                b.writeVarLong(p.cookFinish);
-                b.writeVarInt(p.cookTotal);
-                b.writeBoolean(p.cooking);
-            }, b -> new FurnaceSyncPayload(ItemStack.OPTIONAL_STREAM_CODEC.decode(b), ItemStack.OPTIONAL_STREAM_CODEC.decode(b),
-                    ItemStack.OPTIONAL_STREAM_CODEC.decode(b), b.readVarLong(), b.readVarInt(), b.readVarLong(),
-                    b.readVarInt(), b.readBoolean()));
+            .of((buffer, payload) -> {
+                ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, payload.input);
+                ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, payload.fuel);
+                ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, payload.output);
+                buffer.writeVarLong(payload.burnFinish);
+                buffer.writeVarInt(payload.burnTotal);
+                buffer.writeVarLong(payload.cookFinish);
+                buffer.writeVarInt(payload.cookTotal);
+                buffer.writeBoolean(payload.cooking);
+            }, buffer -> new FurnaceSyncPayload(ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer),
+                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer),
+                    ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer), buffer.readVarLong(), buffer.readVarInt(),
+                    buffer.readVarLong(),
+                    buffer.readVarInt(), buffer.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

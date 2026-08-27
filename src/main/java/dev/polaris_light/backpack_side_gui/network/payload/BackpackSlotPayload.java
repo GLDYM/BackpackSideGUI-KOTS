@@ -11,15 +11,15 @@ public record BackpackSlotPayload(int slot, int clickType, ItemStack carried) im
     public static final Type<BackpackSlotPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "backpack_slot"));
     public static final StreamCodec<RegistryFriendlyByteBuf, BackpackSlotPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                b.writeVarInt(p.slot());
-                b.writeVarInt(p.clickType());
-                boolean present = !p.carried().isEmpty();
-                b.writeBoolean(present);
+            .of((buffer, payload) -> {
+                buffer.writeVarInt(payload.slot());
+                buffer.writeVarInt(payload.clickType());
+                boolean present = !payload.carried().isEmpty();
+                buffer.writeBoolean(present);
                 if (present)
-                    ItemStack.STREAM_CODEC.encode(b, p.carried());
-            }, b -> new BackpackSlotPayload(b.readVarInt(), b.readVarInt(),
-                    b.readBoolean() ? ItemStack.STREAM_CODEC.decode(b) : ItemStack.EMPTY));
+                    ItemStack.STREAM_CODEC.encode(buffer, payload.carried());
+            }, buffer -> new BackpackSlotPayload(buffer.readVarInt(), buffer.readVarInt(),
+                    buffer.readBoolean() ? ItemStack.STREAM_CODEC.decode(buffer) : ItemStack.EMPTY));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

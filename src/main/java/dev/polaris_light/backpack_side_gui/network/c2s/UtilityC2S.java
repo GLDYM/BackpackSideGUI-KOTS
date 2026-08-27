@@ -1,10 +1,13 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Optional;
-import dev.polaris_light.backpack_side_gui.server.record.UpgradeFlags;
-import dev.polaris_light.backpack_side_gui.network.payload.*;
-import dev.polaris_light.backpack_side_gui.server.*;
+
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
+import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
+import dev.polaris_light.backpack_side_gui.server.FlagResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.record.UpgradeFlags;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -59,7 +62,8 @@ public final class UtilityC2S {
     public static void sendFlags(ServerPlayer player, BackpackAccess access) {
         UpgradeFlags flags = FlagResolver.resolve(access);
         PacketDistributor.sendToPlayer(player,
-                new UtilityFlagsPayload(flags.crafting(), flags.furnace(), flags.anvil(), flags.smithing(), flags.stonecutter()),
+                new UtilityFlagsPayload(flags.crafting(), flags.furnace(), flags.anvil(), flags.smithing(),
+                        flags.stonecutter()),
                 new CustomPacketPayload[0]);
     }
 }

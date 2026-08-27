@@ -12,8 +12,8 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class SmithingOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int firstSlotX = 0, secondSlotX = 18, thirdSlotX = 36, resultSlotX = 72;
-        public int slotsY = 15, slotSize = 18, panelWidth = 98, panelHeight = 35;
+        public int FIRST_SLOT_X = 0, SECOND_SLOT_X = 18, THIRD_SLOT_X = 36, RESULT_SLOT_X = 72;
+        public int SLOTS_Y = 15, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 35;
     }
 
     public final Layout layout = new Layout();
@@ -35,11 +35,11 @@ public final class SmithingOverlayArea extends IOverlayArea {
         visible = true;
         // Match the legacy utility panel: 162 px content plus 4 px margins,
         // with the smithing slots placed on the same baseline as the backup.
-        width = layout.panelWidth;
-        height = layout.panelHeight;
+        width = layout.PANEL_WIDTH;
+        height = layout.PANEL_HEIGHT;
     }
 
-    public void render(Screen s, GuiGraphics g, Minecraft mc) {
+    public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
         // The panel can become visible before the first sync packet arrives.
@@ -47,27 +47,29 @@ public final class SmithingOverlayArea extends IOverlayArea {
             if (slots[i] == null)
                 slots[i] = new BackpackOverlaySlot(i, stacks[i]);
         }
-        int panelRight = x + layout.panelWidth - 4;
-        int panelBottom = y + layout.panelHeight + 4;
-        g.fill(x - 4, y - 4, panelRight, panelBottom, -871362544);
-        g.fill(x - 4, y - 4, panelRight, y - 3, -11184811);
-        g.drawString(mc.font, "Smithing", x + 4, y + 3, 16777215, true);
-        slots[0].renderAt(g, mc, x + layout.firstSlotX, y + layout.slotsY);
-        slots[1].renderAt(g, mc, x + layout.secondSlotX, y + layout.slotsY);
-        slots[2].renderAt(g, mc, x + layout.thirdSlotX, y + layout.slotsY);
-        // g.drawString(mc.font, "=", x + 82, y + 38, 16777215, true);
-        slots[3].renderAt(g, mc, x + layout.resultSlotX, y + layout.slotsY);
+        int panelRight = x + layout.PANEL_WIDTH - 4;
+        int panelBottom = y + layout.PANEL_HEIGHT + 4;
+        graphics.fill(x - 4, y - 4, panelRight, panelBottom, -871362544);
+        graphics.fill(x - 4, y - 4, panelRight, y - 3, -11184811);
+        graphics.drawString(minecraft.font, "Smithing", x + 4, y + 3, 16777215, true);
+        slots[0].renderAt(graphics, minecraft, x + layout.FIRST_SLOT_X, y + layout.SLOTS_Y);
+        slots[1].renderAt(graphics, minecraft, x + layout.SECOND_SLOT_X, y + layout.SLOTS_Y);
+        slots[2].renderAt(graphics, minecraft, x + layout.THIRD_SLOT_X, y + layout.SLOTS_Y);
+        // graphics.drawString(minecraft.font, "=", x + 82, y + 38, 16777215, true);
+        slots[3].renderAt(graphics, minecraft, x + layout.RESULT_SLOT_X, y + layout.SLOTS_Y);
     }
 
-    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre e) {
-        if (!visible || e.getMouseY() < y + layout.slotsY || e.getMouseY() >= y + layout.slotsY + layout.slotSize)
+    public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
+        if (!visible || event.getMouseY() < y + layout.SLOTS_Y
+                || event.getMouseY() >= y + layout.SLOTS_Y + layout.SLOT_SIZE)
             return false;
-        int[] slotX = { x + layout.firstSlotX, x + layout.secondSlotX, x + layout.thirdSlotX, x + layout.resultSlotX };
+        int[] slotX = { x + layout.FIRST_SLOT_X, x + layout.SECOND_SLOT_X, x + layout.THIRD_SLOT_X,
+                x + layout.RESULT_SLOT_X };
         for (int i = 0; i < slotX.length; i++) {
-            if (e.getMouseX() >= slotX[i] && e.getMouseX() < slotX[i] + layout.slotSize) {
-                ItemStack carried = e.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
+            if (event.getMouseX() >= slotX[i] && event.getMouseX() < slotX[i] + layout.SLOT_SIZE) {
+                ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ClientPacketSender.smithingSlot(i, e.getButton(), carried);
+                ClientPacketSender.smithingSlot(i, event.getButton(), carried);
                 return true;
             }
         }
@@ -76,22 +78,23 @@ public final class SmithingOverlayArea extends IOverlayArea {
         return false;
     }
 
-    public void renderTooltip(GuiGraphics g, double mouseX, double mouseY) {
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
-        slots[0].renderHighlightAt(g, x + layout.firstSlotX, y + layout.slotsY, mouseX, mouseY);
-        slots[1].renderHighlightAt(g, x + layout.secondSlotX, y + layout.slotsY, mouseX, mouseY);
-        slots[2].renderHighlightAt(g, x + layout.thirdSlotX, y + layout.slotsY, mouseX, mouseY);
-        slots[3].renderHighlightAt(g, x + layout.resultSlotX, y + layout.slotsY, mouseX, mouseY);
-        int[] tooltipX = { layout.firstSlotX, layout.secondSlotX, layout.thirdSlotX, layout.resultSlotX };
+        slots[0].renderHighlightAt(graphics, x + layout.FIRST_SLOT_X, y + layout.SLOTS_Y, mouseX, mouseY);
+        slots[1].renderHighlightAt(graphics, x + layout.SECOND_SLOT_X, y + layout.SLOTS_Y, mouseX, mouseY);
+        slots[2].renderHighlightAt(graphics, x + layout.THIRD_SLOT_X, y + layout.SLOTS_Y, mouseX, mouseY);
+        slots[3].renderHighlightAt(graphics, x + layout.RESULT_SLOT_X, y + layout.SLOTS_Y, mouseX, mouseY);
+        int[] tooltipX = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.THIRD_SLOT_X, layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderTooltip(g, Minecraft.getInstance(), x + tooltipX[i], y + layout.slotsY, mouseX, mouseY);
+            slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + tooltipX[i], y + layout.SLOTS_Y, mouseX,
+                    mouseY);
     }
 
-    public boolean panelInteractiveContains(double mx, double my, int sw, int sh) {
-        int panelRight = x + layout.panelWidth - 4;
-        int panelBottom = y + layout.panelHeight + 4;
-        return visible && mx >= x - 4 && mx < panelRight
-                && my >= y - 4 && my < panelBottom;
+    public boolean panelInteractiveContains(double mouseX, double mouseY, int sw, int sh) {
+        int panelRight = x + layout.PANEL_WIDTH - 4;
+        int panelBottom = y + layout.PANEL_HEIGHT + 4;
+        return visible && mouseX >= x - 4 && mouseX < panelRight
+                && mouseY >= y - 4 && mouseY < panelBottom;
     }
 }

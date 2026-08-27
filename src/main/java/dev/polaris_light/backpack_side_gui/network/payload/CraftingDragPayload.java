@@ -13,18 +13,18 @@ public record CraftingDragPayload(List<Integer> slots, int button, ItemStack car
     public static final Type<CraftingDragPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "crafting_drag"));
     public static final StreamCodec<RegistryFriendlyByteBuf, CraftingDragPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                b.writeVarInt(p.slots.size());
-                for (int i : p.slots)
-                    b.writeVarInt(i);
-                b.writeBoolean(p.button == 1);
-                ItemStack.STREAM_CODEC.encode(b, p.carried);
-            }, b -> {
-                int n = Math.min(9, b.readVarInt());
+            .of((buffer, payload) -> {
+                buffer.writeVarInt(payload.slots.size());
+                for (int i : payload.slots)
+                    buffer.writeVarInt(i);
+                buffer.writeBoolean(payload.button == 1);
+                ItemStack.STREAM_CODEC.encode(buffer, payload.carried);
+            }, buffer -> {
+                int n = Math.min(9, buffer.readVarInt());
                 var s = new java.util.ArrayList<Integer>();
                 for (int i = 0; i < n; i++)
-                    s.add(b.readVarInt());
-                return new CraftingDragPayload(s, b.readBoolean() ? 1 : 0, ItemStack.STREAM_CODEC.decode(b));
+                    s.add(buffer.readVarInt());
+                return new CraftingDragPayload(s, buffer.readBoolean() ? 1 : 0, ItemStack.STREAM_CODEC.decode(buffer));
             });
 
     @Override

@@ -74,7 +74,8 @@ public final class BackpackC2S {
             if (carried.isEmpty() || !slot.mayPlace(carried))
                 return;
             int amount = payload.clickType() == 2 ? 1
-                    : (payload.clickType() >= 10 ? Math.min(carried.getCount(), payload.clickType() - 10) : carried.getCount());
+                    : (payload.clickType() >= 10 ? Math.min(carried.getCount(), payload.clickType() - 10)
+                            : carried.getCount());
             ItemStack rest = slot.safeInsert(carried.copyWithCount(amount));
             ItemStack remaining = carried.copy();
             remaining.shrink(amount - rest.getCount());

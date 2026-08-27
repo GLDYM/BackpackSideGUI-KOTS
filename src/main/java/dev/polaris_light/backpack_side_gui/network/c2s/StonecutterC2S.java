@@ -1,12 +1,19 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
-import java.util.*;
-import dev.polaris_light.backpack_side_gui.network.payload.*;
-import dev.polaris_light.backpack_side_gui.server.*;
+import java.util.List;
+import java.util.Optional;
+
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.StonecutterClickPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload;
+import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.item.crafting.StonecutterRecipe;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;

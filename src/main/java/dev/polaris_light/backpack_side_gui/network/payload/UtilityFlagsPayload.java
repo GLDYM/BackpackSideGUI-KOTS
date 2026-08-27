@@ -11,14 +11,15 @@ public record UtilityFlagsPayload(boolean crafting, boolean furnace, boolean anv
     public static final Type<UtilityFlagsPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "utility_flags"));
     public static final StreamCodec<RegistryFriendlyByteBuf, UtilityFlagsPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                b.writeBoolean(p.crafting());
-                b.writeBoolean(p.furnace());
-                b.writeBoolean(p.anvil());
-                b.writeBoolean(p.smithing());
-                b.writeBoolean(p.stonecutter());
-            }, b -> new UtilityFlagsPayload(b.readBoolean(), b.readBoolean(), b.readBoolean(), b.readBoolean(),
-                    b.readBoolean()));
+            .of((buffer, payload) -> {
+                buffer.writeBoolean(payload.crafting());
+                buffer.writeBoolean(payload.furnace());
+                buffer.writeBoolean(payload.anvil());
+                buffer.writeBoolean(payload.smithing());
+                buffer.writeBoolean(payload.stonecutter());
+            }, buffer -> new UtilityFlagsPayload(buffer.readBoolean(), buffer.readBoolean(), buffer.readBoolean(),
+                    buffer.readBoolean(),
+                    buffer.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

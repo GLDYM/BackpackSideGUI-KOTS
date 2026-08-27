@@ -10,8 +10,12 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-public record BackpackSyncPayload(String title, List<ItemStack> items, List<Integer> slotLimits) implements CustomPacketPayload {
-    public BackpackSyncPayload(String title, List<ItemStack> items) { this(title, items, java.util.List.of()); }
+public record BackpackSyncPayload(String title, List<ItemStack> items, List<Integer> slotLimits)
+        implements CustomPacketPayload {
+    public BackpackSyncPayload(String title, List<ItemStack> items) {
+        this(title, items, java.util.List.of());
+    }
+
     public static final Type<BackpackSyncPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "backpack_sync"));
 
@@ -27,8 +31,10 @@ public record BackpackSyncPayload(String title, List<ItemStack> items, List<Inte
                     stack.setCount(Math.max(1, buf.readVarInt()));
                     items.add(stack);
                     limits.add(buf.readVarInt());
-                } else
-                    { items.add(ItemStack.EMPTY); limits.add(64); }
+                } else {
+                    items.add(ItemStack.EMPTY);
+                    limits.add(64);
+                }
             }
             return new BackpackSyncPayload(title, items, limits);
         }
