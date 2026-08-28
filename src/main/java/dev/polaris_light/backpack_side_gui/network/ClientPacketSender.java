@@ -10,6 +10,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiBackpackFillPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
@@ -74,6 +75,9 @@ public final class ClientPacketSender {
 
     public static void jeiCraftingFill(List<List<ItemStack>> ingredients, boolean maxTransfer) {
         PacketDistributor.sendToServer(new JeiCraftingFillPayload(ingredients, maxTransfer));
+    }
+    public static void jeiBackpackFill(List<List<ItemStack>> ingredients, boolean maxTransfer) {
+        PacketDistributor.sendToServer(new JeiBackpackFillPayload(ingredients, maxTransfer));
     }
     public static void jeiSmithingFill(List<List<ItemStack>> ingredients, boolean maxTransfer) { PacketDistributor.sendToServer(new JeiSmithingFillPayload(ingredients, maxTransfer)); }
 

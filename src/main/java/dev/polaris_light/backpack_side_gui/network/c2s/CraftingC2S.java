@@ -9,6 +9,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.CraftingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiBackpackFillPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
@@ -134,6 +135,40 @@ public final class CraftingC2S {
         }
         player.containerMenu.broadcastChanges();
         send(player, BackpackResolver.resolve(player).orElse(null));
+    }
+
+    public static void handleBackpackFill(ServerPlayer player, JeiBackpackFillPayload payload) {
+        if (payload.ingredients() == null) return;
+        java.util.Set<Integer> used = new java.util.HashSet<>();
+        for (List<ItemStack> options : payload.ingredients()) {
+            int target=-1;
+            for(int i=0;i<player.containerMenu.slots.size();i++) {
+                var slot=player.containerMenu.getSlot(i);
+                if(!used.contains(i)&&slot.getItem().isEmpty()&&slot.container!=player.getInventory()
+                        &&options.stream().anyMatch(o->o!=null&&!o.isEmpty()&&slot.mayPlace(o))) { target=i; break; }
+            }
+            if(target<0) continue;
+            for(ItemStack wanted:options) {
+                if(wanted==null||wanted.isEmpty()) continue;
+                ItemStack found=findAndExtractFromBackpacks(player,wanted,payload.maxTransfer());
+                if(found.isEmpty()) continue;
+                used.add(target); ItemStack rest=player.containerMenu.getSlot(target).safeInsert(found);
+                if(!rest.isEmpty()) returnToBackpacks(player,rest); break;
+            }
+        }
+        player.containerMenu.broadcastChanges();
+    }
+    private static ItemStack findAndExtractFromBackpacks(ServerPlayer p, ItemStack w, boolean max) {
+        for(BackpackAccess a:BackpackResolver.getAllBackpacks(p)) for(int i=0;i<a.handler().getSlots();i++) {
+            ItemStack s=a.handler().getStackInSlot(i);
+            if(ItemStack.isSameItemSameComponents(s,w)) return a.handler().extractItem(i,max?Math.min(s.getCount(),w.getMaxStackSize()):1,false);
+        }
+        return ItemStack.EMPTY;
+    }
+    private static void returnToBackpacks(ServerPlayer p, ItemStack stack) {
+        ItemStack r=stack;
+        for(BackpackAccess a:BackpackResolver.getAllBackpacks(p)) for(int i=0;i<a.handler().getSlots()&&!r.isEmpty();i++) r=a.handler().insertItem(i,r,false);
+        if(!r.isEmpty()) p.getInventory().placeItemBackInInventory(r);
     }
 
     private static ItemStack findAndExtract(ServerPlayer player, ItemStack wanted, boolean max) {

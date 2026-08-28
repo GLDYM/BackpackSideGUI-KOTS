@@ -17,6 +17,10 @@ import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
+import top.theillusivec4.curios.api.CuriosApi;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import dev.polaris_light.backpack_side_gui.compat.JeiReflectionCompat;
@@ -27,6 +31,30 @@ public final class SideBackpackClient {
     private static int refreshTicks;
     private static boolean hasBackpack;
     private static double lastMouseX, lastMouseY;
+
+    public static boolean canFillFromBackpacks(List<List<ItemStack>> groups) {
+        if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty()) return false;
+        List<ItemStack> items = new java.util.ArrayList<>();
+        for (ItemStack s : Minecraft.getInstance().player.getInventory().items) collect(s, items);
+        CuriosApi.getCuriosInventory(Minecraft.getInstance().player).ifPresent(c -> c.getCurios().values().forEach(v -> {
+            IItemHandler h=v.getStacks(); for(int i=0;i<h.getSlots();i++) collect(h.getStackInSlot(i),items);
+        }));
+        for (List<ItemStack> options : groups) {
+            if (options == null || options.isEmpty()) continue;
+            int found=-1;
+            for(int i=0;i<items.size() && found<0;i++) for(ItemStack o:options)
+                if(o!=null&&!o.isEmpty()&&ItemStack.isSameItemSameComponents(items.get(i),o)
+                        &&items.get(i).getCount()>=Math.max(1,o.getCount())) { found=i; break; }
+            if(found<0) return false;
+            items.get(found).shrink(1);
+        }
+        return true;
+    }
+    private static void collect(ItemStack backpack, List<ItemStack> out) {
+        if(backpack==null||backpack.isEmpty()||!(backpack.getItem() instanceof BackpackItem)) return;
+        IItemHandler h=backpack.getCapability(Capabilities.ItemHandler.ITEM); if(h==null)return;
+        for(int i=0;i<h.getSlots();i++){ ItemStack s=h.getStackInSlot(i); if(!s.isEmpty())out.add(s.copy()); }
+    }
 
     public static void receiveUtilityFlags(UtilityFlagsPayload payload) {
         OVERLAY.setUtilityFlags(new boolean[] { payload.crafting(), payload.furnace(), payload.anvil(),

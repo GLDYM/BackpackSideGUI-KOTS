@@ -21,6 +21,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.CraftingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiBackpackFillPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.OpenBackpackPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
@@ -62,6 +63,8 @@ public final class ModNetwork {
         registrar.playToServer(JeiCraftingFillPayload.TYPE, JeiCraftingFillPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context,
                         () -> CraftingC2S.handleJeiFill((ServerPlayer) context.player(), payload))));
+        registrar.playToServer(JeiBackpackFillPayload.TYPE, JeiBackpackFillPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> server(context, () -> CraftingC2S.handleBackpackFill((ServerPlayer) context.player(), payload))));
         registrar.playToServer(JeiSmithingFillPayload.TYPE, JeiSmithingFillPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> server(context, () -> SmithingC2S.handleJeiFill((ServerPlayer) context.player(), payload))));
         registrar.playToServer(SmithingClickPayload.TYPE, SmithingClickPayload.STREAM_CODEC,

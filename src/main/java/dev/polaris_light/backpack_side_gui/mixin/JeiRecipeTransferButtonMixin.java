@@ -27,7 +27,7 @@ public abstract class JeiRecipeTransferButtonMixin {
 
     @Inject(method = "onPress", at = @At("HEAD"), cancellable = true, remap = false)
     private void backpack_side_gui$transfer(IJeiUserInput input, CallbackInfoReturnable<Boolean> cir) {
-        if (input.isSimulate() || (!SideBackpackClient.isCraftingUtilityVisible() && !SideBackpackClient.isSmithingUtilityVisible()))
+        if (input.isSimulate())
             return;
         if (Minecraft.getInstance().player == null)
             return;
@@ -37,6 +37,12 @@ public abstract class JeiRecipeTransferButtonMixin {
                 .forEach(slot -> groups.add(slot.getItemStacks().map(s -> s.copy()).toList()));
         if (groups.isEmpty())
             return;
+        if (recipesGui.getParentContainerMenu() != null && SideBackpackClient.canFillFromBackpacks(groups)) {
+            ClientPacketSender.jeiBackpackFill(groups, net.minecraft.client.gui.screens.Screen.hasShiftDown());
+            recipesGui.onClose();
+            cir.setReturnValue(true);
+            return;
+        }
         boolean smith = SideBackpackClient.isSmithingUtilityVisible();
         if (smith) { List<List<net.minecraft.world.item.ItemStack>> smithGroups = new ArrayList<>(groups.subList(0, Math.min(3, groups.size()))); ClientPacketSender.jeiSmithingFill(smithGroups, net.minecraft.client.gui.screens.Screen.hasShiftDown()); }
         else { while (groups.size() < 9) groups.add(List.of()); ClientPacketSender.jeiCraftingFill(groups, net.minecraft.client.gui.screens.Screen.hasShiftDown()); }
@@ -46,9 +52,18 @@ public abstract class JeiRecipeTransferButtonMixin {
 
     @Inject(method = "updateState", at = @At("RETURN"), remap = false)
     private void backpack_side_gui$forceVisible(IButtonState state, CallbackInfo ci) {
-        if (SideBackpackClient.isCraftingUtilityVisible() || SideBackpackClient.isSmithingUtilityVisible()) {
-            state.setActive(true);
+        boolean overlay = SideBackpackClient.isCraftingUtilityVisible() || SideBackpackClient.isSmithingUtilityVisible();
+        boolean backpackFill = false;
+        if (recipesGui.getParentContainerMenu() != null && Minecraft.getInstance().player != null) {
+            List<List<net.minecraft.world.item.ItemStack>> groups = new ArrayList<>();
+            recipeLayout.getRecipeSlotsView().getSlotViews(RecipeIngredientRole.INPUT).stream().limit(9)
+                    .forEach(slot -> groups.add(slot.getItemStacks().map(s -> s.copy()).toList()));
+            backpackFill = SideBackpackClient.canFillFromBackpacks(groups);
+        }
+        if (overlay || recipesGui.getParentContainerMenu() != null) {
+            state.setActive(overlay || backpackFill);
             state.setVisible(true);
         }
     }
+
 }
