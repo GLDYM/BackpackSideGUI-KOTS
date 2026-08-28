@@ -14,6 +14,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackAvailabilityPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
@@ -31,14 +32,20 @@ public final class SideBackpackClient {
     private static int refreshTicks;
     private static boolean hasBackpack;
     private static double lastMouseX, lastMouseY;
+    private static List<ItemStack> syncedBackpackItems = List.of();
+    private static boolean backpackAvailabilitySynced;
 
     public static boolean canFillFromBackpacks(List<List<ItemStack>> groups) {
         if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty()) return false;
         List<ItemStack> items = new java.util.ArrayList<>();
-        for (ItemStack s : Minecraft.getInstance().player.getInventory().items) collect(s, items);
-        CuriosApi.getCuriosInventory(Minecraft.getInstance().player).ifPresent(c -> c.getCurios().values().forEach(v -> {
-            IItemHandler h=v.getStacks(); for(int i=0;i<h.getSlots();i++) collect(h.getStackInSlot(i),items);
-        }));
+        if (backpackAvailabilitySynced)
+            for (ItemStack stack : syncedBackpackItems) items.add(stack.copy());
+        else {
+            for (ItemStack s : Minecraft.getInstance().player.getInventory().items) collect(s, items);
+            CuriosApi.getCuriosInventory(Minecraft.getInstance().player).ifPresent(c -> c.getCurios().values().forEach(v -> {
+                IItemHandler h=v.getStacks(); for(int i=0;i<h.getSlots();i++) collect(h.getStackInSlot(i),items);
+            }));
+        }
         for (List<ItemStack> options : groups) {
             if (options == null || options.isEmpty()) continue;
             int found=-1;
@@ -49,6 +56,11 @@ public final class SideBackpackClient {
             items.get(found).shrink(1);
         }
         return true;
+    }
+
+    public static void receiveBackpackAvailability(BackpackAvailabilityPayload payload) {
+        syncedBackpackItems = payload.items().stream().map(ItemStack::copy).toList();
+        backpackAvailabilitySynced = true;
     }
     private static void collect(ItemStack backpack, List<ItemStack> out) {
         if(backpack==null||backpack.isEmpty()||!(backpack.getItem() instanceof BackpackItem)) return;

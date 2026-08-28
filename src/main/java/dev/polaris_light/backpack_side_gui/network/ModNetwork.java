@@ -12,6 +12,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.AnvilClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilRenamePayload;
 import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackAvailabilityPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackDragPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSlotPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSyncPayload;
@@ -102,6 +103,8 @@ public final class ModNetwork {
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveStonecutter(payload)));
         registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
+        registrar.playToClient(BackpackAvailabilityPayload.TYPE, BackpackAvailabilityPayload.STREAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveBackpackAvailability(payload)));
     }
 
     private static void server(IPayloadContext context, Runnable action) {

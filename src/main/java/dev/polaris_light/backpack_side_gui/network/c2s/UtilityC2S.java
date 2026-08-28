@@ -3,6 +3,7 @@ package dev.polaris_light.backpack_side_gui.network.c2s;
 import java.util.Optional;
 
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackSyncPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackAvailabilityPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.FlagResolver;
@@ -19,15 +20,30 @@ public final class UtilityC2S {
     public static void open(ServerPlayer player) {
         Optional<BackpackAccess> access = BackpackResolver.resolve(player);
         if (access.isEmpty()) {
+            PacketDistributor.sendToPlayer(player, new BackpackAvailabilityPayload(java.util.List.of()),
+                    new CustomPacketPayload[0]);
             PacketDistributor.sendToPlayer(player, new BackpackSyncPayload("", java.util.List.of()),
                     new CustomPacketPayload[0]);
         } else {
+            PacketDistributor.sendToPlayer(player, availability(player), new CustomPacketPayload[0]);
             sendFlags(player, access.get());
             PacketDistributor.sendToPlayer(player, BackpackC2S.snapshot(access.get(), player),
                     new CustomPacketPayload[0]);
             if (FlagResolver.resolve(access.get()).furnace())
                 FurnaceC2S.send(player, access.get());
         }
+    }
+
+    private static BackpackAvailabilityPayload availability(ServerPlayer player) {
+        java.util.List<net.minecraft.world.item.ItemStack> items = new java.util.ArrayList<>();
+        for (BackpackAccess access : BackpackResolver.getAllBackpacks(player)) {
+            for (int i = 0; i < access.handler().getSlots(); i++) {
+                net.minecraft.world.item.ItemStack stack = access.handler().getStackInSlot(i);
+                if (!stack.isEmpty())
+                    items.add(stack.copy());
+            }
+        }
+        return new BackpackAvailabilityPayload(items);
     }
 
     public static void request(ServerPlayer player, int type) {
