@@ -18,6 +18,9 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.minecraft.client.Minecraft;
 import mezz.jei.api.gui.inputs.IJeiUserInput;
 import mezz.jei.api.gui.buttons.IButtonState;
+import mezz.jei.api.gui.builder.ITooltipBuilder;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.Rect2i;
 import mezz.jei.gui.recipes.RecipesGui;
 
 @Mixin(targets = "mezz.jei.gui.recipes.RecipeTransferButtonController")
@@ -64,6 +67,30 @@ public abstract class JeiRecipeTransferButtonMixin {
             state.setActive(overlay || backpackFill);
             state.setVisible(true);
         }
+    }
+
+    @Inject(method = "getTooltips", at = @At("HEAD"), cancellable = true, remap = false)
+    private void backpack_side_gui$hideMissingTooltip(ITooltipBuilder tooltip, CallbackInfo ci) {
+        if (backpack_side_gui$canFillFromBackpacks()) {
+            tooltip.add(net.minecraft.network.chat.Component.translatable("jei.tooltip.transfer"));
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "drawExtras", at = @At("HEAD"), cancellable = true, remap = false)
+    private void backpack_side_gui$hideMissingHighlight(GuiGraphics graphics, Rect2i buttonArea, int mouseX,
+            int mouseY, float partialTicks, CallbackInfo ci) {
+        if (backpack_side_gui$canFillFromBackpacks())
+            ci.cancel();
+    }
+
+    private boolean backpack_side_gui$canFillFromBackpacks() {
+        if (recipesGui.getParentContainerMenu() == null || Minecraft.getInstance().player == null)
+            return false;
+        List<List<net.minecraft.world.item.ItemStack>> groups = new ArrayList<>();
+        recipeLayout.getRecipeSlotsView().getSlotViews(RecipeIngredientRole.INPUT).stream().limit(9)
+                .forEach(slot -> groups.add(slot.getItemStacks().map(s -> s.copy()).toList()));
+        return SideBackpackClient.canFillFromBackpacks(groups);
     }
 
 }
