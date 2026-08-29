@@ -24,71 +24,71 @@ public final class StonecutterC2S {
     private StonecutterC2S() {
     }
 
-    private static StonecutterUpgradeItem.Wrapper wrapper(ServerPlayer p, BackpackAccess a) {
-        var w = BackpackWrapper.fromStack(a.stack()).getUpgradeHandler()
+    private static StonecutterUpgradeItem.Wrapper wrapper(ServerPlayer player, BackpackAccess access) {
+        var wrappers = BackpackWrapper.fromStack(access.stack()).getUpgradeHandler()
                 .getWrappersThatImplement(StonecutterUpgradeItem.Wrapper.class);
-        return w.isEmpty() ? null : w.get(0);
+        return wrappers.isEmpty() ? null : wrappers.get(0);
     }
 
-    public static void handleClick(ServerPlayer p, StonecutterClickPayload q) {
-        var a = BackpackResolver.resolve(p);
-        if (a.isEmpty())
+    public static void handleClick(ServerPlayer player, StonecutterClickPayload payload) {
+        var access = BackpackResolver.resolve(player);
+        if (access.isEmpty())
             return;
-        var w = wrapper(p, a.get());
-        if (w == null)
+        var upgradeWrapper = wrapper(player, access.get());
+        if (upgradeWrapper == null)
             return;
-        IItemHandlerModifiable inv = w.getInputInventory();
-        ItemStack carried = p.containerMenu.getCarried();
-        if (!ItemStack.matches(carried, q.carried())) {
-            if (!p.gameMode.isCreative())
+        IItemHandlerModifiable inventory = upgradeWrapper.getInputInventory();
+        ItemStack carried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(carried, payload.carried())) {
+            if (!player.gameMode.isCreative())
                 return;
-            carried = q.carried().copy();
-            p.containerMenu.setCarried(carried);
+            carried = payload.carried().copy();
+            player.containerMenu.setCarried(carried);
         }
-        if (q.slot() == 1) {
-            var rs = recipes(p, inv);
-            if (q.recipe() >= 0 && q.recipe() < rs.size())
-                w.setRecipeId(rs.get(q.recipe()).id());
-        } else if (q.slot() == 0) {
-            p.containerMenu.setCarried(q.button() == 6 ? collect(inv, carried)
-                    : HandlerSlotClicker.click(inv, 0, q.button(), carried));
-        } else if (q.slot() == 2) {
-            var out = result(p, inv, q.recipe());
+        if (payload.slot() == 1) {
+            var rs = recipes(player, inventory);
+            if (payload.recipe() >= 0 && payload.recipe() < rs.size())
+                upgradeWrapper.setRecipeId(rs.get(payload.recipe()).id());
+        } else if (payload.slot() == 0) {
+            player.containerMenu.setCarried(payload.button() == 6 ? collect(inventory, carried)
+                    : HandlerSlotClicker.click(inventory, 0, payload.button(), carried));
+        } else if (payload.slot() == 2) {
+            var out = result(player, inventory, payload.recipe());
             if (!out.isEmpty()) {
-                if (q.shift()) {
-                    while (!out.isEmpty() && canInsert(p, out)) {
-                        if (!p.getInventory().add(out.copy()))
+                if (payload.shift()) {
+                    while (!out.isEmpty() && canInsert(player, out)) {
+                        if (!player.getInventory().add(out.copy()))
                             break;
-                        inv.extractItem(0, 1, false);
-                        out = result(p, inv, q.recipe());
+                        inventory.extractItem(0, 1, false);
+                        out = result(player, inventory, payload.recipe());
                     }
                 } else if (carried.isEmpty()) {
-                    p.containerMenu.setCarried(out.copy());
-                    inv.extractItem(0, 1, false);
+                    player.containerMenu.setCarried(out.copy());
+                    inventory.extractItem(0, 1, false);
                 } else if (ItemStack.isSameItemSameComponents(carried, out)
                         && carried.getCount() + out.getCount() <= carried.getMaxStackSize()) {
                     carried.grow(out.getCount());
-                    p.containerMenu.setCarried(carried);
-                    inv.extractItem(0, 1, false);
+                    player.containerMenu.setCarried(carried);
+                    inventory.extractItem(0, 1, false);
                 }
             }
         }
-        p.containerMenu.broadcastChanges();
-        PacketDistributor.sendToPlayer(p, new BackpackCarriedPayload(p.containerMenu.getCarried().copy()));
-        send(p, a.get());
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
+        send(player, access.get());
     }
-    private static ItemStack collect(IItemHandlerModifiable inv, ItemStack carried) {
-        ItemStack stack = inv.getStackInSlot(0);
+    private static ItemStack collect(IItemHandlerModifiable inventory, ItemStack carried) {
+        ItemStack stack = inventory.getStackInSlot(0);
         if (stack.isEmpty() && carried.isEmpty()) return carried;
-        if (carried.isEmpty()) return inv.extractItem(0, stack.getCount(), false);
+        if (carried.isEmpty()) return inventory.extractItem(0, stack.getCount(), false);
         if (!ItemStack.isSameItemSameComponents(stack, carried)) return carried;
-        ItemStack taken = inv.extractItem(0, Math.min(carried.getMaxStackSize() - carried.getCount(), stack.getCount()), false);
+        ItemStack taken = inventory.extractItem(0, Math.min(carried.getMaxStackSize() - carried.getCount(), stack.getCount()), false);
         return carried.copyWithCount(carried.getCount() + taken.getCount());
     }
 
-    private static boolean canInsert(ServerPlayer p, ItemStack stack) {
+    private static boolean canInsert(ServerPlayer player, ItemStack stack) {
         int room = 0;
-        for (ItemStack s : p.getInventory().items) {
+        for (ItemStack s : player.getInventory().items) {
             if (s.isEmpty())
                 room += stack.getMaxStackSize();
             else if (ItemStack.isSameItemSameComponents(s, stack))
@@ -99,33 +99,34 @@ public final class StonecutterC2S {
         return false;
     }
 
-    private static List<RecipeHolder<StonecutterRecipe>> recipes(ServerPlayer p, IItemHandlerModifiable i) {
-        var in = i.getStackInSlot(0);
+    private static List<RecipeHolder<StonecutterRecipe>> recipes(ServerPlayer player, IItemHandlerModifiable inventory) {
+        var in = inventory.getStackInSlot(0);
         return in.isEmpty() ? List.of()
                 : RecipeHelper.getRecipesOfType(RecipeType.STONECUTTING, new SingleRecipeInput(in));
     }
 
-    private static ItemStack result(ServerPlayer p, IItemHandlerModifiable i, int n) {
-        var r = recipes(p, i);
-        if (n < 0 || n >= r.size())
+    private static ItemStack result(ServerPlayer player, IItemHandlerModifiable inventory, int recipeIndex) {
+        var recipes = recipes(player, inventory);
+        if (recipeIndex < 0 || recipeIndex >= recipes.size())
             return ItemStack.EMPTY;
-        return r.get(n).value().assemble(new SingleRecipeInput(i.getStackInSlot(0)), p.registryAccess());
+        return recipes.get(recipeIndex).value().assemble(new SingleRecipeInput(inventory.getStackInSlot(0)), player.registryAccess());
     }
 
-    public static void send(ServerPlayer p, BackpackAccess a) {
-        var w = wrapper(p, a);
-        if (w == null)
+    public static void send(ServerPlayer player, BackpackAccess access) {
+        var upgradeWrapper = wrapper(player, access);
+        if (upgradeWrapper == null)
             return;
-        var i = w.getInputInventory();
-        var rs = recipes(p, i);
-        ItemStack[] out = rs.stream().map(r -> r.value().getResultItem(p.registryAccess())).toArray(ItemStack[]::new);
-        int selected = w.getRecipeId().flatMap(id -> {
+        var i = upgradeWrapper.getInputInventory();
+        var rs = recipes(player, i);
+        ItemStack[] out = rs.stream().map(r -> r.value().getResultItem(player.registryAccess())).toArray(ItemStack[]::new);
+        int selected = upgradeWrapper.getRecipeId().flatMap(id -> {
             for (int n = 0; n < rs.size(); n++)
                 if (rs.get(n).id().equals(id))
                     return Optional.of(n);
             return Optional.empty();
         }).orElse(0);
-        PacketDistributor.sendToPlayer(p,
-                new StonecutterSyncPayload(i.getStackInSlot(0), result(p, i, selected), out, selected));
+        PacketDistributor.sendToPlayer(player,
+                new StonecutterSyncPayload(i.getStackInSlot(0), result(player, i, selected), out, selected));
     }
 }
+

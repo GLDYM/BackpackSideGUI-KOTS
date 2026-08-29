@@ -145,17 +145,17 @@ public final class CraftingC2S {
         }
         player.containerMenu.broadcastChanges();
     }
-    private static ItemStack findAndExtractFromBackpacks(ServerPlayer p, ItemStack w, boolean max) {
-        for(BackpackAccess a:BackpackResolver.getAllBackpacks(p)) for(int i=0;i<a.handler().getSlots();i++) {
-            ItemStack s=a.handler().getStackInSlot(i);
-            if(ItemStack.isSameItemSameComponents(s,w)) return a.handler().extractItem(i,max?Math.min(s.getCount(),w.getMaxStackSize()):1,false);
+    private static ItemStack findAndExtractFromBackpacks(ServerPlayer player, ItemStack wanted, boolean maxTransfer) {
+        for(BackpackAccess access:BackpackResolver.getAllBackpacks(player)) for(int i=0;i<access.handler().getSlots();i++) {
+            ItemStack stack=access.handler().getStackInSlot(i);
+            if(ItemStack.isSameItemSameComponents(stack,wanted)) return access.handler().extractItem(i,maxTransfer?Math.min(stack.getCount(),wanted.getMaxStackSize()):1,false);
         }
         return ItemStack.EMPTY;
     }
-    private static void returnToBackpacks(ServerPlayer p, ItemStack stack) {
+    private static void returnToBackpacks(ServerPlayer player, ItemStack stack) {
         ItemStack r=stack;
-        for(BackpackAccess a:BackpackResolver.getAllBackpacks(p)) for(int i=0;i<a.handler().getSlots()&&!r.isEmpty();i++) r=a.handler().insertItem(i,r,false);
-        if(!r.isEmpty()) p.getInventory().placeItemBackInInventory(r);
+        for(BackpackAccess access:BackpackResolver.getAllBackpacks(player)) for(int i=0;i<access.handler().getSlots()&&!r.isEmpty();i++) r=access.handler().insertItem(i,r,false);
+        if(!r.isEmpty()) player.getInventory().placeItemBackInInventory(r);
     }
 
     private static ItemStack findAndExtract(ServerPlayer player, ItemStack wanted, boolean max) {

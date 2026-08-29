@@ -18,50 +18,50 @@ public final class FurnaceC2S {
     private FurnaceC2S() {
     }
 
-    private static IItemHandler inv(ServerPlayer p, BackpackAccess a) {
-        var w = BackpackWrapper.fromStack(a.stack()).getUpgradeHandler()
+    private static IItemHandler inv(ServerPlayer player, BackpackAccess access) {
+        var w = BackpackWrapper.fromStack(access.stack()).getUpgradeHandler()
                 .getWrappersThatImplement(CookingUpgradeWrapper.class);
         return w.isEmpty() ? null : w.get(0).getCookingLogic().getCookingInventory();
     }
 
-    public static void handleClick(ServerPlayer p, FurnaceClickPayload q) {
-        Optional<BackpackAccess> a = BackpackResolver.resolve(p);
-        if (a.isEmpty() || q.slot() < 0 || q.slot() > 2)
+    public static void handleClick(ServerPlayer player, FurnaceClickPayload payload) {
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
+        if (access.isEmpty() || payload.slot() < 0 || payload.slot() > 2)
             return;
-        IItemHandler i = inv(p, a.get());
-        if (i == null)
+        IItemHandler inventory = inv(player, access.get());
+        if (inventory == null)
             return;
-        ItemStack carried = p.containerMenu.getCarried();
-        if (!ItemStack.matches(carried, q.carried())) {
-            if (!p.gameMode.isCreative())
+        ItemStack carried = player.containerMenu.getCarried();
+        if (!ItemStack.matches(carried, payload.carried())) {
+            if (!player.gameMode.isCreative())
                 return;
-            carried = q.carried().copy();
-            p.containerMenu.setCarried(carried);
+            carried = payload.carried().copy();
+            player.containerMenu.setCarried(carried);
         }
-        int realSlot = q.slot();
-        if (q.slot() == 2 && !carried.isEmpty())
+        int realSlot = payload.slot();
+        if (payload.slot() == 2 && !carried.isEmpty())
             return;
-        p.containerMenu.setCarried(q.button() == 6 && realSlot < 2 ? collect(i, realSlot, carried)
-                : HandlerSlotClicker.click(i, realSlot, q.button(), carried));
-        p.containerMenu.broadcastChanges();
-        PacketDistributor.sendToPlayer(p, new BackpackCarriedPayload(p.containerMenu.getCarried().copy()));
-        send(p, a.get());
+        player.containerMenu.setCarried(payload.button() == 6 && realSlot < 2 ? collect(inventory, realSlot, carried)
+                : HandlerSlotClicker.click(inventory, realSlot, payload.button(), carried));
+        player.containerMenu.broadcastChanges();
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
+        send(player, access.get());
     }
 
     private static ItemStack collect(IItemHandler inv, int source, ItemStack carried) {
         return HandlerSlotClicker.collect(inv, source, 2, carried);
     }
 
-    public static void send(ServerPlayer p, BackpackAccess a) {
-        IItemHandler i = inv(p, a);
-        if (i == null)
+    public static void send(ServerPlayer player, BackpackAccess access) {
+        IItemHandler inventory = inv(player, access);
+        if (inventory == null)
             return;
-        var w = BackpackWrapper.fromStack(a.stack()).getUpgradeHandler()
+        var w = BackpackWrapper.fromStack(access.stack()).getUpgradeHandler()
                 .getWrappersThatImplement(CookingUpgradeWrapper.class).get(0).getCookingLogic();
-        PacketDistributor.sendToPlayer(p,
-                new FurnaceSyncPayload(i.getStackInSlot(0), i.getStackInSlot(1), i.getStackInSlot(2),
-                        Math.max(0, w.getBurnTimeFinish() - p.level().getGameTime()), w.getBurnTimeTotal(),
-                        Math.max(0, w.getCookTimeFinish() - p.level().getGameTime()), w.getCookTimeTotal(),
+        PacketDistributor.sendToPlayer(player,
+                new FurnaceSyncPayload(inventory.getStackInSlot(0), inventory.getStackInSlot(1), inventory.getStackInSlot(2),
+                        Math.max(0, w.getBurnTimeFinish() - player.level().getGameTime()), w.getBurnTimeTotal(),
+                        Math.max(0, w.getCookTimeFinish() - player.level().getGameTime()), w.getCookTimeTotal(),
                         w.isCooking()));
     }
 }

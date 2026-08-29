@@ -69,9 +69,9 @@ public final class SmithingC2S {
         for (int i=0;i<Math.min(3,payload.ingredients().size());i++) if (inv.getStackInSlot(i).isEmpty()) for (ItemStack o: payload.ingredients().get(i)) { if (o==null||o.isEmpty()) continue; ItemStack f=find(player,o); if(!f.isEmpty()){inv.insertItem(i,f,false);break;} }
         player.containerMenu.broadcastChanges(); send(player, (BackpackAccess)null);
     }
-    private static ItemStack find(ServerPlayer p, ItemStack w) {
-        for (int i=0;i<p.getInventory().items.size();i++){ItemStack s=p.getInventory().items.get(i);if(ItemStack.isSameItemSameComponents(s,w)){ItemStack o=s.copyWithCount(1);s.shrink(1);return o;}}
-        for (BackpackAccess a: BackpackResolver.getAllBackpacks(p)) for(int i=0;i<a.handler().getSlots();i++){ItemStack s=a.handler().getStackInSlot(i);if(ItemStack.isSameItemSameComponents(s,w)) return a.handler().extractItem(i,1,false);} return ItemStack.EMPTY;
+    private static ItemStack find(ServerPlayer player, ItemStack wanted) {
+        for (int i=0;i<player.getInventory().items.size();i++){ItemStack s=player.getInventory().items.get(i);if(ItemStack.isSameItemSameComponents(s,wanted)){ItemStack o=s.copyWithCount(1);s.shrink(1);return o;}}
+        for (BackpackAccess access: BackpackResolver.getAllBackpacks(player)) for(int i=0;i<access.handler().getSlots();i++){ItemStack stack=access.handler().getStackInSlot(i);if(ItemStack.isSameItemSameComponents(stack,wanted)) return access.handler().extractItem(i,1,false);} return ItemStack.EMPTY;
     }
 
     private static ItemStack getResult(ServerPlayer player, IItemHandler inventory) {
@@ -93,3 +93,4 @@ public final class SmithingC2S {
                 inventory.getStackInSlot(1), inventory.getStackInSlot(2), getResult(player, inventory)));
     }
 }
+
