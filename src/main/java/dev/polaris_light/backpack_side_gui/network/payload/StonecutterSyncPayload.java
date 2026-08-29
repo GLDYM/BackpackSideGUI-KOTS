@@ -16,8 +16,8 @@ public record StonecutterSyncPayload(ItemStack input, ItemStack output, ItemStac
                 write(buffer, payload.input);
                 write(buffer, payload.output);
                 buffer.writeVarInt(payload.recipes.length);
-                for (ItemStack s : payload.recipes)
-                    write(buffer, s);
+                for (ItemStack recipeStack : payload.recipes)
+                    write(buffer, recipeStack);
                 buffer.writeVarInt(payload.selected);
             }, buffer -> {
                 ItemStack i = read(buffer), o = read(buffer);
@@ -28,10 +28,10 @@ public record StonecutterSyncPayload(ItemStack input, ItemStack output, ItemStac
                 return new StonecutterSyncPayload(i, o, r, buffer.readVarInt());
             });
 
-    private static void write(RegistryFriendlyByteBuf buffer, ItemStack s) {
-        buffer.writeBoolean(!s.isEmpty());
-        if (!s.isEmpty())
-            ItemStack.STREAM_CODEC.encode(buffer, s);
+    private static void write(RegistryFriendlyByteBuf buffer, ItemStack stack) {
+        buffer.writeBoolean(!stack.isEmpty());
+        if (!stack.isEmpty())
+            ItemStack.STREAM_CODEC.encode(buffer, stack);
     }
 
     private static ItemStack read(RegistryFriendlyByteBuf buffer) {

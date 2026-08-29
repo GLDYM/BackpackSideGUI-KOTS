@@ -14,28 +14,28 @@ public record JeiBackpackFillPayload(List<List<ItemStack>> ingredients, boolean 
     public static final Type<JeiBackpackFillPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "jei_backpack_fill"));
     public static final StreamCodec<RegistryFriendlyByteBuf, JeiBackpackFillPayload> STREAM_CODEC = StreamCodec
-            .of((b, p) -> {
-                int n = Math.min(9, p.ingredients().size());
-                b.writeVarInt(n);
+            .of((buffer, payload) -> {
+                int n = Math.min(9, payload.ingredients().size());
+                buffer.writeVarInt(n);
                 for (int i = 0; i < n; i++) {
-                    List<ItemStack> a = p.ingredients().get(i);
-                    int m = Math.min(64, a == null ? 0 : a.size());
-                    b.writeVarInt(m);
+                    List<ItemStack> ingredientOptions = payload.ingredients().get(i);
+                    int m = Math.min(64, ingredientOptions == null ? 0 : ingredientOptions.size());
+                    buffer.writeVarInt(m);
                     for (int j = 0; j < m; j++)
-                        ItemStack.STREAM_CODEC.encode(b, a.get(j));
+                        ItemStack.STREAM_CODEC.encode(buffer, ingredientOptions.get(j));
                 }
-                b.writeBoolean(p.maxTransfer());
-            }, b -> {
-                int n = Math.min(9, b.readVarInt());
+                buffer.writeBoolean(payload.maxTransfer());
+            }, buffer -> {
+                int n = Math.min(9, buffer.readVarInt());
                 List<List<ItemStack>> out = new ArrayList<>(n);
                 for (int i = 0; i < n; i++) {
-                    int m = Math.min(64, b.readVarInt());
-                    List<ItemStack> a = new ArrayList<>(m);
+                    int m = Math.min(64, buffer.readVarInt());
+                    List<ItemStack> ingredientOptions = new ArrayList<>(m);
                     for (int j = 0; j < m; j++)
-                        a.add(ItemStack.STREAM_CODEC.decode(b));
-                    out.add(a);
+                        ingredientOptions.add(ItemStack.STREAM_CODEC.decode(buffer));
+                    out.add(ingredientOptions);
                 }
-                return new JeiBackpackFillPayload(out, b.readBoolean());
+                return new JeiBackpackFillPayload(out, buffer.readBoolean());
             });
 
     @Override
