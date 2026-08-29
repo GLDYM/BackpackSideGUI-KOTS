@@ -83,13 +83,13 @@ public final class BackpackC2S {
         if (carried.isEmpty())
             return;
         LinkedHashSet<Integer> unique = new LinkedHashSet<>(payload.slots());
-        unique.removeIf(i -> i < 0 || i >= resolved.get().handler().getSlots());
-        unique.removeIf(i -> {
-            BackpackVirtualSlot candidate = new BackpackVirtualSlot(resolved.get().stack(), i, player);
+        unique.removeIf(slotIndex -> slotIndex < 0 || slotIndex >= resolved.get().handler().getSlots());
+        unique.removeIf(slotIndex -> {
+            BackpackVirtualSlot candidate = new BackpackVirtualSlot(resolved.get().stack(), slotIndex, player);
             ItemStack existing = candidate.getItem();
             return (!existing.isEmpty() && !ItemStack.isSameItemSameComponents(existing, carried))
                     || !candidate.mayPlace(carried)
-                    || !resolved.get().handler().insertItem(i, carried.copyWithCount(1), true).isEmpty();
+                    || !resolved.get().handler().insertItem(slotIndex, carried.copyWithCount(1), true).isEmpty();
         });
         if (unique.isEmpty())
             return;
@@ -142,16 +142,16 @@ public final class BackpackC2S {
                 left.shrink(part.getCount());
             }
         }
-        Comparator<ItemStack> name = Comparator.comparing(s -> s.getHoverName().getString().toLowerCase(Locale.ROOT));
+        Comparator<ItemStack> name = Comparator.comparing(stackEntry -> stackEntry.getHoverName().getString().toLowerCase(Locale.ROOT));
         if (payload.sortMode() == 0)
             merged.sort(Comparator.comparingInt(ItemStack::getCount).reversed().thenComparing(name));
         else if (payload.sortMode() == 1)
-            merged.sort(Comparator.comparing((ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace())
+            merged.sort(Comparator.comparing((ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).getNamespace())
                     .thenComparing(name));
         else if (payload.sortMode() == 2)
             merged.sort(name);
         else
-            merged.sort(Comparator.comparing((ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString())
+            merged.sort(Comparator.comparing((ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).toString())
                     .thenComparing(name));
         for (int i = 0; i < merged.size() && i < inv.getSlots(); i++)
             inv.setStackInSlot(i, merged.get(i));

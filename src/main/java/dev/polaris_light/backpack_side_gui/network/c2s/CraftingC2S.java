@@ -132,7 +132,7 @@ public final class CraftingC2S {
             for(int i=0;i<player.containerMenu.slots.size();i++) {
                 var slot=player.containerMenu.getSlot(i);
                 if(!used.contains(i)&&slot.getItem().isEmpty()&&slot.container!=player.getInventory()
-                        &&options.stream().anyMatch(o->o!=null&&!o.isEmpty()&&slot.mayPlace(o))) { target=i; break; }
+                        &&options.stream().anyMatch(option->option!=null&&!option.isEmpty()&&slot.mayPlace(option))) { target=i; break; }
             }
             if(target<0) continue;
             for(ItemStack wanted:options) {
@@ -185,7 +185,7 @@ public final class CraftingC2S {
             x[n] = itemHandler.getStackInSlot(n).copy();
         CraftingInput input = CraftingInput.of(3, 3, Arrays.asList(x));
         return player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
-                .map(h -> h.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
+                .map(recipeHolder -> recipeHolder.value().assemble(input, player.registryAccess())).orElse(ItemStack.EMPTY);
     }
 
     private static void consume(IItemHandler itemHandler) {

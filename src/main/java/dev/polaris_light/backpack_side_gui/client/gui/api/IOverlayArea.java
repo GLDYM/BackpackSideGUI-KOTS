@@ -15,9 +15,9 @@ public abstract class IOverlayArea extends IOverlayElement {
      * Updates the screen-space anchor used when rendering and hit-testing this
      * area.
      */
-    public void setOverlayPosition(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public void setOverlayPosition(int overlayX, int overlayY) {
+        this.x = overlayX;
+        this.y = overlayY;
     }
 
     @Override

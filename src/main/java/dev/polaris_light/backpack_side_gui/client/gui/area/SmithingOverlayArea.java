@@ -27,10 +27,10 @@ public final class SmithingOverlayArea extends IOverlayArea {
     private long lastLeftClickTime;
     private int lastLeftClickSlot = -1;
 
-    public void sync(ItemStack a, ItemStack b, ItemStack c, ItemStack result) {
-        stacks[0] = a.copy();
-        stacks[1] = b.copy();
-        stacks[2] = c.copy();
+    public void sync(ItemStack template, ItemStack addition, ItemStack base, ItemStack result) {
+        stacks[0] = template.copy();
+        stacks[1] = addition.copy();
+        stacks[2] = base.copy();
         stacks[3] = result.copy();
         for (int i = 0; i < slots.length; i++)
             slots[i] = new BackpackOverlaySlot(i, stacks[i]);

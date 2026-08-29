@@ -42,8 +42,8 @@ public final class SideBackpackClient {
             for (ItemStack stack : syncedBackpackItems) items.add(stack.copy());
         else {
             for (ItemStack s : Minecraft.getInstance().player.getInventory().items) collect(s, items);
-            CuriosApi.getCuriosInventory(Minecraft.getInstance().player).ifPresent(c -> c.getCurios().values().forEach(v -> {
-                IItemHandler h=v.getStacks(); for(int i=0;i<h.getSlots();i++) collect(h.getStackInSlot(i),items);
+            CuriosApi.getCuriosInventory(Minecraft.getInstance().player).ifPresent(curiosInventory -> curiosInventory.getCurios().values().forEach(curioHandler -> {
+                IItemHandler handler = curioHandler.getStacks(); for(int i=0;i<handler.getSlots();i++) collect(handler.getStackInSlot(i),items);
             }));
         }
         for (List<ItemStack> options : groups) {

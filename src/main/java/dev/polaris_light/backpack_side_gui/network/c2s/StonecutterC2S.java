@@ -118,7 +118,7 @@ public final class StonecutterC2S {
             return;
         var i = upgradeWrapper.getInputInventory();
         var rs = recipes(player, i);
-        ItemStack[] out = rs.stream().map(r -> r.value().getResultItem(player.registryAccess())).toArray(ItemStack[]::new);
+        ItemStack[] out = rs.stream().map(recipeHolder -> recipeHolder.value().getResultItem(player.registryAccess())).toArray(ItemStack[]::new);
         int selected = upgradeWrapper.getRecipeId().flatMap(id -> {
             for (int n = 0; n < rs.size(); n++)
                 if (rs.get(n).id().equals(id))

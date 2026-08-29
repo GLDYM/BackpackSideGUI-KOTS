@@ -9,9 +9,9 @@ public final class BackpackOverlayScrollbar {
     private boolean dragging;
     private int dragOffset;
 
-    public void update(int x, int y, int visibleRows, int totalRows) {
-        this.x = x;
-        this.y = y;
+    public void update(int scrollbarX, int scrollbarY, int visibleRows, int totalRows) {
+        this.x = scrollbarX;
+        this.y = scrollbarY;
         this.height = visibleRows * 18;
         maxRow = Math.max(0, totalRows - visibleRows);
         row = Math.max(0, Math.min(maxRow, row));

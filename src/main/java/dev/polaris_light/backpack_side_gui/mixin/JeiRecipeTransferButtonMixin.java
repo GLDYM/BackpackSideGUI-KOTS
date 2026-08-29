@@ -37,7 +37,7 @@ public abstract class JeiRecipeTransferButtonMixin {
         IRecipeSlotsView view = recipeLayout.getRecipeSlotsView();
         List<List<net.minecraft.world.item.ItemStack>> groups = new ArrayList<>();
         view.getSlotViews(RecipeIngredientRole.INPUT).stream().limit(9)
-                .forEach(slot -> groups.add(slot.getItemStacks().map(s -> s.copy()).toList()));
+                .forEach(slot -> groups.add(slot.getItemStacks().map(stack -> stack.copy()).toList()));
         if (groups.isEmpty())
             return;
         if (recipesGui.getParentContainerMenu() != null && SideBackpackClient.canFillFromBackpacks(groups)) {
@@ -60,7 +60,7 @@ public abstract class JeiRecipeTransferButtonMixin {
         if (recipesGui.getParentContainerMenu() != null && Minecraft.getInstance().player != null) {
             List<List<net.minecraft.world.item.ItemStack>> groups = new ArrayList<>();
             recipeLayout.getRecipeSlotsView().getSlotViews(RecipeIngredientRole.INPUT).stream().limit(9)
-                    .forEach(slot -> groups.add(slot.getItemStacks().map(s -> s.copy()).toList()));
+                    .forEach(slot -> groups.add(slot.getItemStacks().map(stack -> stack.copy()).toList()));
             backpackFill = SideBackpackClient.canFillFromBackpacks(groups);
         }
         if (overlay || recipesGui.getParentContainerMenu() != null) {
@@ -89,7 +89,7 @@ public abstract class JeiRecipeTransferButtonMixin {
             return false;
         List<List<net.minecraft.world.item.ItemStack>> groups = new ArrayList<>();
         recipeLayout.getRecipeSlotsView().getSlotViews(RecipeIngredientRole.INPUT).stream().limit(9)
-                .forEach(slot -> groups.add(slot.getItemStacks().map(s -> s.copy()).toList()));
+                .forEach(slot -> groups.add(slot.getItemStacks().map(stack -> stack.copy()).toList()));
         return SideBackpackClient.canFillFromBackpacks(groups);
     }
 

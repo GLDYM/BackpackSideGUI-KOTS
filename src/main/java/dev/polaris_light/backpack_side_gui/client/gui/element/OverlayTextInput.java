@@ -27,9 +27,9 @@ public class OverlayTextInput extends IOverlayElement {
         return focused;
     }
 
-    public void setBounds(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public void setBounds(int inputX, int inputY) {
+        this.x = inputX;
+        this.y = inputY;
     }
 
     public void focus() {
