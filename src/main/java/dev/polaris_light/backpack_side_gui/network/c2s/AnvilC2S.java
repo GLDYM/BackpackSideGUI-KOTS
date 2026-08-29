@@ -53,7 +53,9 @@ public final class AnvilC2S {
                 return;
             carried = payload.carried().copy();
         }
-        if (payload.slot() == 2) {
+        if (payload.button() == 6 && payload.slot() < 2) {
+            player.containerMenu.setCarried(collect(inv, payload.slot(), carried));
+        } else if (payload.slot() == 2) {
             Calculation calc = calculate(player, inv, wrapper.getItemName());
             if (!calc.result.isEmpty() && (player.isCreative() || player.experienceLevel >= calc.cost)
                     && carried.isEmpty()) {
@@ -70,6 +72,9 @@ public final class AnvilC2S {
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         send(player, wrapper);
+    }
+    private static ItemStack collect(IItemHandler inv, int source, ItemStack carried) {
+        return HandlerSlotClicker.collect(inv, source, 2, carried);
     }
 
     public static void send(ServerPlayer player, BackpackAccess access) {

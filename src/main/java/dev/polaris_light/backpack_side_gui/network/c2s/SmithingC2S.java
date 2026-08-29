@@ -45,7 +45,9 @@ public final class SmithingC2S {
             carried = payload.carried().copy();
             player.containerMenu.setCarried(carried);
         }
-        if (payload.slot() == 3) {
+        if (payload.button() == 6 && payload.slot() < 3) {
+            player.containerMenu.setCarried(collect(inventory, payload.slot(), carried));
+        } else if (payload.slot() == 3) {
             ItemStack result = getResult(player, inventory);
             if (!result.isEmpty() && carried.isEmpty()) {
                 player.containerMenu.setCarried(result);
@@ -58,6 +60,9 @@ public final class SmithingC2S {
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         send(player, inventory);
+    }
+    private static ItemStack collect(IItemHandler inv, int source, ItemStack carried) {
+        return HandlerSlotClicker.collect(inv, source, 3, carried);
     }
     public static void handleJeiFill(ServerPlayer player, JeiSmithingFillPayload payload) {
         IItemHandler inv = findInventory(player); if (inv == null) return;

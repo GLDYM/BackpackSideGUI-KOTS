@@ -14,7 +14,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 public final class StonecutterOverlayArea extends IOverlayArea {
     public static final class Layout {
         public int INPUT_BOX_X = 0, INPUT_BOX_Y = 15;
-        public int OUTPUT_BOX_X = 54, OUTPUT_BOX_Y = 15;
+        public int OUTPUT_BOX_X = 72, OUTPUT_BOX_Y = 15;
         public int RECIPE_BOX_X = 0, RECIPE_BOX_Y = 33;
         public int RECIPE_COLUMNS = 4, RECIPE_ROWS = 3;
         public int RECIPE_SLOT_COUNT = RECIPE_COLUMNS * RECIPE_ROWS;
@@ -27,6 +27,8 @@ public final class StonecutterOverlayArea extends IOverlayArea {
     private ItemStack[] recipes = new ItemStack[0];
     private int selected;
     private final BackpackOverlayScrollbar scrollbar = new BackpackOverlayScrollbar();
+    private long lastLeftClickTime;
+    private int lastLeftClickSlot = -1;
 
     public void sync(ItemStack input, ItemStack output, ItemStack[] recipes, int selected) {
         this.input = input.copy();
@@ -70,7 +72,10 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         if (mouseX >= layout.INPUT_BOX_X && mouseX < layout.INPUT_BOX_X + layout.SLOT_SIZE
                 && mouseY >= layout.INPUT_BOX_Y
                 && mouseY < layout.INPUT_BOX_Y + layout.SLOT_SIZE) {
-            ClientPacketSender.stonecutterSlot(0, event.getButton(), selected, false, carried(event));
+            long now = net.minecraft.Util.getMillis();
+            boolean dbl = event.getButton() == 0 && lastLeftClickSlot == 0 && now - lastLeftClickTime < 250;
+            if (event.getButton() == 0) { lastLeftClickSlot = 0; lastLeftClickTime = now; }
+            ClientPacketSender.stonecutterSlot(0, dbl ? 6 : event.getButton(), selected, false, carried(event));
             return true;
         }
         if (mouseX >= layout.OUTPUT_BOX_X && mouseX < layout.OUTPUT_BOX_X + layout.SLOT_SIZE

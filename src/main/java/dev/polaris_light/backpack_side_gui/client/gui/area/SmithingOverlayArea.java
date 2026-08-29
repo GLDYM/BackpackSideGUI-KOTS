@@ -24,6 +24,8 @@ public final class SmithingOverlayArea extends IOverlayArea {
             new BackpackOverlaySlot(2, ItemStack.EMPTY),
             new BackpackOverlaySlot(3, ItemStack.EMPTY)
     };
+    private long lastLeftClickTime;
+    private int lastLeftClickSlot = -1;
 
     public void sync(ItemStack a, ItemStack b, ItemStack c, ItemStack result) {
         stacks[0] = a.copy();
@@ -69,7 +71,11 @@ public final class SmithingOverlayArea extends IOverlayArea {
             if (event.getMouseX() >= slotX[i] && event.getMouseX() < slotX[i] + layout.SLOT_SIZE) {
                 ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ClientPacketSender.smithingSlot(i, event.getButton(), carried);
+                long now = net.minecraft.Util.getMillis();
+                boolean dbl = i < 3 && event.getButton() == 0 && i == lastLeftClickSlot
+                        && now - lastLeftClickTime < 250;
+                if (event.getButton() == 0) { lastLeftClickSlot = i; lastLeftClickTime = now; }
+                ClientPacketSender.smithingSlot(i, dbl ? 6 : event.getButton(), carried);
                 return true;
             }
         }

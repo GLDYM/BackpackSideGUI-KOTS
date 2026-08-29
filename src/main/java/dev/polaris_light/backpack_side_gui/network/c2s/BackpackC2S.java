@@ -36,22 +36,8 @@ public final class BackpackC2S {
             carried = payload.carried().copy();
         BackpackVirtualSlot slot = new BackpackVirtualSlot(access.get().stack(), payload.slot(), player);
         if (payload.clickType() == 6) {
-            ItemStack target = carried.isEmpty() ? slot.getItem() : carried;
-            if (target.isEmpty())
-                return;
-            for (int i = 0; i < access.get().handler().getSlots(); i++) {
-                ItemStack source = access.get().handler().getStackInSlot(i);
-                if (!ItemStack.isSameItemSameComponents(target, source))
-                    continue;
-                int room = target.getMaxStackSize() - carried.getCount();
-                if (room <= 0)
-                    break;
-                int move = Math.min(room, source.getCount());
-                access.get().handler().extractItem(i, move, false);
-                carried = carried.isEmpty() ? source.copyWithCount(move)
-                        : carried.copyWithCount(carried.getCount() + move);
-            }
-            player.containerMenu.setCarried(carried);
+            player.containerMenu.setCarried(
+                    HandlerSlotClicker.collect(access.get().handler(), payload.slot(), carried));
         } else if (payload.clickType() == 4 || payload.clickType() == 5) {
             if (!carried.isEmpty())
                 return;

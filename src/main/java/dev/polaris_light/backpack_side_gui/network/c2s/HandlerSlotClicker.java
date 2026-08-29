@@ -42,6 +42,44 @@ public final class HandlerSlotClicker {
     }
 
     /**
+     * Picks up matching stacks in the same order as vanilla pickup-all: stacks
+     * which are not already full are considered first, and full stacks are
+     * only considered if the cursor still has room afterwards.
+     */
+    public static ItemStack collect(IItemHandler inventory, int source, ItemStack carried) {
+        return collect(inventory, source, inventory.getSlots(), carried);
+    }
+
+    public static ItemStack collect(IItemHandler inventory, int source, int slotCount, ItemStack carried) {
+        int limit = Math.min(Math.max(0, slotCount), inventory.getSlots());
+        if (source < 0 || source >= limit)
+            return carried == null ? ItemStack.EMPTY : carried;
+
+        ItemStack cursor = carried == null ? ItemStack.EMPTY : carried.copy();
+        ItemStack sample = cursor.isEmpty() ? inventory.getStackInSlot(source) : cursor;
+        if (sample.isEmpty())
+            return cursor;
+
+        int max = sample.getMaxStackSize();
+        for (int pass = 0; pass < 2 && cursor.getCount() < max; pass++) {
+            for (int slot = 0; slot < limit && cursor.getCount() < max; slot++) {
+                ItemStack stack = inventory.getStackInSlot(slot);
+                if (stack.isEmpty() || !ItemStack.isSameItemSameComponents(stack, sample))
+                    continue;
+                if (pass == 0 && stack.getCount() >= stack.getMaxStackSize())
+                    continue;
+
+                ItemStack taken = inventory.extractItem(slot,
+                        Math.min(max - cursor.getCount(), stack.getCount()), false);
+                if (taken.isEmpty())
+                    continue;
+                cursor = cursor.isEmpty() ? taken : cursor.copyWithCount(cursor.getCount() + taken.getCount());
+            }
+        }
+        return cursor;
+    }
+
+    /**
      * Distributes the cursor stack across distinct, valid slots. Left drag
      * shares it equally; right drag tries to place one in every selected slot.
      */

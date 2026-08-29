@@ -41,10 +41,15 @@ public final class FurnaceC2S {
         int realSlot = q.slot();
         if (q.slot() == 2 && !carried.isEmpty())
             return;
-        p.containerMenu.setCarried(HandlerSlotClicker.click(i, realSlot, q.button(), carried));
+        p.containerMenu.setCarried(q.button() == 6 && realSlot < 2 ? collect(i, realSlot, carried)
+                : HandlerSlotClicker.click(i, realSlot, q.button(), carried));
         p.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(p, new BackpackCarriedPayload(p.containerMenu.getCarried().copy()));
         send(p, a.get());
+    }
+
+    private static ItemStack collect(IItemHandler inv, int source, ItemStack carried) {
+        return HandlerSlotClicker.collect(inv, source, 2, carried);
     }
 
     public static void send(ServerPlayer p, BackpackAccess a) {

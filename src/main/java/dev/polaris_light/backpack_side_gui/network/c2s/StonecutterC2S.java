@@ -50,7 +50,8 @@ public final class StonecutterC2S {
             if (q.recipe() >= 0 && q.recipe() < rs.size())
                 w.setRecipeId(rs.get(q.recipe()).id());
         } else if (q.slot() == 0) {
-            p.containerMenu.setCarried(HandlerSlotClicker.click(inv, 0, q.button(), p.containerMenu.getCarried()));
+            p.containerMenu.setCarried(q.button() == 6 ? collect(inv, carried)
+                    : HandlerSlotClicker.click(inv, 0, q.button(), carried));
         } else if (q.slot() == 2) {
             var out = result(p, inv, q.recipe());
             if (!out.isEmpty()) {
@@ -75,6 +76,14 @@ public final class StonecutterC2S {
         p.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(p, new BackpackCarriedPayload(p.containerMenu.getCarried().copy()));
         send(p, a.get());
+    }
+    private static ItemStack collect(IItemHandlerModifiable inv, ItemStack carried) {
+        ItemStack stack = inv.getStackInSlot(0);
+        if (stack.isEmpty() && carried.isEmpty()) return carried;
+        if (carried.isEmpty()) return inv.extractItem(0, stack.getCount(), false);
+        if (!ItemStack.isSameItemSameComponents(stack, carried)) return carried;
+        ItemStack taken = inv.extractItem(0, Math.min(carried.getMaxStackSize() - carried.getCount(), stack.getCount()), false);
+        return carried.copyWithCount(carried.getCount() + taken.getCount());
     }
 
     private static boolean canInsert(ServerPlayer p, ItemStack stack) {

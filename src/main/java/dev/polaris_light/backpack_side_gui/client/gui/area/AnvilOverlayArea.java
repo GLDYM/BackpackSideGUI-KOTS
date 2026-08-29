@@ -26,6 +26,8 @@ public final class AnvilOverlayArea extends IOverlayArea {
     private final BackpackOverlaySlot[] slots = { new BackpackOverlaySlot(0, ItemStack.EMPTY),
             new BackpackOverlaySlot(1, ItemStack.EMPTY), new BackpackOverlaySlot(2, ItemStack.EMPTY) };
     private int cost;
+    private long lastLeftClickTime;
+    private int lastLeftClickSlot = -1;
 
     public void sync(ItemStack first, ItemStack second, ItemStack result, int cost, String name) {
         stacks[0] = first == null ? ItemStack.EMPTY : first.copy();
@@ -79,7 +81,11 @@ public final class AnvilOverlayArea extends IOverlayArea {
                     && event.getMouseY() < y + layout.SLOTS_Y + layout.SLOT_SIZE) {
                 ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ClientPacketSender.anvilSlot(i, event.getButton(), carried);
+                long now = net.minecraft.Util.getMillis();
+                boolean dbl = i < 2 && event.getButton() == 0 && i == lastLeftClickSlot
+                        && now - lastLeftClickTime < 250;
+                if (event.getButton() == 0) { lastLeftClickSlot = i; lastLeftClickTime = now; }
+                ClientPacketSender.anvilSlot(i, dbl ? 6 : event.getButton(), carried);
                 return true;
             }
         return false;

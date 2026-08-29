@@ -24,6 +24,8 @@ public final class FurnaceOverlayArea extends IOverlayArea {
     private long burnFinish, cookFinish;
     private int burnTotal, cookTotal;
     private boolean cooking;
+    private long lastLeftClickTime;
+    private int lastLeftClickSlot = -1;
 
     public void sync(ItemStack input, ItemStack fuel, ItemStack output, long bf, int bt, long cf, int ct,
             boolean active) {
@@ -80,7 +82,11 @@ public final class FurnaceOverlayArea extends IOverlayArea {
                     && event.getMouseY() < sy + 18) {
                 ItemStack c = event.getScreen() instanceof AbstractContainerScreen<?> a ? a.getMenu().getCarried()
                         : ItemStack.EMPTY;
-                ClientPacketSender.furnaceSlot(i, event.getButton(), c);
+                long now = net.minecraft.Util.getMillis();
+                boolean dbl = i < 2 && event.getButton() == 0 && i == lastLeftClickSlot
+                        && now - lastLeftClickTime < 250;
+                if (event.getButton() == 0) { lastLeftClickSlot = i; lastLeftClickTime = now; }
+                ClientPacketSender.furnaceSlot(i, dbl ? 6 : event.getButton(), c);
                 return true;
             }
         }
