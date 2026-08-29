@@ -73,6 +73,7 @@ public final class AnvilC2S {
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         send(player, wrapper);
     }
+
     private static ItemStack collect(IItemHandler inv, int source, ItemStack carried) {
         return HandlerSlotClicker.collect(inv, source, 2, carried);
     }

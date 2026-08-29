@@ -10,13 +10,15 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-/** Server-authoritative contents used by JEI to calculate transfer availability. */
+/**
+ * Server-authoritative contents used by JEI to calculate transfer availability.
+ */
 public record BackpackAvailabilityPayload(List<ItemStack> items) implements CustomPacketPayload {
     public static final Type<BackpackAvailabilityPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(BackpackSideGuiMod.MOD_ID, "backpack_availability"));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, BackpackAvailabilityPayload> STREAM_CODEC =
-            StreamCodec.of((buf, payload) -> {
+    public static final StreamCodec<RegistryFriendlyByteBuf, BackpackAvailabilityPayload> STREAM_CODEC = StreamCodec
+            .of((buf, payload) -> {
                 int count = Math.min(4096, payload.items().size());
                 buf.writeVarInt(count);
                 for (int i = 0; i < count; i++) {

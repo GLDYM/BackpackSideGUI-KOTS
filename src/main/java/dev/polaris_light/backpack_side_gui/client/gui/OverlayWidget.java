@@ -65,7 +65,10 @@ public final class OverlayWidget extends IOverlayWidget {
     public boolean isCraftingVisible() {
         return crafting.isVisible();
     }
-    public boolean isSmithingVisible() { return smithing.isVisible(); }
+
+    public boolean isSmithingVisible() {
+        return smithing.isVisible();
+    }
 
     public void receiveFurnace(FurnaceSyncPayload payload) {
         furnace.sync(payload.input(), payload.fuel(), payload.output(), payload.burnFinish(), payload.burnTotal(),
@@ -96,7 +99,8 @@ public final class OverlayWidget extends IOverlayWidget {
         furnace.setVisible(activeUtility == UtilityType.FURNACE && area.isVisible() && utilityButtons[1].isVisible());
         anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
-        stonecutter.setVisible(activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
+        stonecutter.setVisible(
+                activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
 
         for (UtilityOverlayButton button : utilityButtons)
             button.setTargetVisible(button == clicked && activeUtility != null);
@@ -142,7 +146,8 @@ public final class OverlayWidget extends IOverlayWidget {
         furnace.setVisible(activeUtility == UtilityType.FURNACE && area.isVisible() && utilityButtons[1].isVisible());
         anvil.setVisible(activeUtility == UtilityType.ANVIL && area.isVisible() && utilityButtons[2].isVisible());
         smithing.setVisible(activeUtility == UtilityType.SMITHING && area.isVisible() && utilityButtons[3].isVisible());
-        stonecutter.setVisible(activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
+        stonecutter.setVisible(
+                activeUtility == UtilityType.STONECUTTER && area.isVisible() && utilityButtons[4].isVisible());
 
         if (crafting.isVisible()) {
             crafting.setOverlayPosition(area.overlayX(), area.overlayButtonY() + 22);
@@ -298,7 +303,9 @@ public final class OverlayWidget extends IOverlayWidget {
         return area.keyPressed(key) || anvil.keyPressed(key);
     }
 
-    public ItemStack stackAt(double mouseX, double mouseY) { return area.stackAt(mouseX, mouseY); }
+    public ItemStack stackAt(double mouseX, double mouseY) {
+        return area.stackAt(mouseX, mouseY);
+    }
 
     public boolean charTyped(char character) {
         return area.charTyped(character) || anvil.charTyped(character);

@@ -77,12 +77,17 @@ public final class StonecutterC2S {
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         send(player, access.get());
     }
+
     private static ItemStack collect(IItemHandlerModifiable inventory, ItemStack carried) {
         ItemStack stack = inventory.getStackInSlot(0);
-        if (stack.isEmpty() && carried.isEmpty()) return carried;
-        if (carried.isEmpty()) return inventory.extractItem(0, stack.getCount(), false);
-        if (!ItemStack.isSameItemSameComponents(stack, carried)) return carried;
-        ItemStack taken = inventory.extractItem(0, Math.min(carried.getMaxStackSize() - carried.getCount(), stack.getCount()), false);
+        if (stack.isEmpty() && carried.isEmpty())
+            return carried;
+        if (carried.isEmpty())
+            return inventory.extractItem(0, stack.getCount(), false);
+        if (!ItemStack.isSameItemSameComponents(stack, carried))
+            return carried;
+        ItemStack taken = inventory.extractItem(0,
+                Math.min(carried.getMaxStackSize() - carried.getCount(), stack.getCount()), false);
         return carried.copyWithCount(carried.getCount() + taken.getCount());
     }
 
@@ -99,7 +104,8 @@ public final class StonecutterC2S {
         return false;
     }
 
-    private static List<RecipeHolder<StonecutterRecipe>> recipes(ServerPlayer player, IItemHandlerModifiable inventory) {
+    private static List<RecipeHolder<StonecutterRecipe>> recipes(ServerPlayer player,
+            IItemHandlerModifiable inventory) {
         var in = inventory.getStackInSlot(0);
         return in.isEmpty() ? List.of()
                 : RecipeHelper.getRecipesOfType(RecipeType.STONECUTTING, new SingleRecipeInput(in));
@@ -109,7 +115,8 @@ public final class StonecutterC2S {
         var recipes = recipes(player, inventory);
         if (recipeIndex < 0 || recipeIndex >= recipes.size())
             return ItemStack.EMPTY;
-        return recipes.get(recipeIndex).value().assemble(new SingleRecipeInput(inventory.getStackInSlot(0)), player.registryAccess());
+        return recipes.get(recipeIndex).value().assemble(new SingleRecipeInput(inventory.getStackInSlot(0)),
+                player.registryAccess());
     }
 
     public static void send(ServerPlayer player, BackpackAccess access) {
@@ -118,7 +125,8 @@ public final class StonecutterC2S {
             return;
         var i = upgradeWrapper.getInputInventory();
         var rs = recipes(player, i);
-        ItemStack[] out = rs.stream().map(recipeHolder -> recipeHolder.value().getResultItem(player.registryAccess())).toArray(ItemStack[]::new);
+        ItemStack[] out = rs.stream().map(recipeHolder -> recipeHolder.value().getResultItem(player.registryAccess()))
+                .toArray(ItemStack[]::new);
         int selected = upgradeWrapper.getRecipeId().flatMap(id -> {
             for (int n = 0; n < rs.size(); n++)
                 if (rs.get(n).id().equals(id))
@@ -129,4 +137,3 @@ public final class StonecutterC2S {
                 new StonecutterSyncPayload(i.getStackInSlot(0), result(player, i, selected), out, selected));
     }
 }
-

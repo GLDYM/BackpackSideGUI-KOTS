@@ -389,7 +389,8 @@ public class BackpackOverlayArea extends IOverlayArea {
         int row = (int) ((mouseY - y) / 18) + scrollbar.row();
         int col = (int) ((mouseX - x) / 18);
         int display = row * 9 + col;
-        if (col < 0 || col >= 9 || display < 0 || display >= slots.size()) return ItemStack.EMPTY;
+        if (col < 0 || col >= 9 || display < 0 || display >= slots.size())
+            return ItemStack.EMPTY;
         return slots.get(display).stack().copy();
     }
 

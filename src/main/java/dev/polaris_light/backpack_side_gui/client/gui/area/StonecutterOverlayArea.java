@@ -74,7 +74,10 @@ public final class StonecutterOverlayArea extends IOverlayArea {
                 && mouseY < layout.INPUT_BOX_Y + layout.SLOT_SIZE) {
             long now = net.minecraft.Util.getMillis();
             boolean dbl = event.getButton() == 0 && lastLeftClickSlot == 0 && now - lastLeftClickTime < 250;
-            if (event.getButton() == 0) { lastLeftClickSlot = 0; lastLeftClickTime = now; }
+            if (event.getButton() == 0) {
+                lastLeftClickSlot = 0;
+                lastLeftClickTime = now;
+            }
             ClientPacketSender.stonecutterSlot(0, dbl ? 6 : event.getButton(), selected, false, carried(event));
             return true;
         }

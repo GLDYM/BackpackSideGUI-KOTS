@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.JeiSmithingFillPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
-import dev.polaris_light.backpack_side_gui.network.payload.JeiSmithingFillPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
@@ -61,17 +61,46 @@ public final class SmithingC2S {
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()));
         send(player, inventory);
     }
+
     private static ItemStack collect(IItemHandler inv, int source, ItemStack carried) {
         return HandlerSlotClicker.collect(inv, source, 3, carried);
     }
+
     public static void handleJeiFill(ServerPlayer player, JeiSmithingFillPayload payload) {
-        IItemHandler inv = findInventory(player); if (inv == null) return;
-        for (int i=0;i<Math.min(3,payload.ingredients().size());i++) if (inv.getStackInSlot(i).isEmpty()) for (ItemStack o: payload.ingredients().get(i)) { if (o==null||o.isEmpty()) continue; ItemStack f=find(player,o); if(!f.isEmpty()){inv.insertItem(i,f,false);break;} }
-        player.containerMenu.broadcastChanges(); send(player, (BackpackAccess)null);
+        IItemHandler inv = findInventory(player);
+        if (inv == null)
+            return;
+        for (int i = 0; i < Math.min(3, payload.ingredients().size()); i++)
+            if (inv.getStackInSlot(i).isEmpty())
+                for (ItemStack o : payload.ingredients().get(i)) {
+                    if (o == null || o.isEmpty())
+                        continue;
+                    ItemStack f = find(player, o);
+                    if (!f.isEmpty()) {
+                        inv.insertItem(i, f, false);
+                        break;
+                    }
+                }
+        player.containerMenu.broadcastChanges();
+        send(player, (BackpackAccess) null);
     }
+
     private static ItemStack find(ServerPlayer player, ItemStack wanted) {
-        for (int i=0;i<player.getInventory().items.size();i++){ItemStack s=player.getInventory().items.get(i);if(ItemStack.isSameItemSameComponents(s,wanted)){ItemStack o=s.copyWithCount(1);s.shrink(1);return o;}}
-        for (BackpackAccess access: BackpackResolver.getAllBackpacks(player)) for(int i=0;i<access.handler().getSlots();i++){ItemStack stack=access.handler().getStackInSlot(i);if(ItemStack.isSameItemSameComponents(stack,wanted)) return access.handler().extractItem(i,1,false);} return ItemStack.EMPTY;
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            ItemStack s = player.getInventory().items.get(i);
+            if (ItemStack.isSameItemSameComponents(s, wanted)) {
+                ItemStack o = s.copyWithCount(1);
+                s.shrink(1);
+                return o;
+            }
+        }
+        for (BackpackAccess access : BackpackResolver.getAllBackpacks(player))
+            for (int i = 0; i < access.handler().getSlots(); i++) {
+                ItemStack stack = access.handler().getStackInSlot(i);
+                if (ItemStack.isSameItemSameComponents(stack, wanted))
+                    return access.handler().extractItem(i, 1, false);
+            }
+        return ItemStack.EMPTY;
     }
 
     private static ItemStack getResult(ServerPlayer player, IItemHandler inventory) {
@@ -93,4 +122,3 @@ public final class SmithingC2S {
                 inventory.getStackInSlot(1), inventory.getStackInSlot(2), getResult(player, inventory)));
     }
 }
-

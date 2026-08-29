@@ -2,8 +2,8 @@ package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Optional;
 
-import dev.polaris_light.backpack_side_gui.network.payload.BackpackSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackAvailabilityPayload;
+import dev.polaris_light.backpack_side_gui.network.payload.BackpackSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.FlagResolver;

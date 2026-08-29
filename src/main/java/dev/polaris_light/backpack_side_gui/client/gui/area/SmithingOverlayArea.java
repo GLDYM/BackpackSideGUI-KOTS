@@ -74,7 +74,10 @@ public final class SmithingOverlayArea extends IOverlayArea {
                 long now = net.minecraft.Util.getMillis();
                 boolean dbl = i < 3 && event.getButton() == 0 && i == lastLeftClickSlot
                         && now - lastLeftClickTime < 250;
-                if (event.getButton() == 0) { lastLeftClickSlot = i; lastLeftClickTime = now; }
+                if (event.getButton() == 0) {
+                    lastLeftClickSlot = i;
+                    lastLeftClickTime = now;
+                }
                 ClientPacketSender.smithingSlot(i, dbl ? 6 : event.getButton(), carried);
                 return true;
             }

@@ -142,16 +142,19 @@ public final class BackpackC2S {
                 left.shrink(part.getCount());
             }
         }
-        Comparator<ItemStack> name = Comparator.comparing(stackEntry -> stackEntry.getHoverName().getString().toLowerCase(Locale.ROOT));
+        Comparator<ItemStack> name = Comparator
+                .comparing(stackEntry -> stackEntry.getHoverName().getString().toLowerCase(Locale.ROOT));
         if (payload.sortMode() == 0)
             merged.sort(Comparator.comparingInt(ItemStack::getCount).reversed().thenComparing(name));
         else if (payload.sortMode() == 1)
-            merged.sort(Comparator.comparing((ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).getNamespace())
+            merged.sort(Comparator.comparing(
+                    (ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).getNamespace())
                     .thenComparing(name));
         else if (payload.sortMode() == 2)
             merged.sort(name);
         else
-            merged.sort(Comparator.comparing((ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).toString())
+            merged.sort(Comparator
+                    .comparing((ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).toString())
                     .thenComparing(name));
         for (int i = 0; i < merged.size() && i < inv.getSlots(); i++)
             inv.setStackInSlot(i, merged.get(i));

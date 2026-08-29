@@ -85,7 +85,10 @@ public final class FurnaceOverlayArea extends IOverlayArea {
                 long now = net.minecraft.Util.getMillis();
                 boolean dbl = i < 2 && event.getButton() == 0 && i == lastLeftClickSlot
                         && now - lastLeftClickTime < 250;
-                if (event.getButton() == 0) { lastLeftClickSlot = i; lastLeftClickTime = now; }
+                if (event.getButton() == 0) {
+                    lastLeftClickSlot = i;
+                    lastLeftClickTime = now;
+                }
                 ClientPacketSender.furnaceSlot(i, dbl ? 6 : event.getButton(), c);
                 return true;
             }

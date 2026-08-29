@@ -59,7 +59,8 @@ public final class FurnaceC2S {
         var w = BackpackWrapper.fromStack(access.stack()).getUpgradeHandler()
                 .getWrappersThatImplement(CookingUpgradeWrapper.class).get(0).getCookingLogic();
         PacketDistributor.sendToPlayer(player,
-                new FurnaceSyncPayload(inventory.getStackInSlot(0), inventory.getStackInSlot(1), inventory.getStackInSlot(2),
+                new FurnaceSyncPayload(inventory.getStackInSlot(0), inventory.getStackInSlot(1),
+                        inventory.getStackInSlot(2),
                         Math.max(0, w.getBurnTimeFinish() - player.level().getGameTime()), w.getBurnTimeTotal(),
                         Math.max(0, w.getCookTimeFinish() - player.level().getGameTime()), w.getCookTimeTotal(),
                         w.isCooking()));
