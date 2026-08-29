@@ -53,21 +53,8 @@ public final class CraftingC2S {
             player.containerMenu.setCarried(carried);
         }
         if (payload.button() == 6 && payload.slot() < 9) {
-            ItemStack test = carried.isEmpty() ? inventory.getStackInSlot(payload.slot()) : carried;
-            if (!test.isEmpty())
-                for (int slot = 0; slot < 9; slot++) {
-                    ItemStack stack = inventory.getStackInSlot(slot);
-                    if (!ItemStack.isSameItemSameComponents(test, stack))
-                        continue;
-                    int room = test.getMaxStackSize() - carried.getCount();
-                    if (room <= 0)
-                        break;
-                    int m = Math.min(room, stack.getCount());
-                    inventory.extractItem(slot, m, false);
-                    carried = carried.isEmpty() ? stack.copyWithCount(m)
-                            : carried.copyWithCount(carried.getCount() + m);
-                }
-            player.containerMenu.setCarried(carried);
+            player.containerMenu.setCarried(
+                    HandlerSlotClicker.collect(inventory, payload.slot(), 9, carried));
         } else if (payload.slot() == 9) {
             ItemStack result = result(player, inventory);
             if (!result.isEmpty()) {
