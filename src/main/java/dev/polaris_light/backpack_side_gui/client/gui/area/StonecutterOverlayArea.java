@@ -15,7 +15,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 public final class StonecutterOverlayArea extends IOverlayArea {
     public static final class Layout {
         public static final int INPUT_BOX_X = 0, INPUT_BOX_Y = 15;
-        public static final int OUTPUT_BOX_X = 72, OUTPUT_BOX_Y = 15;
+        public static final int OUTPUT_BOX_X = 54, OUTPUT_BOX_Y = 15;
         public static final int RECIPE_BOX_X = 0, RECIPE_BOX_Y = 33;
         public static final int RECIPE_COLUMNS = 4, RECIPE_ROWS = 3;
         public static final int RECIPE_SLOT_COUNT = RECIPE_COLUMNS * RECIPE_ROWS;
@@ -48,8 +48,7 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y - 3, -11184811);
         graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.stonecutter"), x + 4, y + 3, 16777215, true);
         new BackpackOverlaySlot(0, input).renderAt(graphics, minecraft, x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y);
-        new BackpackOverlaySlot(1, output).renderAt(graphics, minecraft, x + Layout.OUTPUT_BOX_X,
-                y + Layout.OUTPUT_BOX_Y);
+
         scrollbar.update(x + Layout.SCROLLER_X, y + Layout.SCROLLER_Y, Layout.RECIPE_ROWS, totalRows());
         int firstRecipe = scrollbar.row() * Layout.RECIPE_COLUMNS;
         for (int n = 0; n < Layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
@@ -57,6 +56,8 @@ public final class StonecutterOverlayArea extends IOverlayArea {
             new BackpackOverlaySlot(i, recipes[i]).renderAt(graphics, minecraft,
                     x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE,
                     y + Layout.RECIPE_BOX_Y + (n / Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE);
+            new BackpackOverlaySlot(1, output).renderAt(graphics, minecraft, x + Layout.OUTPUT_BOX_X,
+                y + Layout.OUTPUT_BOX_Y);
             if (i == selected)
                 new BackpackOverlaySlot(i, recipes[i]).renderDragHighlight(graphics,
                         x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE,

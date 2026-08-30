@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
@@ -54,7 +55,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
         int right = x + Layout.PANEL_WIDTH - 4, bottom = y + Layout.PANEL_HEIGHT + 4;
         graphics.fill(x - 4, y - 4, right, bottom, -871362544);
         graphics.fill(x - 4, y - 4, right, y - 3, -11184811);
-        graphics.drawString(minecraft.font, "Crafting", x + 4, y + 3, 16777215, true);
+        graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.crafting"), x + 4, y + 3, 16777215, true);
         for (int i = 0; i < 9; i++)
             slots[i].renderAt(graphics, minecraft, x + Layout.INPUT_X + (i % 3) * Layout.SLOT_SIZE,
                     y + Layout.INPUT_Y + (i / 3) * Layout.SLOT_SIZE);
