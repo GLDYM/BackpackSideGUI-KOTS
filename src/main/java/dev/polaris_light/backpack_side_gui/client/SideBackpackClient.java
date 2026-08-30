@@ -54,22 +54,6 @@ public final class SideBackpackClient {
                     }));
         }
         return BackpackAvailabilityCache.canFill(groups, items);
-        /*for (List<ItemStack> options : groups) {
-            if (options == null || options.isEmpty())
-                continue;
-            int found = -1;
-            for (int i = 0; i < items.size() && found < 0; i++)
-                for (ItemStack o : options)
-                    if (o != null && !o.isEmpty() && ItemStack.isSameItemSameComponents(items.get(i), o)
-                            && items.get(i).getCount() >= Math.max(1, o.getCount())) {
-                        found = i;
-                        break;
-                    }
-            if (found < 0)
-                return false;
-            items.get(found).shrink(1);
-        }
-        return true;*/
     }
 
     public static void receiveBackpackAvailability(BackpackAvailabilityPayload payload) {
