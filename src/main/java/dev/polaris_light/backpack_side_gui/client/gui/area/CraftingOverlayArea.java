@@ -9,14 +9,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 /** Crafting utility layout; slot data remains server-owned. */
 public final class CraftingOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int INPUT_X = 0, INPUT_Y = 15;
-        public int RESULT_X = 72, RESULT_Y = 33;
-        public int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
+        private int INPUT_X = 0, INPUT_Y = 15;
+        private int RESULT_X = 72, RESULT_Y = 33;
+        private int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
     }
 
     public final Layout layout = new Layout();
@@ -55,7 +56,8 @@ public final class CraftingOverlayArea extends IOverlayArea {
         int right = x + layout.PANEL_WIDTH - 4, bottom = y + layout.PANEL_HEIGHT + 4;
         graphics.fill(x - 4, y - 4, right, bottom, -871362544);
         graphics.fill(x - 4, y - 4, right, y - 3, -11184811);
-        graphics.drawString(minecraft.font, "Crafting", x + 4, y + 3, 16777215, true);
+        graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.crafting"), x + 4, y + 3,
+                16777215, true);
         for (int i = 0; i < 9; i++)
             slots[i].renderAt(graphics, minecraft, x + layout.INPUT_X + (i % 3) * layout.SLOT_SIZE,
                     y + layout.INPUT_Y + (i / 3) * layout.SLOT_SIZE);
@@ -171,3 +173,4 @@ public final class CraftingOverlayArea extends IOverlayArea {
                 && mouseY >= y - 4 && mouseY < y + layout.PANEL_HEIGHT + 4;
     }
 }
+

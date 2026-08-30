@@ -13,13 +13,13 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class StonecutterOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int INPUT_BOX_X = 0, INPUT_BOX_Y = 15;
-        public int OUTPUT_BOX_X = 72, OUTPUT_BOX_Y = 15;
-        public int RECIPE_BOX_X = 0, RECIPE_BOX_Y = 33;
-        public int RECIPE_COLUMNS = 4, RECIPE_ROWS = 3;
-        public int RECIPE_SLOT_COUNT = RECIPE_COLUMNS * RECIPE_ROWS;
-        public int SCROLLER_X = 78, SCROLLER_Y = 33, SCROLLER_WIDTH = 6, SCROLLER_HEIGHT = 54;
-        public int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 89;
+        private int INPUT_BOX_X = 0, INPUT_BOX_Y = 15;
+        private int OUTPUT_BOX_X = 72, OUTPUT_BOX_Y = 15;
+        private int RECIPE_BOX_X = 0, RECIPE_BOX_Y = 33;
+        private int RECIPE_COLUMNS = 4, RECIPE_ROWS = 3;
+        private int RECIPE_SLOT_COUNT = RECIPE_COLUMNS * RECIPE_ROWS;
+        private int SCROLLER_X = 78, SCROLLER_Y = 33, SCROLLER_WIDTH = 6, SCROLLER_HEIGHT = 54;
+        private int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 89;
     }
 
     public final Layout layout = new Layout();
@@ -169,3 +169,4 @@ public final class StonecutterOverlayArea extends IOverlayArea {
                 && mouseY < y + layout.PANEL_HEIGHT + 4;
     }
 }
+

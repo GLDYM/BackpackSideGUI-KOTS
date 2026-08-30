@@ -45,7 +45,7 @@ public final class ModNetwork {
         PayloadRegistrar registrar = event.registrar("1");
         registrar.playToServer(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> server(context, () -> UtilityC2S.open((ServerPlayer) context.player()))));
+                        () -> serverPlayer(context, UtilityC2S::open)));
         registrar.playToServer(BackpackSlotPayload.TYPE, BackpackSlotPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
                         () -> server(context, () -> BackpackC2S.handleSlot((ServerPlayer) context.player(), payload))));
@@ -114,5 +114,16 @@ public final class ModNetwork {
     private static void server(IPayloadContext context, Runnable action) {
         if (context.player() instanceof ServerPlayer)
             action.run();
+    }
+
+    /**
+     * Executes a serverbound action only when the network context belongs to a
+     * server player. Keeping the cast in one place prevents individual
+     * handlers from accidentally operating on a client-side player context.
+     */
+    private static void serverPlayer(IPayloadContext context,
+            java.util.function.Consumer<ServerPlayer> action) {
+        if (context.player() instanceof ServerPlayer player)
+            action.accept(player);
     }
 }

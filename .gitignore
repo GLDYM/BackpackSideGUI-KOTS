@@ -24,3 +24,5 @@ logs/
 src/generated/
 *.class
 .cache/
+# Local historical snapshots must not be indexed as source code
+backup-*/

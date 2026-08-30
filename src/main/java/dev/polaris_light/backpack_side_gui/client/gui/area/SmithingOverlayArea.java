@@ -12,8 +12,8 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class SmithingOverlayArea extends IOverlayArea {
     public static final class Layout {
-        public int FIRST_SLOT_X = 0, SECOND_SLOT_X = 18, THIRD_SLOT_X = 36, RESULT_SLOT_X = 72;
-        public int SLOTS_Y = 15, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 35;
+        private int FIRST_SLOT_X = 0, SECOND_SLOT_X = 18, THIRD_SLOT_X = 36, RESULT_SLOT_X = 72;
+        private int SLOTS_Y = 15, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 35;
     }
 
     public final Layout layout = new Layout();
@@ -107,3 +107,4 @@ public final class SmithingOverlayArea extends IOverlayArea {
                 && mouseY >= y - 4 && mouseY < panelBottom;
     }
 }
+

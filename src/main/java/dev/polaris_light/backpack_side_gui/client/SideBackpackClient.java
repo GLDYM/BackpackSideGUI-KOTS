@@ -30,6 +30,7 @@ import top.theillusivec4.curios.api.CuriosApi;
 public final class SideBackpackClient {
     private static final OverlayWidget OVERLAY = new OverlayWidget();
     private static int refreshTicks;
+    private static final int REFRESH_INTERVAL_TICKS = 5;
     private static boolean hasBackpack;
     private static double lastMouseX, lastMouseY;
     private static List<ItemStack> syncedBackpackItems = List.of();
@@ -124,11 +125,14 @@ public final class SideBackpackClient {
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,
             double mouseY) {
-        return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
-                && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
+        return isOverlayInteractive(screen, mouseX, mouseY);
     }
 
     public static boolean shouldBlockContainerTooltip(AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
+        return isOverlayInteractive(screen, mouseX, mouseY);
+    }
+
+    private static boolean isOverlayInteractive(AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
         return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
                 && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
     }
@@ -138,7 +142,7 @@ public final class SideBackpackClient {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && ++refreshTicks >= 1) {
+        if (minecraft.player != null && ++refreshTicks >= REFRESH_INTERVAL_TICKS) {
             refreshTicks = 0;
             ClientPacketSender.open();
         }
