@@ -9,6 +9,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.AnvilSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.BackpackCarriedPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.inventory.HandlerSlotClicker;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

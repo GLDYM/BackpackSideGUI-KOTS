@@ -16,6 +16,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.JeiBackpackFillPayloa
 import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.inventory.HandlerSlotClicker;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;

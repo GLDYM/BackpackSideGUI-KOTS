@@ -7,6 +7,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.FurnaceClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.FurnaceSyncPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.inventory.HandlerSlotClicker;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;

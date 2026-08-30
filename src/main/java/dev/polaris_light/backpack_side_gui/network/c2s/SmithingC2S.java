@@ -9,6 +9,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.SmithingClickPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.inventory.HandlerSlotClicker;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
