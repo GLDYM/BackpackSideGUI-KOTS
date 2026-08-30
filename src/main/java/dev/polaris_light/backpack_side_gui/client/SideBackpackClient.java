@@ -53,7 +53,8 @@ public final class SideBackpackClient {
                             collect(handler.getStackInSlot(i), items);
                     }));
         }
-        for (List<ItemStack> options : groups) {
+        return BackpackAvailabilityCache.canFill(groups, items);
+        /*for (List<ItemStack> options : groups) {
             if (options == null || options.isEmpty())
                 continue;
             int found = -1;
@@ -68,7 +69,7 @@ public final class SideBackpackClient {
                 return false;
             items.get(found).shrink(1);
         }
-        return true;
+        return true;*/
     }
 
     public static void receiveBackpackAvailability(BackpackAvailabilityPayload payload) {
