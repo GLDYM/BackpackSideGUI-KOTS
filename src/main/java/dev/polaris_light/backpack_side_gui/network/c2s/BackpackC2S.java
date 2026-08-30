@@ -14,6 +14,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.SortPayload;
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.BackpackVirtualSlot;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
+import dev.polaris_light.backpack_side_gui.server.action.ServerActionValidator;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,11 +27,11 @@ public final class BackpackC2S {
     }
 
     public static void handleSlot(ServerPlayer player, BackpackSlotPayload payload) {
-        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
-        if (access.isEmpty() || payload.slot() < 0 || payload.slot() >= access.get().handler().getSlots())
+        Optional<BackpackAccess> access = ServerActionValidator.backpack(player, payload.slot());
+        if (access.isEmpty())
             return;
         ItemStack carried = player.containerMenu.getCarried();
-        if (!player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
+        if (!ServerActionValidator.carriedMatches(player, payload.carried()))
             return;
         if (player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
             carried = payload.carried().copy();
