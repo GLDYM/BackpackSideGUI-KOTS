@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.client.gui.area;
+﻿package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +11,7 @@ import dev.polaris_light.backpack_side_gui.client.gui.element.SearchOverlayButto
 import dev.polaris_light.backpack_side_gui.client.gui.element.SortModeOverlayButton;
 import dev.polaris_light.backpack_side_gui.client.gui.element.SortOverlayButton;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
-import dev.polaris_light.backpack_side_gui.network.c2s.HandlerSlotClicker;
+import dev.polaris_light.backpack_side_gui.server.inventory.HandlerSlotClicker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -410,4 +410,5 @@ public class BackpackOverlayArea extends IOverlayArea {
         return getButtonY() - y;
     }
 }
+
 

@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network.c2s;
+﻿package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Optional;
 
@@ -66,3 +66,4 @@ public final class FurnaceC2S {
                         w.isCooking()));
     }
 }
+

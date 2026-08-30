@@ -1,10 +1,10 @@
-package dev.polaris_light.backpack_side_gui.client.gui.area;
+﻿package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.GuiConstants;
 import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
-import dev.polaris_light.backpack_side_gui.network.c2s.HandlerSlotClicker;
+import dev.polaris_light.backpack_side_gui.server.inventory.HandlerSlotClicker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -174,4 +174,5 @@ public final class CraftingOverlayArea extends IOverlayArea {
                 && mouseY >= y - 4 && mouseY < y + layout.PANEL_HEIGHT + 4;
     }
 }
+
 

@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network.c2s;
+﻿package dev.polaris_light.backpack_side_gui.server.inventory;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -111,3 +111,4 @@ public final class HandlerSlotClicker {
         return cursor.isEmpty() ? ItemStack.EMPTY : cursor;
     }
 }
+

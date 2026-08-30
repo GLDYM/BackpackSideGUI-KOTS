@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network.c2s;
+﻿package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.List;
 import java.util.Optional;
@@ -137,3 +137,4 @@ public final class StonecutterC2S {
                 new StonecutterSyncPayload(i.getStackInSlot(0), result(player, i, selected), out, selected));
     }
 }
+

@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network.c2s;
+﻿package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -184,3 +184,4 @@ public final class BackpackC2S {
         return new BackpackSyncPayload(access.stack().getHoverName().getString(), s, limits);
     }
 }
+

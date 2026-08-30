@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network.c2s;
+﻿package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Arrays;
 import java.util.List;
@@ -310,3 +310,4 @@ public final class CraftingC2S {
         PacketDistributor.sendToPlayer(player, new CraftingSyncPayload(x));
     }
 }
+

@@ -1,4 +1,4 @@
-package dev.polaris_light.backpack_side_gui.network.c2s;
+﻿package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.List;
 import java.util.Optional;
@@ -131,3 +131,4 @@ public final class AnvilC2S {
         static final Calculation EMPTY = new Calculation(ItemStack.EMPTY, 0, 0);
     }
 }
+
