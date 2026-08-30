@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
@@ -49,7 +50,7 @@ public final class FurnaceOverlayArea extends IOverlayArea {
             return;
         graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y + Layout.PANEL_HEIGHT + 4, -871362544);
         graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y - 3, -11184811);
-        graphics.drawString(minecraft.font, "Furnace", x + 4, y + 3, 16777215, true);
+        graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.furnace"), x + 4, y + 3, 16777215, true);
         slots[0].renderAt(graphics, minecraft, x + Layout.INPUT_X, y + Layout.INPUT_Y);
         slots[1].renderAt(graphics, minecraft, x + Layout.FUEL_X, y + Layout.FUEL_Y);
         slots[2].renderAt(graphics, minecraft, x + Layout.OUTPUT_X, y + Layout.OUTPUT_Y);

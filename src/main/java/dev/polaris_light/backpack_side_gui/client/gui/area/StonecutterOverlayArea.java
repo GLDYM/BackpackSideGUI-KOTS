@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
@@ -45,7 +46,7 @@ public final class StonecutterOverlayArea extends IOverlayArea {
             return;
         graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y + Layout.PANEL_HEIGHT + 4, -871362544);
         graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y - 3, -11184811);
-        graphics.drawString(minecraft.font, "Stonecutter", x + 4, y + 3, 16777215, true);
+        graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.stonecutter"), x + 4, y + 3, 16777215, true);
         new BackpackOverlaySlot(0, input).renderAt(graphics, minecraft, x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y);
         new BackpackOverlaySlot(1, output).renderAt(graphics, minecraft, x + Layout.OUTPUT_BOX_X,
                 y + Layout.OUTPUT_BOX_Y);
@@ -91,6 +92,8 @@ public final class StonecutterOverlayArea extends IOverlayArea {
                 && mouseX < Layout.RECIPE_BOX_X + Layout.RECIPE_COLUMNS * Layout.SLOT_SIZE) {
             int n = (mouseY - Layout.RECIPE_BOX_Y) / Layout.SLOT_SIZE * Layout.RECIPE_COLUMNS
                     + ((mouseX - Layout.RECIPE_BOX_X) / Layout.SLOT_SIZE);
+            if (n < 0 || n >= Layout.RECIPE_SLOT_COUNT)
+                return false;
             int firstRecipe = scrollbar.row() * Layout.RECIPE_COLUMNS;
             if (n < Layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length) {
                 selected = firstRecipe + n;
