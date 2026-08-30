@@ -1,6 +1,5 @@
 package dev.polaris_light.backpack_side_gui.network;
 
-import dev.polaris_light.backpack_side_gui.client.SideBackpackClient;
 import dev.polaris_light.backpack_side_gui.network.c2s.AnvilC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.BackpackC2S;
 import dev.polaris_light.backpack_side_gui.network.c2s.CraftingC2S;
@@ -93,24 +92,24 @@ public final class ModNetwork {
 
         registrar.playToClient(BackpackSyncPayload.TYPE, BackpackSyncPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
-                        () -> SideBackpackClient.receive(payload.title(), payload.items(), payload.slotLimits())));
+                        () -> ClientPayloadHandlers.backpack(payload)));
         registrar.playToClient(UtilityFlagsPayload.TYPE, UtilityFlagsPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.flags(payload)));
         registrar.playToClient(SmithingSyncPayload.TYPE, SmithingSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveSmithing(payload)));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.smithing(payload)));
         registrar.playToClient(CraftingSyncPayload.TYPE, CraftingSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCrafting(payload)));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.crafting(payload)));
         registrar.playToClient(AnvilSyncPayload.TYPE, AnvilSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveAnvil(payload)));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.anvil(payload)));
         registrar.playToClient(FurnaceSyncPayload.TYPE, FurnaceSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveFurnace(payload)));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.furnace(payload)));
         registrar.playToClient(StonecutterSyncPayload.TYPE, StonecutterSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveStonecutter(payload)));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.stonecutter(payload)));
         registrar.playToClient(BackpackCarriedPayload.TYPE, BackpackCarriedPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveCarried(payload.carried())));
+                (payload, context) -> context.enqueueWork(() -> ClientPayloadHandlers.carried(payload)));
         registrar.playToClient(BackpackAvailabilityPayload.TYPE, BackpackAvailabilityPayload.STREAM_CODEC,
                 (payload, context) -> context
-                        .enqueueWork(() -> SideBackpackClient.receiveBackpackAvailability(payload)));
+                        .enqueueWork(() -> ClientPayloadHandlers.availability(payload)));
     }
 
     private static void server(IPayloadContext context, Runnable action) {
