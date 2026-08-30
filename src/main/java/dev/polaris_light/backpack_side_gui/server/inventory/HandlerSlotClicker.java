@@ -1,4 +1,4 @@
-﻿package dev.polaris_light.backpack_side_gui.server.inventory;
+package dev.polaris_light.backpack_side_gui.server.inventory;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;

@@ -1,4 +1,4 @@
-﻿package dev.polaris_light.backpack_side_gui.client.gui.area;
+package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import java.util.ArrayList;
 import java.util.List;

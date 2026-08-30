@@ -1,4 +1,4 @@
-﻿package dev.polaris_light.backpack_side_gui.client.gui.area;
+package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
 import dev.polaris_light.backpack_side_gui.client.gui.GuiConstants;
