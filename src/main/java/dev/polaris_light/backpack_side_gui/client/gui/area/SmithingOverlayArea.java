@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
@@ -53,7 +54,7 @@ public final class SmithingOverlayArea extends IOverlayArea {
         int panelBottom = y + layout.PANEL_HEIGHT + 4;
         graphics.fill(x - 4, y - 4, panelRight, panelBottom, -871362544);
         graphics.fill(x - 4, y - 4, panelRight, y - 3, -11184811);
-        graphics.drawString(minecraft.font, "Smithing", x + 4, y + 3, 16777215, true);
+        graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.smithing"), x + 4, y + 3, 16777215, true);
         slots[0].renderAt(graphics, minecraft, x + layout.FIRST_SLOT_X, y + layout.SLOTS_Y);
         slots[1].renderAt(graphics, minecraft, x + layout.SECOND_SLOT_X, y + layout.SLOTS_Y);
         slots[2].renderAt(graphics, minecraft, x + layout.THIRD_SLOT_X, y + layout.SLOTS_Y);

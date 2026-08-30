@@ -34,5 +34,6 @@
   "text.backpack_side_gui.anvil.cost": "等级消耗: %s",
   "text.backpack_side_gui.utility.smithing": "锻造台",
   "text.backpack_side_gui.utility.stonecutter": "切石机",
+  "text.backpack_side_gui.utility.stonecutter": "切石机",
   "text.backpack_side_gui.utility.click_open": "点击使用功能"
 }

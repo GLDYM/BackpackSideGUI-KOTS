@@ -53,10 +53,6 @@ dependencies {
     runtimeOnly "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
     compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
     runtimeOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}"
-    compileOnly "curse.maven:sophisticated-core-618298:${sophisticated_core_fileid}"
-    runtimeOnly "curse.maven:sophisticated-core-618298:${sophisticated_core_fileid}"
-    compileOnly "curse.maven:sophisticated-backpacks-422301:${sophisticated_backpacks_fileid}"
-    runtimeOnly "curse.maven:sophisticated-backpacks-422301:${sophisticated_backpacks_fileid}"
 }
 
 // sourceSets.main.java { srcDirs = ['src/main/java/dev/polaris_light/backpack_side_gui'] }

@@ -34,5 +34,6 @@
   "text.backpack_side_gui.anvil.cost": "Level cost: %s",
   "text.backpack_side_gui.utility.smithing": "Smithing Table",
   "text.backpack_side_gui.utility.stonecutter": "Stonecutter",
+  "text.backpack_side_gui.utility.stonecutter": "Stonecutter",
   "text.backpack_side_gui.utility.click_open": "Click to use"
 }
