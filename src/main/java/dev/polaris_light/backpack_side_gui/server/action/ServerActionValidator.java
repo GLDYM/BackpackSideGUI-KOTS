@@ -21,4 +21,11 @@ public final class ServerActionValidator {
         if (player == null || claimed == null) return false;
         return player.gameMode.isCreative() || ItemStack.matches(player.containerMenu.getCarried(), claimed);
     }
+
+    public static boolean validDrag(ServerPlayer player, java.util.List<Integer> slots, ItemStack claimed) {
+        if (!carriedMatches(player, claimed) || claimed.isEmpty() || slots == null || slots.size() < 2)
+            return false;
+        Optional<BackpackAccess> access = BackpackResolver.resolve(player);
+        return access.isPresent() && slots.stream().allMatch(i -> i != null && i >= 0 && i < access.get().handler().getSlots());
+    }
 }

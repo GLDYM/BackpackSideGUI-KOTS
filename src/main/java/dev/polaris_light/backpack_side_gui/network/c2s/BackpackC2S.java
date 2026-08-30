@@ -30,7 +30,7 @@ public final class BackpackC2S {
     public static void handleSlot(ServerPlayer player, BackpackSlotPayload payload) {
         // Normalize wire-level click codes at the boundary; business branches below
         // retain vanilla-compatible details while sharing a semantic model.
-        SlotAction.fromClickType(payload.clickType());
+        SlotAction action = SlotAction.fromClickType(payload.clickType());
         Optional<BackpackAccess> access = ServerActionValidator.backpack(player, payload.slot());
         if (access.isEmpty())
             return;
@@ -40,10 +40,10 @@ public final class BackpackC2S {
         if (player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
             carried = payload.carried().copy();
         BackpackVirtualSlot slot = new BackpackVirtualSlot(access.get().stack(), payload.slot(), player);
-        if (payload.clickType() == 6) {
+        if (action == SlotAction.PICKUP_ALL) {
             player.containerMenu.setCarried(
                     HandlerSlotClicker.collect(access.get().handler(), payload.slot(), carried));
-        } else if (payload.clickType() == 4 || payload.clickType() == 5) {
+        } else if (action == SlotAction.QUICK_MOVE) {
             if (!carried.isEmpty())
                 return;
             ItemStack picked = slot.getItem().copy();
@@ -53,7 +53,7 @@ public final class BackpackC2S {
             ItemStack moved = slot.remove(amount);
             if (!player.getInventory().add(moved))
                 slot.set(moved);
-        } else if (payload.clickType() <= 1) {
+        } else if (action == SlotAction.PICKUP) {
             if (!carried.isEmpty())
                 return;
             ItemStack in = slot.getItem();
@@ -80,7 +80,7 @@ public final class BackpackC2S {
 
     public static void handleDrag(ServerPlayer player, BackpackDragPayload payload) {
         Optional<BackpackAccess> resolved = BackpackResolver.resolve(player);
-        if (resolved.isEmpty() || payload.slots().size() < 2)
+        if (resolved.isEmpty() || !ServerActionValidator.validDrag(player, payload.slots(), payload.carried()))
             return;
         ItemStack carried = player.containerMenu.getCarried();
         if (!player.gameMode.isCreative() && !ItemStack.matches(carried, payload.carried()))
