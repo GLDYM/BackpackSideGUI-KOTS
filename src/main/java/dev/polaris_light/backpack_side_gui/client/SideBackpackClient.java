@@ -33,16 +33,15 @@ public final class SideBackpackClient {
     private static final int REFRESH_INTERVAL_TICKS = 5;
     private static boolean hasBackpack;
     private static double lastMouseX, lastMouseY;
-    private static List<ItemStack> syncedBackpackItems = List.of();
-    private static boolean backpackAvailabilitySynced;
+    private static final ClientSyncState SYNC_STATE = new ClientSyncState();
     private static AbstractContainerScreen<?> lastScreen;
 
     public static boolean canFillFromBackpacks(List<List<ItemStack>> groups) {
         if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty())
             return false;
         List<ItemStack> items = new java.util.ArrayList<>();
-        if (backpackAvailabilitySynced)
-            for (ItemStack stack : syncedBackpackItems)
+        if (SYNC_STATE.availabilitySynced())
+            for (ItemStack stack : SYNC_STATE.backpackItems())
                 items.add(stack.copy());
         else {
             for (ItemStack s : Minecraft.getInstance().player.getInventory().items)
@@ -73,8 +72,7 @@ public final class SideBackpackClient {
     }
 
     public static void receiveBackpackAvailability(BackpackAvailabilityPayload payload) {
-        syncedBackpackItems = payload.items().stream().map(ItemStack::copy).toList();
-        backpackAvailabilitySynced = true;
+        SYNC_STATE.updateAvailability(payload.items());
     }
 
     private static void collect(ItemStack backpack, List<ItemStack> out) {
@@ -153,12 +151,11 @@ public final class SideBackpackClient {
         if (current != lastScreen) {
             lastScreen = current;
             refreshTicks = REFRESH_INTERVAL_TICKS;
-            backpackAvailabilitySynced = false;
+            SYNC_STATE.invalidate();
         }
         if (minecraft.player == null) {
             hasBackpack = false;
-            syncedBackpackItems = List.of();
-            backpackAvailabilitySynced = false;
+            SYNC_STATE.invalidate();
             refreshTicks = 0;
             return;
         }
