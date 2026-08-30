@@ -156,8 +156,14 @@ public final class BackpackC2S {
             merged.sort(Comparator
                     .comparing((ItemStack stackEntry) -> BuiltInRegistries.ITEM.getKey(stackEntry.getItem()).toString())
                     .thenComparing(name));
-        for (int i = 0; i < merged.size() && i < inv.getSlots(); i++)
-            inv.setStackInSlot(i, merged.get(i));
+        int slots = inv.getSlots();
+        for (int i = 0; i < merged.size(); i++) {
+            ItemStack stack = merged.get(i);
+            if (i < slots)
+                inv.setStackInSlot(i, stack);
+            else if (!player.getInventory().add(stack.copy()))
+                player.drop(stack, false);
+        }
         PacketDistributor.sendToPlayer(player, snapshot(access.get(), player), new CustomPacketPayload[0]);
     }
 

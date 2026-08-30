@@ -17,9 +17,11 @@ import dev.polaris_light.backpack_side_gui.network.payload.JeiCraftingFillPayloa
 import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
@@ -63,19 +65,22 @@ public final class CraftingC2S {
             if (!result.isEmpty()) {
                 if (payload.shift()) {
                     while (!result.isEmpty() && canInsert(player, result)) {
-                        if (!player.getInventory().add(result.copy()))
+                        ItemStack crafted = result.copy();
+                        if (!consume(player, inventory))
                             break;
-                        consume(inventory);
+                        if (!player.getInventory().add(crafted))
+                            player.drop(crafted, false);
                         result = result(player, inventory);
                     }
                 } else if (carried.isEmpty()) {
-                    player.containerMenu.setCarried(result.copy());
-                    consume(inventory);
+                    if (consume(player, inventory))
+                        player.containerMenu.setCarried(result.copy());
                 } else if (ItemStack.isSameItemSameComponents(carried, result)
                         && carried.getCount() + result.getCount() <= carried.getMaxStackSize()) {
-                    carried.grow(result.getCount());
-                    player.containerMenu.setCarried(carried);
-                    consume(inventory);
+                    if (consume(player, inventory)) {
+                        carried.grow(result.getCount());
+                        player.containerMenu.setCarried(carried);
+                    }
                 }
             }
         } else
@@ -116,10 +121,15 @@ public final class CraftingC2S {
             for (ItemStack option : payload.ingredients().get(slot)) {
                 if (option == null || option.isEmpty())
                     continue;
-                ItemStack found = findAndExtract(player, option, payload.maxTransfer());
+                int amount = payload.maxTransfer() ? Math.min(option.getMaxStackSize(), availableCount(player, option)) : 1;
+                if (amount <= 0 || !inventory.insertItem(slot, option.copyWithCount(amount), true).isEmpty())
+                    continue;
+                ItemStack found = findAndExtract(player, option, amount);
                 LOGGER.info("JEI crafting slot={} wanted={} found={}", slot, option, found);
                 if (!found.isEmpty()) {
-                    inventory.insertItem(slot, found, false);
+                    ItemStack rest = inventory.insertItem(slot, found, false);
+                    if (!rest.isEmpty())
+                        returnToBackpacks(player, rest);
                     break;
                 }
             }
@@ -148,7 +158,8 @@ public final class CraftingC2S {
             for (ItemStack wanted : options) {
                 if (wanted == null || wanted.isEmpty())
                     continue;
-                ItemStack found = findAndExtractFromBackpacks(player, wanted, payload.maxTransfer());
+                int amount = payload.maxTransfer() ? wanted.getMaxStackSize() : 1;
+                ItemStack found = findAndExtractFromBackpacks(player, wanted, amount);
                 if (found.isEmpty())
                     continue;
                 used.add(target);
@@ -161,15 +172,22 @@ public final class CraftingC2S {
         player.containerMenu.broadcastChanges();
     }
 
-    private static ItemStack findAndExtractFromBackpacks(ServerPlayer player, ItemStack wanted, boolean maxTransfer) {
+    private static ItemStack findAndExtractFromBackpacks(ServerPlayer player, ItemStack wanted, int maxAmount) {
+        ItemStack result = ItemStack.EMPTY;
+        int remaining = Math.max(0, maxAmount);
         for (BackpackAccess access : BackpackResolver.getAllBackpacks(player))
-            for (int i = 0; i < access.handler().getSlots(); i++) {
+            for (int i = 0; i < access.handler().getSlots() && remaining > 0; i++) {
                 ItemStack stack = access.handler().getStackInSlot(i);
                 if (ItemStack.isSameItemSameComponents(stack, wanted))
-                    return access.handler().extractItem(i,
-                            maxTransfer ? Math.min(stack.getCount(), wanted.getMaxStackSize()) : 1, false);
-            }
-        return ItemStack.EMPTY;
+                    {
+                        ItemStack taken = access.handler().extractItem(i, Math.min(stack.getCount(), remaining), false);
+                        if (!taken.isEmpty()) {
+                            result = result.isEmpty() ? taken.copy() : result.copyWithCount(result.getCount() + taken.getCount());
+                            remaining -= taken.getCount();
+                        }
+                    }
+        }
+        return result;
     }
 
     private static void returnToBackpacks(ServerPlayer player, ItemStack stack) {
@@ -178,29 +196,51 @@ public final class CraftingC2S {
             for (int i = 0; i < access.handler().getSlots() && !r.isEmpty(); i++)
                 r = access.handler().insertItem(i, r, false);
         if (!r.isEmpty())
-            player.getInventory().placeItemBackInInventory(r);
+            if (!player.getInventory().add(r))
+                player.drop(r, false);
     }
 
-    private static ItemStack findAndExtract(ServerPlayer player, ItemStack wanted, boolean max) {
+    private static ItemStack findAndExtract(ServerPlayer player, ItemStack wanted, int maxAmount) {
+        ItemStack result = ItemStack.EMPTY;
+        int remaining = Math.max(0, maxAmount);
         for (int i = 0; i < player.getInventory().items.size(); i++) {
             ItemStack stack = player.getInventory().items.get(i);
-            if (ItemStack.isSameItemSameComponents(stack, wanted)) {
-                int amount = max ? Math.min(stack.getCount(), wanted.getMaxStackSize()) : 1;
+            if (remaining > 0 && ItemStack.isSameItemSameComponents(stack, wanted)) {
+                int amount = Math.min(stack.getCount(), remaining);
                 ItemStack out = stack.copyWithCount(amount);
                 stack.shrink(amount);
-                return out;
+                result = result.isEmpty() ? out : result.copyWithCount(result.getCount() + out.getCount());
+                remaining -= amount;
             }
         }
         for (BackpackAccess access : BackpackResolver.getAllBackpacks(player)) {
             IItemHandler handler = access.handler();
-            for (int i = 0; i < handler.getSlots(); i++) {
+            for (int i = 0; i < handler.getSlots() && remaining > 0; i++) {
                 ItemStack stack = handler.getStackInSlot(i);
-                if (ItemStack.isSameItemSameComponents(stack, wanted))
-                    return handler.extractItem(i,
-                            max ? Math.min(handler.getStackInSlot(i).getCount(), wanted.getMaxStackSize()) : 1, false);
+                if (ItemStack.isSameItemSameComponents(stack, wanted)) {
+                    ItemStack out = handler.extractItem(i, Math.min(stack.getCount(), remaining), false);
+                    if (!out.isEmpty()) {
+                        result = result.isEmpty() ? out.copy() : result.copyWithCount(result.getCount() + out.getCount());
+                        remaining -= out.getCount();
+                    }
+                }
             }
         }
-        return ItemStack.EMPTY;
+        return result;
+    }
+
+    private static int availableCount(ServerPlayer player, ItemStack wanted) {
+        int count = 0;
+        for (ItemStack stack : player.getInventory().items)
+            if (ItemStack.isSameItemSameComponents(stack, wanted))
+                count += stack.getCount();
+        for (BackpackAccess access : BackpackResolver.getAllBackpacks(player))
+            for (int i = 0; i < access.handler().getSlots(); i++) {
+                ItemStack stack = access.handler().getStackInSlot(i);
+                if (ItemStack.isSameItemSameComponents(stack, wanted))
+                    count += stack.getCount();
+            }
+        return count;
     }
 
     private static ItemStack result(ServerPlayer player, IItemHandler itemHandler) {
@@ -213,10 +253,37 @@ public final class CraftingC2S {
                 .orElse(ItemStack.EMPTY);
     }
 
-    private static void consume(IItemHandler itemHandler) {
+    private static boolean consume(ServerPlayer player, IItemHandler itemHandler) {
+        ItemStack[] x = new ItemStack[9];
         for (int n = 0; n < 9; n++)
-            if (!itemHandler.getStackInSlot(n).isEmpty())
-                itemHandler.extractItem(n, 1, false);
+            x[n] = itemHandler.getStackInSlot(n).copy();
+        CraftingInput input = CraftingInput.of(3, 3, Arrays.asList(x));
+        List<ItemStack> remaining = player.level().getRecipeManager()
+                .getRecipeFor(RecipeType.CRAFTING, input, player.level())
+                .map(RecipeHolder::value)
+                .map(recipe -> recipe.getRemainingItems(input))
+                .orElse(NonNullList.withSize(9, ItemStack.EMPTY));
+        // Validate every extraction before mutating any slot. This keeps a
+        // partially failing third-party handler from consuming only part of a
+        // recipe while no result is delivered.
+        for (int n = 0; n < 9; n++) {
+            if (!x[n].isEmpty() && itemHandler.extractItem(n, 1, true).getCount() != 1)
+                return false;
+        }
+        for (int n = 0; n < 9; n++) {
+            if (!itemHandler.getStackInSlot(n).isEmpty()) {
+                ItemStack extracted = itemHandler.extractItem(n, 1, false);
+                if (extracted.isEmpty())
+                    return false;
+            }
+            ItemStack rest = remaining.get(n);
+            if (!rest.isEmpty()) {
+                ItemStack rejected = itemHandler.insertItem(n, rest.copy(), false);
+                if (!rejected.isEmpty())
+                    returnToBackpacks(player, rejected);
+            }
+        }
+        return true;
     }
 
     private static boolean canInsert(ServerPlayer player, ItemStack stack) {

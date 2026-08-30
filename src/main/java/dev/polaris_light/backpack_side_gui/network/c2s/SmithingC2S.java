@@ -36,7 +36,7 @@ public final class SmithingC2S {
         if (access.isEmpty() || payload.slot() < 0)
             return;
         IItemHandler inventory = findInventory(player);
-        if (inventory == null || payload.slot() > inventory.getSlots())
+        if (inventory == null || payload.slot() >= inventory.getSlots() + 1)
             return;
         ItemStack carried = player.containerMenu.getCarried();
         if (!ItemStack.matches(carried, payload.carried())) {
@@ -75,9 +75,13 @@ public final class SmithingC2S {
                 for (ItemStack o : payload.ingredients().get(i)) {
                     if (o == null || o.isEmpty())
                         continue;
+                    if (!inv.insertItem(i, o.copyWithCount(1), true).isEmpty())
+                        continue;
                     ItemStack f = find(player, o);
                     if (!f.isEmpty()) {
-                        inv.insertItem(i, f, false);
+                        ItemStack rest = inv.insertItem(i, f, false);
+                        if (!rest.isEmpty())
+                            returnToBackpacks(player, rest);
                         break;
                     }
                 }
@@ -101,6 +105,15 @@ public final class SmithingC2S {
                     return access.handler().extractItem(i, 1, false);
             }
         return ItemStack.EMPTY;
+    }
+
+    private static void returnToBackpacks(ServerPlayer player, ItemStack stack) {
+        ItemStack rest = stack;
+        for (BackpackAccess access : BackpackResolver.getAllBackpacks(player))
+            for (int i = 0; i < access.handler().getSlots() && !rest.isEmpty(); i++)
+                rest = access.handler().insertItem(i, rest, false);
+        if (!rest.isEmpty() && !player.getInventory().add(rest))
+            player.drop(rest, false);
     }
 
     private static ItemStack getResult(ServerPlayer player, IItemHandler inventory) {
