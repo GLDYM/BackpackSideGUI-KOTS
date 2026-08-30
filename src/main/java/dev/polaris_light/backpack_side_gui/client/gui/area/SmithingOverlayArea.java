@@ -16,7 +16,6 @@ public final class SmithingOverlayArea extends IOverlayArea {
         private static final int FIRST_SLOT_X = 0, SECOND_SLOT_X = 18, THIRD_SLOT_X = 36, RESULT_SLOT_X = 72;
         private static final int SLOTS_Y = 15, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 35;
     }
-    public final Layout layout = new Layout();
 
     private final ItemStack[] stacks = { ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY };
     private final BackpackOverlaySlot[] slots = {

@@ -22,7 +22,6 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         private static final int SCROLLER_X = 78, SCROLLER_Y = 33, SCROLLER_WIDTH = 6, SCROLLER_HEIGHT = 54;
         private static final int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 89;
     }
-    public final Layout layout = new Layout();
 
     private ItemStack input = ItemStack.EMPTY, output = ItemStack.EMPTY;
     private ItemStack[] recipes = new ItemStack[0];
