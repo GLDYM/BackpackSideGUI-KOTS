@@ -45,6 +45,7 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation files('libs/sophisticatedbackpacks-1.21.1-3.25.78.2107.jar')
     implementation files('libs/sophisticatedcore-1.21.1-1.4.89.2291.jar')
     runtimeOnly files('libs/spark-1.10.124-neoforge.jar')
