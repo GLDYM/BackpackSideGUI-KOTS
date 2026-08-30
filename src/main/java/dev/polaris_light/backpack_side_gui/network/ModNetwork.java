@@ -38,6 +38,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public final class ModNetwork {
+    // Keep protocol version explicit and easy to bump during compatibility changes.
     private static final String PROTOCOL_VERSION = "1";
     private ModNetwork() {
     }
