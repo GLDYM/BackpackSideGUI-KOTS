@@ -20,8 +20,8 @@ public final class AnvilOverlayArea extends IOverlayArea {
         private static final int SLOTS_Y = 35, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 68;
     }
 
-    public final Layout layout = new Layout();
-    private final OverlayTextInput nameInput = new OverlayTextInput(layout.INPUT_BOX_WIDTH);
+
+    private final OverlayTextInput nameInput = new OverlayTextInput(Layout.INPUT_BOX_WIDTH);
     private final ItemStack[] stacks = { ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY };
     private final BackpackOverlaySlot[] slots = { new BackpackOverlaySlot(0, ItemStack.EMPTY),
             new BackpackOverlaySlot(1, ItemStack.EMPTY), new BackpackOverlaySlot(2, ItemStack.EMPTY) };
@@ -37,8 +37,8 @@ public final class AnvilOverlayArea extends IOverlayArea {
             slots[i] = new BackpackOverlaySlot(i, stacks[i]);
         nameInput.setValue(name);
         this.cost = Math.max(0, cost);
-        width = layout.PANEL_WIDTH;
-        height = layout.PANEL_HEIGHT;
+        width = Layout.PANEL_WIDTH;
+        height = Layout.PANEL_HEIGHT;
         visible = true;
         nameInput.setVisible(true);
     }
@@ -52,21 +52,21 @@ public final class AnvilOverlayArea extends IOverlayArea {
     public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
-        int right = x + layout.PANEL_WIDTH - 4, bottom = y + layout.PANEL_HEIGHT + 4;
+        int right = x + Layout.PANEL_WIDTH - 4, bottom = y + Layout.PANEL_HEIGHT + 4;
         graphics.fill(x - 4, y - 4, right, bottom, -871362544);
         graphics.fill(x - 4, y - 4, right, y - 3, -11184811);
         graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.anvil"), x + 4,
                 y + 3, 16777215,
                 true);
-        nameInput.setBounds(x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y);
+        nameInput.setBounds(x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y);
         nameInput.render(graphics, minecraft, Component.translatable("text.backpack_side_gui.anvil.rename_hint"));
-        int[] xs = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.RESULT_SLOT_X };
+        int[] xs = { Layout.FIRST_SLOT_X, Layout.SECOND_SLOT_X, Layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderAt(graphics, minecraft, x + xs[i], y + layout.SLOTS_Y);
+            slots[i].renderAt(graphics, minecraft, x + xs[i], y + Layout.SLOTS_Y);
         if (cost > 0)
             graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.anvil.cost", cost),
                     x + 2,
-                    y + layout.SLOTS_Y + layout.SLOT_SIZE + 4, 8454016, true);
+                    y + Layout.SLOTS_Y + Layout.SLOT_SIZE + 4, 8454016, true);
     }
 
     public boolean mousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
@@ -74,11 +74,11 @@ public final class AnvilOverlayArea extends IOverlayArea {
             return false;
         if (nameInput.mousePressed(event.getMouseX(), event.getMouseY()))
             return true;
-        int[] xs = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.RESULT_SLOT_X };
+        int[] xs = { Layout.FIRST_SLOT_X, Layout.SECOND_SLOT_X, Layout.RESULT_SLOT_X };
         for (int i = 0; i < xs.length; i++)
-            if (event.getMouseX() >= x + xs[i] && event.getMouseX() < x + xs[i] + layout.SLOT_SIZE
-                    && event.getMouseY() >= y + layout.SLOTS_Y
-                    && event.getMouseY() < y + layout.SLOTS_Y + layout.SLOT_SIZE) {
+            if (event.getMouseX() >= x + xs[i] && event.getMouseX() < x + xs[i] + Layout.SLOT_SIZE
+                    && event.getMouseY() >= y + Layout.SLOTS_Y
+                    && event.getMouseY() < y + Layout.SLOTS_Y + Layout.SLOT_SIZE) {
                 ItemStack carried = event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried()
                         : ItemStack.EMPTY;
                 long now = net.minecraft.Util.getMillis();
@@ -113,16 +113,16 @@ public final class AnvilOverlayArea extends IOverlayArea {
     public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
-        int[] xs = { layout.FIRST_SLOT_X, layout.SECOND_SLOT_X, layout.RESULT_SLOT_X };
+        int[] xs = { Layout.FIRST_SLOT_X, Layout.SECOND_SLOT_X, Layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderHighlightAt(graphics, x + xs[i], y + layout.SLOTS_Y, mouseX, mouseY);
+            slots[i].renderHighlightAt(graphics, x + xs[i], y + Layout.SLOTS_Y, mouseX, mouseY);
         for (int i = 0; i < slots.length; i++)
-            slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + xs[i], y + layout.SLOTS_Y, mouseX, mouseY);
+            slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + xs[i], y + Layout.SLOTS_Y, mouseX, mouseY);
     }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int sw, int sh) {
-        return visible && mouseX >= x - 4 && mouseX < x + layout.PANEL_WIDTH - 4 && mouseY >= y - 4
-                && mouseY < y + layout.PANEL_HEIGHT + 4;
+        return visible && mouseX >= x - 4 && mouseX < x + Layout.PANEL_WIDTH - 4 && mouseY >= y - 4
+                && mouseY < y + Layout.PANEL_HEIGHT + 4;
     }
 }
 

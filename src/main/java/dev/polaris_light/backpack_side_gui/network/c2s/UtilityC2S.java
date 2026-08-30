@@ -27,7 +27,7 @@ public final class UtilityC2S {
         } else {
             PacketDistributor.sendToPlayer(player, availability(player), new CustomPacketPayload[0]);
             sendFlags(player, access.get());
-            PacketDistributor.sendToPlayer(player, BackpackC2S.snapshot(access.get(), player),
+            PacketDistributor.sendToPlayer(player, dev.polaris_light.backpack_side_gui.server.sync.BackpackSyncService.snapshot(access.get(), player),
                     new CustomPacketPayload[0]);
             if (FlagResolver.resolve(access.get()).furnace())
                 FurnaceC2S.send(player, access.get());
