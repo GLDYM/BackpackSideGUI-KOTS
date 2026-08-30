@@ -1,6 +1,7 @@
 package dev.polaris_light.backpack_side_gui.client.gui.area;
 
 import dev.polaris_light.backpack_side_gui.client.gui.api.IOverlayArea;
+import dev.polaris_light.backpack_side_gui.client.gui.GuiConstants;
 import dev.polaris_light.backpack_side_gui.client.gui.element.BackpackOverlaySlot;
 import dev.polaris_light.backpack_side_gui.network.ClientPacketSender;
 import dev.polaris_light.backpack_side_gui.network.c2s.HandlerSlotClicker;
@@ -17,7 +18,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
     public static final class Layout {
         private static final int INPUT_X = 0, INPUT_Y = 15;
         private static final int RESULT_X = 72, RESULT_Y = 33;
-        private static final int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
+        private static final int SLOT_SIZE = GuiConstants.SLOT_SIZE, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
     }
 
     public final Layout layout = new Layout();
@@ -133,8 +134,8 @@ public final class CraftingOverlayArea extends IOverlayArea {
     public boolean mouseDragged(ScreenEvent.MouseDragged.Pre event) {
         if (!itemDragging)
             return false;
-        int col = (int) ((event.getMouseX() - x - layout.INPUT_X) / 18),
-                row = (int) ((event.getMouseY() - y - layout.INPUT_Y) / 18);
+        int col = (int) ((event.getMouseX() - x - layout.INPUT_X) / GuiConstants.SLOT_SIZE),
+                row = (int) ((event.getMouseY() - y - layout.INPUT_Y) / GuiConstants.SLOT_SIZE);
         if (col >= 0 && col < 3 && row >= 0 && row < 3) {
             int i = row * 3 + col;
             if (!dragSlots.contains(i))
