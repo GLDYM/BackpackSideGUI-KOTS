@@ -138,7 +138,7 @@ public final class SideBackpackClient {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && ++refreshTicks >= 1) {
+        if (minecraft.player != null && ++refreshTicks >= 5) {
             refreshTicks = 0;
             ClientPacketSender.open();
         }
