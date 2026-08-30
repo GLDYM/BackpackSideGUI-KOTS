@@ -15,9 +15,9 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 /** Anvil utility area: name input above, two inputs and one result below. */
 public final class AnvilOverlayArea extends IOverlayArea {
     public static final class Layout {
-        private int INPUT_BOX_X = 0, INPUT_BOX_Y = 15, INPUT_BOX_WIDTH = 90;
-        private int FIRST_SLOT_X = 0, SECOND_SLOT_X = 36, RESULT_SLOT_X = 72;
-        private int SLOTS_Y = 35, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 68;
+        private static final int INPUT_BOX_X = 0, INPUT_BOX_Y = 15, INPUT_BOX_WIDTH = 90;
+        private static final int FIRST_SLOT_X = 0, SECOND_SLOT_X = 36, RESULT_SLOT_X = 72;
+        private static final int SLOTS_Y = 35, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 68;
     }
 
     public final Layout layout = new Layout();

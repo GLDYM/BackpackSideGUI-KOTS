@@ -13,9 +13,9 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public final class FurnaceOverlayArea extends IOverlayArea {
     public static final class Layout {
-        private int INPUT_X = 0, INPUT_Y = 15, FUEL_X = 0, FUEL_Y = 43, OUTPUT_X = 54, OUTPUT_Y = 29;
-        private int PROGRESS_X = 24, PROGRESS_Y = 36, PROGRESS_WIDTH = 24, BURN_X = 1, BURN_Y = 36, BURN_WIDTH = 16;
-        private int SLOT_SIZE = 18, PANEL_WIDTH = 80, PANEL_HEIGHT = 68;
+        private static final int INPUT_X = 0, INPUT_Y = 15, FUEL_X = 0, FUEL_Y = 43, OUTPUT_X = 54, OUTPUT_Y = 29;
+        private static final int PROGRESS_X = 24, PROGRESS_Y = 36, PROGRESS_WIDTH = 24, BURN_X = 1, BURN_Y = 36, BURN_WIDTH = 16;
+        private static final int SLOT_SIZE = 18, PANEL_WIDTH = 80, PANEL_HEIGHT = 68;
     }
 
     public final Layout layout = new Layout();

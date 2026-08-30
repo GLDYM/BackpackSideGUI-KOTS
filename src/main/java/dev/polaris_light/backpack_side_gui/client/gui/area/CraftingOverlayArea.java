@@ -15,9 +15,9 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 /** Crafting utility layout; slot data remains server-owned. */
 public final class CraftingOverlayArea extends IOverlayArea {
     public static final class Layout {
-        private int INPUT_X = 0, INPUT_Y = 15;
-        private int RESULT_X = 72, RESULT_Y = 33;
-        private int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
+        private static final int INPUT_X = 0, INPUT_Y = 15;
+        private static final int RESULT_X = 72, RESULT_Y = 33;
+        private static final int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
     }
 
     public final Layout layout = new Layout();
