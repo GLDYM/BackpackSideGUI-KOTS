@@ -9,6 +9,7 @@ import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import dev.polaris_light.backpack_side_gui.server.FlagResolver;
 import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import dev.polaris_light.backpack_side_gui.server.record.UpgradeFlags;
+import dev.polaris_light.backpack_side_gui.server.sync.BackpackSyncService;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -27,7 +28,7 @@ public final class UtilityC2S {
         } else {
             PacketDistributor.sendToPlayer(player, availability(player), new CustomPacketPayload[0]);
             sendFlags(player, access.get());
-            PacketDistributor.sendToPlayer(player, dev.polaris_light.backpack_side_gui.server.sync.BackpackSyncService.snapshot(access.get(), player),
+            PacketDistributor.sendToPlayer(player, BackpackSyncService.snapshot(access.get(), player),
                     new CustomPacketPayload[0]);
             if (FlagResolver.resolve(access.get()).furnace())
                 FurnaceC2S.send(player, access.get());

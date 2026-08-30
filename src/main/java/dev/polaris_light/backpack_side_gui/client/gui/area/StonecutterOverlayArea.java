@@ -22,8 +22,8 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         private static final int SCROLLER_X = 78, SCROLLER_Y = 33, SCROLLER_WIDTH = 6, SCROLLER_HEIGHT = 54;
         private static final int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 89;
     }
-
     public final Layout layout = new Layout();
+
     private ItemStack input = ItemStack.EMPTY, output = ItemStack.EMPTY;
     private ItemStack[] recipes = new ItemStack[0];
     private int selected;
@@ -37,31 +37,31 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         this.recipes = recipes == null ? new ItemStack[0] : recipes;
         this.selected = selected;
         visible = true;
-        width = layout.PANEL_WIDTH;
-        height = layout.PANEL_HEIGHT;
-        scrollbar.update(x + layout.SCROLLER_X, y + layout.SCROLLER_Y, layout.RECIPE_ROWS, totalRows());
+        width = Layout.PANEL_WIDTH;
+        height = Layout.PANEL_HEIGHT;
+        scrollbar.update(x + Layout.SCROLLER_X, y + Layout.SCROLLER_Y, Layout.RECIPE_ROWS, totalRows());
     }
 
     public void render(Screen screen, GuiGraphics graphics, Minecraft minecraft) {
         if (!visible)
             return;
-        graphics.fill(x - 4, y - 4, x + layout.PANEL_WIDTH - 4, y + layout.PANEL_HEIGHT + 4, -871362544);
-        graphics.fill(x - 4, y - 4, x + layout.PANEL_WIDTH - 4, y - 3, -11184811);
+        graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y + Layout.PANEL_HEIGHT + 4, -871362544);
+        graphics.fill(x - 4, y - 4, x + Layout.PANEL_WIDTH - 4, y - 3, -11184811);
         graphics.drawString(minecraft.font, Component.translatable("text.backpack_side_gui.utility.stonecutter"), x + 4, y + 3, 16777215, true);
-        new BackpackOverlaySlot(0, input).renderAt(graphics, minecraft, x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y);
-        new BackpackOverlaySlot(1, output).renderAt(graphics, minecraft, x + layout.OUTPUT_BOX_X,
-                y + layout.OUTPUT_BOX_Y);
-        scrollbar.update(x + layout.SCROLLER_X, y + layout.SCROLLER_Y, layout.RECIPE_ROWS, totalRows());
-        int firstRecipe = scrollbar.row() * layout.RECIPE_COLUMNS;
-        for (int n = 0; n < layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
+        new BackpackOverlaySlot(0, input).renderAt(graphics, minecraft, x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y);
+        new BackpackOverlaySlot(1, output).renderAt(graphics, minecraft, x + Layout.OUTPUT_BOX_X,
+                y + Layout.OUTPUT_BOX_Y);
+        scrollbar.update(x + Layout.SCROLLER_X, y + Layout.SCROLLER_Y, Layout.RECIPE_ROWS, totalRows());
+        int firstRecipe = scrollbar.row() * Layout.RECIPE_COLUMNS;
+        for (int n = 0; n < Layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
             int i = firstRecipe + n;
             new BackpackOverlaySlot(i, recipes[i]).renderAt(graphics, minecraft,
-                    x + layout.RECIPE_BOX_X + (n % layout.RECIPE_COLUMNS) * layout.SLOT_SIZE,
-                    y + layout.RECIPE_BOX_Y + (n / layout.RECIPE_COLUMNS) * layout.SLOT_SIZE);
+                    x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE,
+                    y + Layout.RECIPE_BOX_Y + (n / Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE);
             if (i == selected)
                 new BackpackOverlaySlot(i, recipes[i]).renderDragHighlight(graphics,
-                        x + layout.RECIPE_BOX_X + (n % layout.RECIPE_COLUMNS) * layout.SLOT_SIZE,
-                        y + layout.RECIPE_BOX_Y + (n / layout.RECIPE_COLUMNS) * layout.SLOT_SIZE);
+                        x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE,
+                        y + Layout.RECIPE_BOX_Y + (n / Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE);
         }
         scrollbar.render(graphics);
     }
@@ -70,9 +70,9 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         if (!visible)
             return false;
         int mouseX = (int) event.getMouseX() - x, mouseY = (int) event.getMouseY() - y;
-        if (mouseX >= layout.INPUT_BOX_X && mouseX < layout.INPUT_BOX_X + layout.SLOT_SIZE
-                && mouseY >= layout.INPUT_BOX_Y
-                && mouseY < layout.INPUT_BOX_Y + layout.SLOT_SIZE) {
+        if (mouseX >= Layout.INPUT_BOX_X && mouseX < Layout.INPUT_BOX_X + Layout.SLOT_SIZE
+                && mouseY >= Layout.INPUT_BOX_Y
+                && mouseY < Layout.INPUT_BOX_Y + Layout.SLOT_SIZE) {
             long now = net.minecraft.Util.getMillis();
             boolean dbl = event.getButton() == 0 && lastLeftClickSlot == 0 && now - lastLeftClickTime < 250;
             if (event.getButton() == 0) {
@@ -82,19 +82,19 @@ public final class StonecutterOverlayArea extends IOverlayArea {
             ClientPacketSender.stonecutterSlot(0, dbl ? 6 : event.getButton(), selected, false, carried(event));
             return true;
         }
-        if (mouseX >= layout.OUTPUT_BOX_X && mouseX < layout.OUTPUT_BOX_X + layout.SLOT_SIZE
-                && mouseY >= layout.OUTPUT_BOX_Y
-                && mouseY < layout.OUTPUT_BOX_Y + layout.SLOT_SIZE) {
+        if (mouseX >= Layout.OUTPUT_BOX_X && mouseX < Layout.OUTPUT_BOX_X + Layout.SLOT_SIZE
+                && mouseY >= Layout.OUTPUT_BOX_Y
+                && mouseY < Layout.OUTPUT_BOX_Y + Layout.SLOT_SIZE) {
             ClientPacketSender.stonecutterSlot(2, event.getButton(), selected, Screen.hasShiftDown(), carried(event));
             return true;
         }
-        if (mouseY >= layout.RECIPE_BOX_Y && mouseY < layout.RECIPE_BOX_Y + layout.RECIPE_ROWS * layout.SLOT_SIZE
-                && mouseX >= layout.RECIPE_BOX_X
-                && mouseX < layout.RECIPE_BOX_X + layout.RECIPE_COLUMNS * layout.SLOT_SIZE) {
-            int n = (mouseY - layout.RECIPE_BOX_Y) / layout.SLOT_SIZE * layout.RECIPE_COLUMNS
-                    + ((mouseX - layout.RECIPE_BOX_X) / layout.SLOT_SIZE);
-            int firstRecipe = scrollbar.row() * layout.RECIPE_COLUMNS;
-            if (n < layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length) {
+        if (mouseY >= Layout.RECIPE_BOX_Y && mouseY < Layout.RECIPE_BOX_Y + Layout.RECIPE_ROWS * Layout.SLOT_SIZE
+                && mouseX >= Layout.RECIPE_BOX_X
+                && mouseX < Layout.RECIPE_BOX_X + Layout.RECIPE_COLUMNS * Layout.SLOT_SIZE) {
+            int n = (mouseY - Layout.RECIPE_BOX_Y) / Layout.SLOT_SIZE * Layout.RECIPE_COLUMNS
+                    + ((mouseX - Layout.RECIPE_BOX_X) / Layout.SLOT_SIZE);
+            int firstRecipe = scrollbar.row() * Layout.RECIPE_COLUMNS;
+            if (n < Layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length) {
                 selected = firstRecipe + n;
                 ClientPacketSender.stonecutterSlot(1, 0, selected, false, carried(event));
             }
@@ -124,19 +124,19 @@ public final class StonecutterOverlayArea extends IOverlayArea {
             return false;
         double mouseX = event.getMouseX() - x;
         double mouseY = event.getMouseY() - y;
-        boolean overRecipeArea = mouseX >= layout.RECIPE_BOX_X
-                && mouseX < layout.RECIPE_BOX_X + layout.RECIPE_COLUMNS * layout.SLOT_SIZE
-                && mouseY >= layout.RECIPE_BOX_Y
-                && mouseY < layout.RECIPE_BOX_Y + layout.RECIPE_ROWS * layout.SLOT_SIZE;
-        boolean overScroller = mouseX >= layout.SCROLLER_X
-                && mouseX < layout.SCROLLER_X + layout.SCROLLER_WIDTH
-                && mouseY >= layout.SCROLLER_Y
-                && mouseY < layout.SCROLLER_Y + layout.SCROLLER_HEIGHT;
+        boolean overRecipeArea = mouseX >= Layout.RECIPE_BOX_X
+                && mouseX < Layout.RECIPE_BOX_X + Layout.RECIPE_COLUMNS * Layout.SLOT_SIZE
+                && mouseY >= Layout.RECIPE_BOX_Y
+                && mouseY < Layout.RECIPE_BOX_Y + Layout.RECIPE_ROWS * Layout.SLOT_SIZE;
+        boolean overScroller = mouseX >= Layout.SCROLLER_X
+                && mouseX < Layout.SCROLLER_X + Layout.SCROLLER_WIDTH
+                && mouseY >= Layout.SCROLLER_Y
+                && mouseY < Layout.SCROLLER_Y + Layout.SCROLLER_HEIGHT;
         return (overRecipeArea || overScroller) && scrollbar.scroll(event.getScrollDeltaY());
     }
 
     private int totalRows() {
-        return Math.max(1, (recipes.length + layout.RECIPE_COLUMNS - 1) / layout.RECIPE_COLUMNS);
+        return Math.max(1, (recipes.length + Layout.RECIPE_COLUMNS - 1) / Layout.RECIPE_COLUMNS);
     }
 
     private ItemStack carried(ScreenEvent.MouseButtonPressed.Pre event) {
@@ -148,17 +148,17 @@ public final class StonecutterOverlayArea extends IOverlayArea {
             return;
         BackpackOverlaySlot inputSlot = new BackpackOverlaySlot(0, input);
         BackpackOverlaySlot outputSlot = new BackpackOverlaySlot(1, output);
-        inputSlot.renderHighlightAt(graphics, x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y, mouseX, mouseY);
-        outputSlot.renderHighlightAt(graphics, x + layout.OUTPUT_BOX_X, y + layout.OUTPUT_BOX_Y, mouseX, mouseY);
-        inputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + layout.INPUT_BOX_X, y + layout.INPUT_BOX_Y,
+        inputSlot.renderHighlightAt(graphics, x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y, mouseX, mouseY);
+        outputSlot.renderHighlightAt(graphics, x + Layout.OUTPUT_BOX_X, y + Layout.OUTPUT_BOX_Y, mouseX, mouseY);
+        inputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y,
                 mouseX, mouseY);
-        outputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + layout.OUTPUT_BOX_X, y + layout.OUTPUT_BOX_Y,
+        outputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + Layout.OUTPUT_BOX_X, y + Layout.OUTPUT_BOX_Y,
                 mouseX, mouseY);
-        int firstRecipe = scrollbar.row() * layout.RECIPE_COLUMNS;
-        for (int n = 0; n < layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
+        int firstRecipe = scrollbar.row() * Layout.RECIPE_COLUMNS;
+        for (int n = 0; n < Layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
             int i = firstRecipe + n;
-            int sx = x + layout.RECIPE_BOX_X + (n % layout.RECIPE_COLUMNS) * layout.SLOT_SIZE;
-            int sy = y + layout.RECIPE_BOX_Y + (n / layout.RECIPE_COLUMNS) * layout.SLOT_SIZE;
+            int sx = x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE;
+            int sy = y + Layout.RECIPE_BOX_Y + (n / Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE;
             BackpackOverlaySlot slot = new BackpackOverlaySlot(i, recipes[i]);
             slot.renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
             slot.renderTooltip(graphics, Minecraft.getInstance(), sx, sy, mouseX, mouseY);
@@ -166,8 +166,7 @@ public final class StonecutterOverlayArea extends IOverlayArea {
     }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int sw, int sh) {
-        return visible && mouseX >= x - 4 && mouseX < x + layout.PANEL_WIDTH - 4 && mouseY >= y - 4
-                && mouseY < y + layout.PANEL_HEIGHT + 4;
+        return visible && mouseX >= x - 4 && mouseX < x + Layout.PANEL_WIDTH - 4 && mouseY >= y - 4
+                && mouseY < y + Layout.PANEL_HEIGHT + 4;
     }
 }
-

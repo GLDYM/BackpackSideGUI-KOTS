@@ -17,6 +17,7 @@ public final class FurnaceOverlayArea extends IOverlayArea {
         private static final int PROGRESS_X = 24, PROGRESS_Y = 36, PROGRESS_WIDTH = 24, BURN_X = 1, BURN_Y = 36, BURN_WIDTH = 16;
         private static final int SLOT_SIZE = 18, PANEL_WIDTH = 80, PANEL_HEIGHT = 68;
     }
+    public final Layout layout = new Layout();
 
     private final ItemStack[] stacks = { ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY };
     private final BackpackOverlaySlot[] slots = { new BackpackOverlaySlot(0, ItemStack.EMPTY),
@@ -112,4 +113,3 @@ public final class FurnaceOverlayArea extends IOverlayArea {
                 && mouseY < y + Layout.PANEL_HEIGHT + 4;
     }
 }
-

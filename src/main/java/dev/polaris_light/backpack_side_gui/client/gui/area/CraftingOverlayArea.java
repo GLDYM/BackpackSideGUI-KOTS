@@ -19,6 +19,7 @@ public final class CraftingOverlayArea extends IOverlayArea {
         private static final int RESULT_X = 72, RESULT_Y = 33;
         private static final int SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 71;
     }
+    public final Layout layout = new Layout();
 
     private final ItemStack[] stacks = new ItemStack[10];
     private final BackpackOverlaySlot[] slots = new BackpackOverlaySlot[10];
@@ -172,5 +173,4 @@ public final class CraftingOverlayArea extends IOverlayArea {
                 && mouseY >= y - 4 && mouseY < y + Layout.PANEL_HEIGHT + 4;
     }
 }
-
 

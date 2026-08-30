@@ -12,11 +12,15 @@ import java.util.ArrayList;
 
 /** Owns server-to-client backpack state publication. */
 public final class BackpackSyncService {
-    private BackpackSyncService() {}
+    private BackpackSyncService() {
+    }
+
     public static void send(ServerPlayer player, BackpackAccess access) {
-        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()), new CustomPacketPayload[0]);
+        PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()),
+                new CustomPacketPayload[0]);
         PacketDistributor.sendToPlayer(player, snapshot(access, player), new CustomPacketPayload[0]);
     }
+
     public static BackpackSyncPayload snapshot(BackpackAccess access, ServerPlayer player) {
         ArrayList<ItemStack> items = new ArrayList<>();
         ArrayList<Integer> limits = new ArrayList<>();

@@ -19,6 +19,7 @@ public final class AnvilOverlayArea extends IOverlayArea {
         private static final int FIRST_SLOT_X = 0, SECOND_SLOT_X = 36, RESULT_SLOT_X = 72;
         private static final int SLOTS_Y = 35, SLOT_SIZE = 18, PANEL_WIDTH = 98, PANEL_HEIGHT = 68;
     }
+    public final Layout layout = new Layout();
 
 
     private final OverlayTextInput nameInput = new OverlayTextInput(Layout.INPUT_BOX_WIDTH);
@@ -125,4 +126,3 @@ public final class AnvilOverlayArea extends IOverlayArea {
                 && mouseY < y + Layout.PANEL_HEIGHT + 4;
     }
 }
-
