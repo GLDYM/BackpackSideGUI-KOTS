@@ -38,11 +38,12 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public final class ModNetwork {
+    private static final String PROTOCOL_VERSION = "1";
     private ModNetwork() {
     }
 
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("1");
+        PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
         registrar.playToServer(OpenBackpackPayload.TYPE, OpenBackpackPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(
                         () -> serverPlayer(context, UtilityC2S::open)));
