@@ -3,7 +3,7 @@ loaderVersion="[4,)"
 license="${mod_license}"
 
 [[mixins]]
-    config="backpack_side_gui.mixins.json"
+    config="backpack_side_gui_kots.mixins.json"
 
 [[mods]]
     modId="${mod_id}"

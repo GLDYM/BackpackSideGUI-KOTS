@@ -61,14 +61,14 @@ public final class UtilityC2S {
             };
             if (exist) {
                 player.containerMenu.broadcastChanges();
-                if (type == 3)
-                    SmithingC2S.send(player, access);
                 if (type == 0)
                     CraftingC2S.send(player, access);
+                if (type == 1)
+                    FurnaceC2S.send(player, access);                
                 if (type == 2)
                     AnvilC2S.send(player, access);
-                if (type == 1)
-                    FurnaceC2S.send(player, access);
+                if (type == 3)
+                    SmithingC2S.send(player, access);
                 if (type == 4)
                     StonecutterC2S.send(player, access);
             }
