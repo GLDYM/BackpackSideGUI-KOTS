@@ -1,8 +1,10 @@
 package dev.polaris_light.backpack_side_gui.network.c2s;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 
@@ -28,6 +30,8 @@ import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.crafting.CraftingUpgradeWrapper;
 
 public final class CraftingC2S {
+    private static final int CRAFTING_SLOTS = 9;
+    private static final int RESULT_SLOT = CRAFTING_SLOTS;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private CraftingC2S() {
@@ -45,10 +49,12 @@ public final class CraftingC2S {
 
     public static void handleClick(ServerPlayer player, CraftingClickPayload payload) {
         Optional<BackpackAccess> access = BackpackResolver.resolve(player);
-        if (access.isEmpty() || payload.slot() < 0 || payload.slot() > 9)
+        if (access.isEmpty() || payload.slot() < 0 || payload.slot() > RESULT_SLOT)
             return;
         IItemHandler inventory = inv(player);
         if (inventory == null)
+            return;
+        if (payload.slot() < RESULT_SLOT && payload.slot() >= inventory.getSlots())
             return;
         ItemStack carried = player.containerMenu.getCarried();
         if (!ItemStack.matches(carried, payload.carried())) {
@@ -57,10 +63,10 @@ public final class CraftingC2S {
             carried = payload.carried().copy();
             player.containerMenu.setCarried(carried);
         }
-        if (payload.button() == 6 && payload.slot() < 9) {
+        if (payload.button() == 6 && payload.slot() < RESULT_SLOT) {
             player.containerMenu.setCarried(
-                    HandlerSlotClicker.collect(inventory, payload.slot(), 9, carried));
-        } else if (payload.slot() == 9) {
+                    HandlerSlotClicker.collect(inventory, payload.slot(), CRAFTING_SLOTS, carried));
+        } else if (payload.slot() == RESULT_SLOT) {
             ItemStack result = result(player, inventory);
             if (!result.isEmpty()) {
                 if (payload.shift()) {
@@ -109,12 +115,14 @@ public final class CraftingC2S {
     }
 
     public static void handleJeiFill(ServerPlayer player, JeiCraftingFillPayload payload) {
+        if (payload.ingredients() == null)
+            return;
         LOGGER.info("JEI crafting fill player={} slots={} max={}", player.getGameProfile().getName(),
                 payload.ingredients().size(), payload.maxTransfer());
         IItemHandler inventory = inv(player);
-        if (inventory == null || payload.ingredients() == null)
+        if (inventory == null)
             return;
-        int limit = Math.min(9, payload.ingredients().size());
+        int limit = Math.min(CRAFTING_SLOTS, Math.min(inventory.getSlots(), payload.ingredients().size()));
         for (int slot = 0; slot < limit; slot++) {
             if (!inventory.getStackInSlot(slot).isEmpty())
                 continue;
@@ -141,7 +149,7 @@ public final class CraftingC2S {
     public static void handleBackpackFill(ServerPlayer player, JeiBackpackFillPayload payload) {
         if (payload.ingredients() == null)
             return;
-        java.util.Set<Integer> used = new java.util.HashSet<>();
+        Set<Integer> used = new HashSet<>();
         for (List<ItemStack> options : payload.ingredients()) {
             int target = -1;
             for (int i = 0; i < player.containerMenu.slots.size(); i++) {
@@ -244,9 +252,7 @@ public final class CraftingC2S {
     }
 
     private static ItemStack result(ServerPlayer player, IItemHandler itemHandler) {
-        ItemStack[] x = new ItemStack[9];
-        for (int n = 0; n < 9; n++)
-            x[n] = itemHandler.getStackInSlot(n).copy();
+        ItemStack[] x = craftingInput(itemHandler);
         CraftingInput input = CraftingInput.of(3, 3, Arrays.asList(x));
         return player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, player.level())
                 .map(recipeHolder -> recipeHolder.value().assemble(input, player.registryAccess()))
@@ -254,9 +260,7 @@ public final class CraftingC2S {
     }
 
     private static boolean consume(ServerPlayer player, IItemHandler itemHandler) {
-        ItemStack[] x = new ItemStack[9];
-        for (int n = 0; n < 9; n++)
-            x[n] = itemHandler.getStackInSlot(n).copy();
+        ItemStack[] x = craftingInput(itemHandler);
         CraftingInput input = CraftingInput.of(3, 3, Arrays.asList(x));
         List<ItemStack> remaining = player.level().getRecipeManager()
                 .getRecipeFor(RecipeType.CRAFTING, input, player.level())
@@ -266,17 +270,18 @@ public final class CraftingC2S {
         // Validate every extraction before mutating any slot. This keeps a
         // partially failing third-party handler from consuming only part of a
         // recipe while no result is delivered.
-        for (int n = 0; n < 9; n++) {
+        int slots = Math.min(CRAFTING_SLOTS, itemHandler.getSlots());
+        for (int n = 0; n < slots; n++) {
             if (!x[n].isEmpty() && itemHandler.extractItem(n, 1, true).getCount() != 1)
                 return false;
         }
-        for (int n = 0; n < 9; n++) {
+        for (int n = 0; n < slots; n++) {
             if (!itemHandler.getStackInSlot(n).isEmpty()) {
                 ItemStack extracted = itemHandler.extractItem(n, 1, false);
                 if (extracted.isEmpty())
                     return false;
             }
-            ItemStack rest = remaining.get(n);
+            ItemStack rest = n < remaining.size() ? remaining.get(n) : ItemStack.EMPTY;
             if (!rest.isEmpty()) {
                 ItemStack rejected = itemHandler.insertItem(n, rest.copy(), false);
                 if (!rejected.isEmpty())
@@ -284,6 +289,16 @@ public final class CraftingC2S {
             }
         }
         return true;
+    }
+
+    /** Builds the fixed-size vanilla 3x3 input without reading past a legacy handler. */
+    private static ItemStack[] craftingInput(IItemHandler itemHandler) {
+        ItemStack[] input = new ItemStack[CRAFTING_SLOTS];
+        Arrays.fill(input, ItemStack.EMPTY);
+        int slots = Math.min(CRAFTING_SLOTS, itemHandler.getSlots());
+        for (int n = 0; n < slots; n++)
+            input[n] = itemHandler.getStackInSlot(n).copy();
+        return input;
     }
 
     private static boolean canInsert(ServerPlayer player, ItemStack stack) {
@@ -303,10 +318,9 @@ public final class CraftingC2S {
         IItemHandler inventory = inv(player);
         if (inventory == null)
             return;
-        ItemStack[] x = new ItemStack[10];
-        for (int n = 0; n < 9; n++)
-            x[n] = inventory.getStackInSlot(n).copy();
-        x[9] = result(player, inventory);
+        ItemStack[] x = new ItemStack[RESULT_SLOT + 1];
+        System.arraycopy(craftingInput(inventory), 0, x, 0, CRAFTING_SLOTS);
+        x[RESULT_SLOT] = result(player, inventory);
         PacketDistributor.sendToPlayer(player, new CraftingSyncPayload(x));
     }
 }

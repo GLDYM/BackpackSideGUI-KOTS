@@ -16,14 +16,14 @@ license="${mod_license}"
 [[dependencies.backpack_side_gui]]
     modId="neoforge"
     type="required"
-    versionRange="[21.1,21.2)"
+    versionRange="${neo_version_range}"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.backpack_side_gui]]
     modId="minecraft"
     type="required"
-    versionRange="[1.21.1,)"
+    versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
 
@@ -38,7 +38,7 @@ license="${mod_license}"
 [[dependencies.backpack_side_gui]]
     modId="jei"
     type="required"
-    versionRange="[0,)"
+    versionRange="${jei_version_range}"
     ordering="AFTER"
     side="BOTH"
 

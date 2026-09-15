@@ -1,5 +1,6 @@
 package dev.polaris_light.backpack_side_gui.client;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -40,21 +41,17 @@ public final class SideBackpackClient {
     public static boolean canFillFromBackpacks(List<List<ItemStack>> groups) {
         if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty())
             return false;
-        List<ItemStack> items = new java.util.ArrayList<>();
-        if (backpackAvailabilitySynced)
-            for (ItemStack stack : syncedBackpackItems)
-                items.add(stack.copy());
-        else {
-            for (ItemStack s : Minecraft.getInstance().player.getInventory().items)
-                collect(s, items);
-            CuriosApi.getCuriosInventory(Minecraft.getInstance().player)
-                    .ifPresent(curiosInventory -> curiosInventory.getCurios().values().forEach(curioHandler -> {
-                        IItemHandler handler = curioHandler.getStacks();
-                        for (int i = 0; i < handler.getSlots(); i++)
-                            collect(handler.getStackInSlot(i), items);
-                    }));
-        }
-        for (List<ItemStack> options : groups) {
+        return missingIngredientIndexes(groups).isEmpty();
+    }
+
+    /** Returns recipe input indexes that cannot be supplied by the player or backpacks. */
+    public static List<Integer> missingIngredientIndexes(List<List<ItemStack>> groups) {
+        if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty())
+            return List.of();
+        List<ItemStack> items = availableItems();
+        List<Integer> missing = new ArrayList<>();
+        for (int groupIndex = 0; groupIndex < groups.size(); groupIndex++) {
+            List<ItemStack> options = groups.get(groupIndex);
             if (options == null || options.isEmpty())
                 continue;
             int found = -1;
@@ -66,10 +63,39 @@ public final class SideBackpackClient {
                         break;
                     }
             if (found < 0)
-                return false;
-            items.get(found).shrink(1);
+                missing.add(groupIndex);
+            else
+                items.get(found).shrink(requiredCount(options, items.get(found)));
         }
-        return true;
+        return missing;
+    }
+
+    private static List<ItemStack> availableItems() {
+        List<ItemStack> items = new ArrayList<>();
+        for (ItemStack stack : Minecraft.getInstance().player.getInventory().items)
+            if (!stack.isEmpty())
+                items.add(stack.copy());
+        if (backpackAvailabilitySynced)
+            for (ItemStack stack : syncedBackpackItems)
+                items.add(stack.copy());
+        else {
+            CuriosApi.getCuriosInventory(Minecraft.getInstance().player)
+                    .ifPresent(curiosInventory -> curiosInventory.getCurios().values().forEach(curioHandler -> {
+                        IItemHandler handler = curioHandler.getStacks();
+                        for (int i = 0; i < handler.getSlots(); i++)
+                            collect(handler.getStackInSlot(i), items);
+                    }));
+        }
+        return items;
+    }
+
+    private static int requiredCount(List<ItemStack> options, ItemStack available) {
+        return options.stream()
+                .filter(option -> option != null && !option.isEmpty()
+                        && ItemStack.isSameItemSameComponents(available, option))
+                .findFirst()
+                .map(option -> Math.max(1, option.getCount()))
+                .orElse(1);
     }
 
     public static void receiveBackpackAvailability(BackpackAvailabilityPayload payload) {

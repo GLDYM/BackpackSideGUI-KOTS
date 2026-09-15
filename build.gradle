@@ -68,6 +68,7 @@ tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version_range: minecraft_version_range,
             neo_version_range      : neo_version_range,
+            jei_version_range      : jei_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,
@@ -83,7 +84,7 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 jar {
-    manifest { attributes 'Specification-Title': mod_id, 'Specification-Version': '1', 'Implementation-Version': project.version, 'MixinConfigs': 'backpack_side_gui.mixins.json' }
+    manifest { attributes 'Specification-Title': mod_id, 'Specification-Version': '1', 'Implementation-Version': project.version, 'MixinConfigs': 'backpack_side_gui_kots.mixins.json' }
 }
 
 publishing {
