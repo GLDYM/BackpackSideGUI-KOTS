@@ -2,12 +2,14 @@ package dev.polaris_light.backpack_side_gui;
 
 import dev.polaris_light.backpack_side_gui.client.ClientBootstrap;
 import dev.polaris_light.backpack_side_gui.network.ModNetwork;
+import dev.polaris_light.backpack_side_gui.server.BackpackResolver;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
 
 @Mod(BackpackSideGuiMod.MOD_ID)
 public final class BackpackSideGuiMod {
@@ -16,6 +18,8 @@ public final class BackpackSideGuiMod {
     public BackpackSideGuiMod(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.CLIENT, BackpackSideGuiConfig.CLIENT_SPEC);
         modBus.addListener(ModNetwork::registerPayloads);
+        NeoForge.EVENT_BUS.addListener(BackpackResolver::onPlayerClone);
+        NeoForge.EVENT_BUS.addListener(BackpackResolver::onPlayerLoggedOut);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientBootstrap.init(modBus);
         }

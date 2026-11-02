@@ -20,6 +20,8 @@ import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayloa
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -29,7 +31,7 @@ import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
 import top.theillusivec4.curios.api.CuriosApi;
 
 public final class SideBackpackClient {
-    private static final OverlayWidget OVERLAY = new OverlayWidget();
+    private static OverlayWidget OVERLAY = new OverlayWidget();
     private static int refreshTicks;
     private static final int REFRESH_INTERVAL_TICKS = 5;
     private static boolean hasBackpack;
@@ -37,8 +39,37 @@ public final class SideBackpackClient {
     private static List<ItemStack> syncedBackpackItems = List.of();
     private static boolean backpackAvailabilitySynced;
     private static AbstractContainerScreen<?> lastScreen;
+    private static LocalPlayer trackedPlayer;
+    private static ClientLevel trackedLevel;
+    private static boolean playerContextInitialized;
+
+    private static void ensurePlayerContext() {
+        Minecraft minecraft = Minecraft.getInstance();
+        LocalPlayer player = minecraft.player;
+        ClientLevel level = minecraft.level;
+        if (playerContextInitialized && player == trackedPlayer && level == trackedLevel)
+            return;
+
+        boolean replaced = playerContextInitialized && (player != trackedPlayer || level != trackedLevel);
+        trackedPlayer = player;
+        trackedLevel = level;
+        playerContextInitialized = true;
+
+        OVERLAY = new OverlayWidget();
+        hasBackpack = false;
+        syncedBackpackItems = List.of();
+        backpackAvailabilitySynced = false;
+        refreshTicks = 0;
+        lastMouseX = 0;
+        lastMouseY = 0;
+        lastScreen = null;
+
+        if (replaced && minecraft.screen instanceof AbstractContainerScreen<?>)
+            minecraft.setScreen(null);
+    }
 
     public static boolean canFillFromBackpacks(List<List<ItemStack>> groups) {
+        ensurePlayerContext();
         if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty())
             return false;
         return missingIngredientIndexes(groups).isEmpty();
@@ -46,6 +77,7 @@ public final class SideBackpackClient {
 
     /** Returns recipe input indexes that cannot be supplied by the player or backpacks. */
     public static List<Integer> missingIngredientIndexes(List<List<ItemStack>> groups) {
+        ensurePlayerContext();
         if (Minecraft.getInstance().player == null || groups == null || groups.isEmpty())
             return List.of();
         List<ItemStack> items = availableItems();
@@ -99,6 +131,7 @@ public final class SideBackpackClient {
     }
 
     public static void receiveBackpackAvailability(BackpackAvailabilityPayload payload) {
+        ensurePlayerContext();
         syncedBackpackItems = payload.items().stream().map(ItemStack::copy).toList();
         backpackAvailabilitySynced = true;
     }
@@ -117,46 +150,56 @@ public final class SideBackpackClient {
     }
 
     public static void receiveUtilityFlags(UtilityFlagsPayload payload) {
+        ensurePlayerContext();
         OVERLAY.setUtilityFlags(new boolean[] { payload.crafting(), payload.furnace(), payload.anvil(),
                 payload.smithing(), payload.stonecutter() });
     }
 
     public static void receiveSmithing(SmithingSyncPayload payload) {
+        ensurePlayerContext();
         OVERLAY.receiveSmithing(payload);
     }
 
     public static void receiveCrafting(CraftingSyncPayload payload) {
+        ensurePlayerContext();
         OVERLAY.receiveCrafting(payload);
     }
 
     public static boolean isCraftingUtilityVisible() {
+        ensurePlayerContext();
         return hasBackpack && OVERLAY.isCraftingVisible();
     }
 
     public static boolean isSmithingUtilityVisible() {
+        ensurePlayerContext();
         return hasBackpack && OVERLAY.isSmithingVisible();
     }
 
     public static void receiveAnvil(AnvilSyncPayload payload) {
+        ensurePlayerContext();
         OVERLAY.receiveAnvil(payload);
     }
 
     public static void receiveFurnace(FurnaceSyncPayload payload) {
+        ensurePlayerContext();
         OVERLAY.receiveFurnace(payload);
     }
 
     public static void receiveStonecutter(StonecutterSyncPayload payload) {
+        ensurePlayerContext();
         OVERLAY.receiveStonecutter(payload);
     }
 
     public static boolean shouldBlockContainerInput(
             AbstractContainerScreen<?> screen, double mouseX,
             double mouseY) {
+        ensurePlayerContext();
         return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
                 && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
     }
 
     public static boolean shouldBlockContainerTooltip(AbstractContainerScreen<?> screen, double mouseX, double mouseY) {
+        ensurePlayerContext();
         return hasBackpack && BackpackOverlayScreenPolicy.allows(screen)
                 && OVERLAY.panelInteractiveContains(screen, mouseX, mouseY);
     }
@@ -166,6 +209,7 @@ public final class SideBackpackClient {
 
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
+        ensurePlayerContext();
         AbstractContainerScreen<?> current = minecraft.screen instanceof AbstractContainerScreen<?> s ? s : null;
         if (current != lastScreen) {
             lastScreen = current;
@@ -186,6 +230,7 @@ public final class SideBackpackClient {
     }
 
     public static void receive(String name, List<ItemStack> stacks) {
+        ensurePlayerContext();
         hasBackpack = name != null && !name.isBlank();
         if (!hasBackpack)
             return;
@@ -193,18 +238,21 @@ public final class SideBackpackClient {
     }
 
     public static void receive(String name, List<ItemStack> stacks, List<Integer> limits) {
+        ensurePlayerContext();
         hasBackpack = name != null && !name.isBlank();
         if (hasBackpack)
             OVERLAY.setContents(name, stacks, limits);
     }
 
     public static void receiveCarried(ItemStack carried) {
+        ensurePlayerContext();
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof AbstractContainerScreen<?> screen)
             screen.getMenu().setCarried(carried == null ? ItemStack.EMPTY : carried.copy());
     }
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
+        ensurePlayerContext();
         lastMouseX = event.getMouseX();
         lastMouseY = event.getMouseY();
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
@@ -228,6 +276,7 @@ public final class SideBackpackClient {
     }
 
     public static void onMousePressedPre(ScreenEvent.MouseButtonPressed.Pre event) {
+        ensurePlayerContext();
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         if (!hasBackpack)
@@ -240,6 +289,7 @@ public final class SideBackpackClient {
     }
 
     public static void onMouseDraggedPre(ScreenEvent.MouseDragged.Pre event) {
+        ensurePlayerContext();
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         if (!hasBackpack)
@@ -249,6 +299,7 @@ public final class SideBackpackClient {
     }
 
     public static void onMouseReleasedPre(ScreenEvent.MouseButtonReleased.Pre event) {
+        ensurePlayerContext();
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         if (!hasBackpack)
@@ -258,6 +309,7 @@ public final class SideBackpackClient {
     }
 
     public static void onMouseScrolledPre(ScreenEvent.MouseScrolled.Pre event) {
+        ensurePlayerContext();
         if (!BackpackOverlayScreenPolicy.allows(event.getScreen()))
             return;
         if (OVERLAY.mouseScrolled(event))
@@ -265,6 +317,7 @@ public final class SideBackpackClient {
     }
 
     public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+        ensurePlayerContext();
         if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen())) {
             ItemStack hovered = OVERLAY.stackAt(lastMouseX, lastMouseY);
             if (!hovered.isEmpty() && event.getKeyCode() == InputConstants.KEY_R) {
@@ -286,6 +339,7 @@ public final class SideBackpackClient {
     }
 
     public static void onCharacterTyped(ScreenEvent.CharacterTyped.Pre event) {
+        ensurePlayerContext();
         if (hasBackpack && BackpackOverlayScreenPolicy.allows(event.getScreen())
                 && OVERLAY.charTyped(event.getCodePoint()))
             event.setCanceled(true);

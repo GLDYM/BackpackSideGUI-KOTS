@@ -11,6 +11,7 @@ import dev.polaris_light.backpack_side_gui.server.record.BackpackAccess;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackItem;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
@@ -30,8 +31,7 @@ public final class BackpackResolver {
 
     public static boolean isValid(ServerPlayer player, BackpackAccess access) {
         if (access.curiosHandler() != null) {
-            return access.curiosSlot() >= 0 && access.curiosSlot() < access.curiosHandler().getSlots()
-                    && access.curiosHandler().getStackInSlot(access.curiosSlot()) == access.stack();
+            return isHeldInCurrentCurios(player, access.stack());
         }
 
         int slot = access.playerInventorySlot();
@@ -45,6 +45,33 @@ public final class BackpackResolver {
 
     public static void forget(ServerPlayer player) {
         cached.remove(player.getUUID());
+    }
+
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        if (event.getOriginal() instanceof ServerPlayer original)
+            forget(original);
+        if (event.getEntity() instanceof ServerPlayer player)
+            forget(player);
+    }
+
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player)
+            forget(player);
+    }
+
+    private static boolean isHeldInCurrentCurios(ServerPlayer player, ItemStack stack) {
+        var curios = CuriosApi.getCuriosInventory(player);
+        if (curios.isEmpty())
+            return false;
+
+        for (var curioHandler : curios.get().getCurios().values()) {
+            IItemHandler currentHandler = curioHandler.getStacks();
+            for (int slot = 0; slot < currentHandler.getSlots(); slot++) {
+                if (currentHandler.getStackInSlot(slot) == stack)
+                    return true;
+            }
+        }
+        return false;
     }
 
     // Find the first backpack in the player's inventory or curios slots
