@@ -1,30 +1,57 @@
 package dev.polaris_light.backpack_side_gui.client.gui.element;
 
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.p3pp3rf1y.sophisticatedcore.util.CountAbbreviator;
 
 public final class BackpackOverlaySlot extends Slot {
+    private static final String INFINITY = "\u221E";
+    private static final String STACK_COUNT_KEY = "gui.sophisticatedcore.tooltip.stack_count";
+    private static final int TOOLTIP_WIDTH = 300;
+
+    /*
+     * Z layering inside the panel. The overlay pass itself is translated to
+     * z=330 and GuiGraphics#renderItem adds another 150, while vanilla puts the
+     * container's slot items at 250 (100 + 150) and the stack it draws for the
+     * cursor at 382 (232 + 150). Panel items therefore have to be pulled down by
+     * 130 so they still cover the container's items but stay underneath the
+     * cursor stack; the count text sits just above them and under the cursor.
+     */
+    private static final float ITEM_Z = -130.0F;
+    private static final float COUNT_Z = 30.0F;
+
     private final int index;
     private final ItemStack stack;
     private final int stackLimit;
+    private final boolean infinite;
 
     public BackpackOverlaySlot(int index, ItemStack stack) {
-        super(new SimpleContainer(1), 0, 0, 0);
-        this.index = index;
-        this.stack = stack == null ? ItemStack.EMPTY : stack;
-        this.stackLimit = 64;
+        this(index, stack, 64);
     }
 
     public BackpackOverlaySlot(int index, ItemStack stack, int stackLimit) {
+        this(index, stack, stackLimit, false);
+    }
+
+    public BackpackOverlaySlot(int index, ItemStack stack, int stackLimit, boolean infinite) {
         super(new SimpleContainer(1), 0, 0, 0);
         this.index = index;
         this.stack = stack == null ? ItemStack.EMPTY : stack;
         this.stackLimit = Math.max(1, stackLimit);
+        this.infinite = infinite;
     }
 
     @Override
@@ -36,33 +63,48 @@ public final class BackpackOverlaySlot extends Slot {
         return stack;
     }
 
+    public boolean isInfinite() {
+        return infinite;
+    }
+
     public void renderAt(GuiGraphics graphics, Minecraft minecraft, int screenX, int screenY) {
         graphics.fill(screenX, screenY, screenX + 18, screenY + 18, -872415232);
         graphics.fill(screenX + 1, screenY + 1, screenX + 17, screenY + 17, -14671840);
         if (stack.isEmpty())
             return;
-        graphics.renderItem(stack, screenX + 1, screenY + 1);
-        if (stack.getCount() <= 1)
-            return;
-        String c = CountAbbreviator.abbreviate(stack.getCount());
+        renderItemIcon(graphics, stack, screenX + 1, screenY + 1);
+        renderCount(graphics, minecraft, screenX, screenY, stack);
+    }
+
+    private void renderItemIcon(GuiGraphics graphics, ItemStack shown, int x, int y) {
         graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 300.0F);
-        graphics.drawString(minecraft.font, c, screenX + 20 - minecraft.font.width(c) - 2, screenY + 10, 16777215,
-                true);
+        graphics.pose().translate(0.0F, 0.0F, ITEM_Z);
+        graphics.renderItem(shown, x, y);
         graphics.pose().popPose();
     }
 
     public void renderPreview(GuiGraphics graphics, Minecraft minecraft, int sx, int sy, ItemStack preview) {
         if (preview == null || preview.isEmpty())
             return;
-        graphics.renderItem(preview, sx + 1, sy + 1);
-        if (preview.getCount() > 1) {
-            String c = CountAbbreviator.abbreviate(preview.getCount());
-            graphics.pose().pushPose();
-            graphics.pose().translate(0.0F, 0.0F, 300.0F);
-            graphics.drawString(minecraft.font, c, sx + 20 - minecraft.font.width(c) - 2, sy + 10, 16777215, true);
-            graphics.pose().popPose();
-        }
+        renderItemIcon(graphics, preview, sx + 1, sy + 1);
+        renderCount(graphics, minecraft, sx, sy, preview);
+    }
+
+    private void renderCount(GuiGraphics graphics, Minecraft minecraft, int sx, int sy, ItemStack shown) {
+        String text = countText(shown);
+        if (text == null)
+            return;
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, COUNT_Z);
+        graphics.drawString(minecraft.font, text, sx + 20 - minecraft.font.width(text) - 2, sy + 10, 16777215,
+                true);
+        graphics.pose().popPose();
+    }
+
+    private String countText(ItemStack shown) {
+        if (infinite)
+            return INFINITY;
+        return shown.getCount() > 1 ? CountAbbreviator.abbreviate(shown.getCount()) : null;
     }
 
     public void renderHighlightAt(GuiGraphics graphics, int sx, int sy, double mouseX, double mouseY) {
@@ -86,28 +128,30 @@ public final class BackpackOverlaySlot extends Slot {
 
     public void renderTooltip(GuiGraphics graphics, Minecraft minecraft, int sx, int sy, double mouseX, double mouseY) {
         if (!stack.isEmpty() && mouseX >= sx && mouseX < sx + 18 && mouseY >= sy && mouseY < sy + 18) {
-            java.util.List<Component> lines = new java.util.ArrayList<>(stack.getTooltipLines(
-                    minecraft.level == null ? net.minecraft.world.item.Item.TooltipContext.EMPTY
-                            : net.minecraft.world.item.Item.TooltipContext.of(minecraft.level),
+            List<Component> lines = new ArrayList<>(stack.getTooltipLines(
+                    minecraft.level == null ? Item.TooltipContext.EMPTY : Item.TooltipContext.of(minecraft.level),
                     minecraft.player,
-                    net.minecraft.world.item.TooltipFlag.NORMAL));
-            // Stupid Codex!
-            if (stack.getCount() > stack.getMaxStackSize() || stackLimit > stack.getMaxStackSize()) {
-                net.minecraft.network.chat.MutableComponent count = Component
-                        .literal(java.text.NumberFormat.getNumberInstance().format(stack.getCount()))
-                        .withStyle(net.minecraft.ChatFormatting.DARK_AQUA);
-                Component max = Component.literal(java.text.NumberFormat.getNumberInstance().format(stackLimit))
-                        .withStyle(net.minecraft.ChatFormatting.DARK_AQUA);
-                Component value = count.append(Component.literal(" /").withStyle(net.minecraft.ChatFormatting.GRAY))
-                        .append(max);
-                lines.add(Component.translatable("gui.sophisticatedcore.tooltip.stack_count", value)
-                        .withStyle(net.minecraft.ChatFormatting.GRAY));
-            }
-            java.util.List<net.minecraft.util.FormattedCharSequence> wrapped = new java.util.ArrayList<>();
+                    TooltipFlag.NORMAL));
+            Component value = stackCountValue();
+            if (value != null)
+                lines.add(Component.translatable(STACK_COUNT_KEY, value).withStyle(ChatFormatting.GRAY));
+            List<FormattedCharSequence> wrapped = new ArrayList<>();
             for (Component line : lines)
-                wrapped.addAll(minecraft.font.split(line, 300));
+                wrapped.addAll(minecraft.font.split(line, TOOLTIP_WIDTH));
             graphics.renderTooltip(minecraft.font, wrapped, (int) mouseX, (int) mouseY);
         }
+    }
+
+    private Component stackCountValue() {
+        if (infinite)
+            return Component.literal(INFINITY).withStyle(ChatFormatting.DARK_AQUA);
+        if (stack.getCount() <= stack.getMaxStackSize() && stackLimit <= stack.getMaxStackSize())
+            return null;
+        MutableComponent count = Component.literal(NumberFormat.getNumberInstance().format(stack.getCount()))
+                .withStyle(ChatFormatting.DARK_AQUA);
+        Component max = Component.literal(NumberFormat.getNumberInstance().format(stackLimit))
+                .withStyle(ChatFormatting.DARK_AQUA);
+        return count.append(Component.literal(" /").withStyle(ChatFormatting.GRAY)).append(max);
     }
 
     public void render(GuiGraphics graphics, Minecraft minecraft, int ox, int oy, int scroll, int visible) {
@@ -123,14 +167,8 @@ public final class BackpackOverlaySlot extends Slot {
         ItemStack shown = stack;
         if (shown.isEmpty())
             return;
-        graphics.renderItem(shown, sx + 1, sy + 1);
-        if (shown.getCount() <= 1)
-            return;
-        String c = CountAbbreviator.abbreviate(shown.getCount());
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 300.0F);
-        graphics.drawString(minecraft.font, c, sx + 20 - minecraft.font.width(c) - 2, sy + 10, 16777215, true);
-        graphics.pose().popPose();
+        renderItemIcon(graphics, shown, sx + 1, sy + 1);
+        renderCount(graphics, minecraft, sx, sy, shown);
     }
 
     public void renderHighlight(GuiGraphics graphics, int ox, int oy, int scroll, int visible, double mouseX,

@@ -54,6 +54,7 @@ public class BackpackOverlayArea extends IOverlayArea {
     private String filter = "";
     private int stackLimit = 64;
     private List<Integer> slotLimits = java.util.List.of();
+    private List<Boolean> infiniteSlots = java.util.List.of();
     private boolean itemDragging;
     private int dragButton;
     private final List<Integer> dragSlots = new ArrayList<>();
@@ -71,7 +72,12 @@ public class BackpackOverlayArea extends IOverlayArea {
     }
 
     public void setContents(String title, List<ItemStack> items, List<Integer> limits) {
+        setContents(title, items, limits, java.util.List.of());
+    }
+
+    public void setContents(String title, List<ItemStack> items, List<Integer> limits, List<Boolean> infinite) {
         this.slotLimits = limits == null ? java.util.List.of() : new ArrayList<>(limits);
+        this.infiniteSlots = infinite == null ? java.util.List.of() : new ArrayList<>(infinite);
         setContents(title, items, filter, this.stackLimit);
     }
 
@@ -98,7 +104,8 @@ public class BackpackOverlayArea extends IOverlayArea {
             if (needle.isEmpty()
                     || stack.getHoverName().getString().toLowerCase(java.util.Locale.ROOT).contains(needle)) {
                 int limit = i < slotLimits.size() ? slotLimits.get(i) : stackLimit;
-                slots.add(new BackpackOverlaySlot(visibleLogicalSlots.size(), stack, limit));
+                boolean infinite = i < infiniteSlots.size() && Boolean.TRUE.equals(infiniteSlots.get(i));
+                slots.add(new BackpackOverlaySlot(visibleLogicalSlots.size(), stack, limit, infinite));
             }
             visibleLogicalSlots.add(i);
         }
@@ -236,6 +243,36 @@ public class BackpackOverlayArea extends IOverlayArea {
                 && mouseY >= y - Layout.TOP_OFFSET && mouseY < y + height + Layout.BOTTOM_PADDING;
     }
 
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible)
+            return;
+        int rows = Math.max(1, (slots.size() + Layout.COLUMNS - 1) / Layout.COLUMNS);
+        int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
+        for (BackpackOverlaySlot slot : slots)
+            slot.renderHighlight(graphics, x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
+        if (!itemDragging)
+            return;
+        for (int logical : dragSlots) {
+            int display = visibleLogicalSlots.indexOf(logical);
+            if (display < 0)
+                continue;
+            int row = display / 9, col = display % 9;
+            if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows) {
+                BackpackOverlaySlot slot = slots.get(display);
+                ItemStack base = slot.stack();
+                int amount = dragAmount();
+                if (base.isEmpty() || ItemStack.isSameItemSameComponents(base, dragCarried)) {
+                    ItemStack preview = (base.isEmpty() ? dragCarried : base)
+                            .copyWithCount(Math.min(slot.getMaxStackSize(), base.getCount() + amount));
+                    slot.renderPreview(graphics, Minecraft.getInstance(), x + col * 18,
+                            y + (row - scrollbar.row()) * 18, preview);
+                }
+                slot.renderDragHighlight(graphics, x + col * 18,
+                        y + (row - scrollbar.row()) * 18);
+            }
+        }
+    }
+
     public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
@@ -249,29 +286,7 @@ public class BackpackOverlayArea extends IOverlayArea {
         int rows = Math.max(1, (slots.size() + Layout.COLUMNS - 1) / Layout.COLUMNS);
         int visibleRows = Math.min(rows, Layout.VISIBLE_ROWS);
         for (BackpackOverlaySlot slot : slots)
-            slot.renderHighlight(graphics, x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
-        for (BackpackOverlaySlot slot : slots)
             slot.renderTooltip(graphics, Minecraft.getInstance(), x, y, scrollbar.row(), visibleRows, mouseX, mouseY);
-        if (itemDragging)
-            for (int logical : dragSlots) {
-                int display = visibleLogicalSlots.indexOf(logical);
-                if (display < 0)
-                    continue;
-                int row = display / 9, col = display % 9;
-                if (row >= scrollbar.row() && row < scrollbar.row() + visibleRows) {
-                    BackpackOverlaySlot slot = slots.get(display);
-                    ItemStack base = slot.stack();
-                    int amount = dragAmount();
-                    if (base.isEmpty() || ItemStack.isSameItemSameComponents(base, dragCarried)) {
-                        ItemStack preview = (base.isEmpty() ? dragCarried : base)
-                                .copyWithCount(Math.min(slot.getMaxStackSize(), base.getCount() + amount));
-                        slot.renderPreview(graphics, Minecraft.getInstance(), x + col * 18,
-                                y + (row - scrollbar.row()) * 18, preview);
-                    }
-                    slot.renderDragHighlight(graphics, x + col * 18,
-                            y + (row - scrollbar.row()) * 18);
-                }
-            }
     }
 
     public boolean panelInteractiveContains(double mouseX, double mouseY, int screenWidth, int screenHeight) {

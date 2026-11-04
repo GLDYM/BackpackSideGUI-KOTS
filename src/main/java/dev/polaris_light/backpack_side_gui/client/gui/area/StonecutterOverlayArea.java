@@ -145,13 +145,27 @@ public final class StonecutterOverlayArea extends IOverlayArea {
         return event.getScreen() instanceof AbstractContainerScreen<?> c ? c.getMenu().getCarried() : ItemStack.EMPTY;
     }
 
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible)
+            return;
+        new BackpackOverlaySlot(0, input).renderHighlightAt(graphics, x + Layout.INPUT_BOX_X,
+                y + Layout.INPUT_BOX_Y, mouseX, mouseY);
+        new BackpackOverlaySlot(1, output).renderHighlightAt(graphics, x + Layout.OUTPUT_BOX_X,
+                y + Layout.OUTPUT_BOX_Y, mouseX, mouseY);
+        int firstRecipe = scrollbar.row() * Layout.RECIPE_COLUMNS;
+        for (int n = 0; n < Layout.RECIPE_SLOT_COUNT && firstRecipe + n < recipes.length; n++) {
+            int i = firstRecipe + n;
+            int sx = x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE;
+            int sy = y + Layout.RECIPE_BOX_Y + (n / Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE;
+            new BackpackOverlaySlot(i, recipes[i]).renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
+        }
+    }
+
     public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         BackpackOverlaySlot inputSlot = new BackpackOverlaySlot(0, input);
         BackpackOverlaySlot outputSlot = new BackpackOverlaySlot(1, output);
-        inputSlot.renderHighlightAt(graphics, x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y, mouseX, mouseY);
-        outputSlot.renderHighlightAt(graphics, x + Layout.OUTPUT_BOX_X, y + Layout.OUTPUT_BOX_Y, mouseX, mouseY);
         inputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + Layout.INPUT_BOX_X, y + Layout.INPUT_BOX_Y,
                 mouseX, mouseY);
         outputSlot.renderTooltip(graphics, Minecraft.getInstance(), x + Layout.OUTPUT_BOX_X, y + Layout.OUTPUT_BOX_Y,
@@ -161,9 +175,8 @@ public final class StonecutterOverlayArea extends IOverlayArea {
             int i = firstRecipe + n;
             int sx = x + Layout.RECIPE_BOX_X + (n % Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE;
             int sy = y + Layout.RECIPE_BOX_Y + (n / Layout.RECIPE_COLUMNS) * Layout.SLOT_SIZE;
-            BackpackOverlaySlot slot = new BackpackOverlaySlot(i, recipes[i]);
-            slot.renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
-            slot.renderTooltip(graphics, Minecraft.getInstance(), sx, sy, mouseX, mouseY);
+            new BackpackOverlaySlot(i, recipes[i]).renderTooltip(graphics, Minecraft.getInstance(), sx, sy, mouseX,
+                    mouseY);
         }
     }
 

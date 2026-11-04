@@ -96,13 +96,22 @@ public final class FurnaceOverlayArea extends IOverlayArea {
         return false;
     }
 
-    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         for (int i = 0; i < 3; i++) {
             int sx = x + (i == 0 ? Layout.INPUT_X : i == 1 ? Layout.FUEL_X : Layout.OUTPUT_X),
                     sy = y + (i == 0 ? Layout.INPUT_Y : i == 1 ? Layout.FUEL_Y : Layout.OUTPUT_Y);
             slots[i].renderHighlightAt(graphics, sx, sy, mouseX, mouseY);
+        }
+    }
+
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible)
+            return;
+        for (int i = 0; i < 3; i++) {
+            int sx = x + (i == 0 ? Layout.INPUT_X : i == 1 ? Layout.FUEL_X : Layout.OUTPUT_X),
+                    sy = y + (i == 0 ? Layout.INPUT_Y : i == 1 ? Layout.FUEL_Y : Layout.OUTPUT_Y);
             slots[i].renderTooltip(graphics, Minecraft.getInstance(), sx, sy, mouseX, mouseY);
         }
     }

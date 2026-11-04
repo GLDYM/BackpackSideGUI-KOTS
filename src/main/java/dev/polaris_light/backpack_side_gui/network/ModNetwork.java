@@ -90,8 +90,8 @@ public final class ModNetwork {
                         () -> UtilityC2S.request((ServerPlayer) context.player(), payload.utilityType()))));
 
         registrar.playToClient(BackpackSyncPayload.TYPE, BackpackSyncPayload.STREAM_CODEC,
-                (payload, context) -> context.enqueueWork(
-                        () -> SideBackpackClient.receive(payload.title(), payload.items(), payload.slotLimits())));
+                (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receive(payload.title(),
+                        payload.items(), payload.slotLimits(), payload.infiniteSlots())));
         registrar.playToClient(UtilityFlagsPayload.TYPE, UtilityFlagsPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> SideBackpackClient.receiveUtilityFlags(payload)));
         registrar.playToClient(SmithingSyncPayload.TYPE, SmithingSyncPayload.STREAM_CODEC,

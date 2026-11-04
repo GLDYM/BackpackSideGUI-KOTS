@@ -87,13 +87,18 @@ public final class SmithingOverlayArea extends IOverlayArea {
         return false;
     }
 
-    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         slots[0].renderHighlightAt(graphics, x + Layout.FIRST_SLOT_X, y + Layout.SLOTS_Y, mouseX, mouseY);
         slots[1].renderHighlightAt(graphics, x + Layout.SECOND_SLOT_X, y + Layout.SLOTS_Y, mouseX, mouseY);
         slots[2].renderHighlightAt(graphics, x + Layout.THIRD_SLOT_X, y + Layout.SLOTS_Y, mouseX, mouseY);
         slots[3].renderHighlightAt(graphics, x + Layout.RESULT_SLOT_X, y + Layout.SLOTS_Y, mouseX, mouseY);
+    }
+
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible)
+            return;
         int[] tooltipX = { Layout.FIRST_SLOT_X, Layout.SECOND_SLOT_X, Layout.THIRD_SLOT_X, Layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
             slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + tooltipX[i], y + Layout.SLOTS_Y, mouseX,

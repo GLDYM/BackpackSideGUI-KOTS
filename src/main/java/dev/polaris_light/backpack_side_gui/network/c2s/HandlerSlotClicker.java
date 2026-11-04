@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 /** Shared primary/secondary click logic for real item handlers. */
 public final class HandlerSlotClicker {
@@ -35,6 +36,15 @@ public final class HandlerSlotClicker {
         }
         if (!inventory.isItemValid(slot, cursor))
             return cursor;
+        if (!current.isEmpty() && !ItemStack.isSameItemSameComponents(current, cursor)) {
+            if (!(inventory instanceof IItemHandlerModifiable modifiable))
+                return cursor;
+            int maxStackSize = Math.min(Math.max(1, modifiable.getSlotLimit(slot)), cursor.getMaxStackSize());
+            if (cursor.getCount() > maxStackSize || current.getCount() > current.getMaxStackSize())
+                return cursor;
+            modifiable.setStackInSlot(slot, cursor.copy());
+            return current.copy();
+        }
         int requested = button == 1 ? 1 : cursor.getCount();
         ItemStack rest = inventory.insertItem(slot, cursor.copyWithCount(requested), false);
         cursor.shrink(requested - rest.getCount());

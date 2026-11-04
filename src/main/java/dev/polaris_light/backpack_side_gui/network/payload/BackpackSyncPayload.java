@@ -10,10 +10,14 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-public record BackpackSyncPayload(String title, List<ItemStack> items, List<Integer> slotLimits)
-        implements CustomPacketPayload {
+public record BackpackSyncPayload(String title, List<ItemStack> items, List<Integer> slotLimits,
+        List<Boolean> infiniteSlots) implements CustomPacketPayload {
     public BackpackSyncPayload(String title, List<ItemStack> items) {
-        this(title, items, java.util.List.of());
+        this(title, items, java.util.List.of(), java.util.List.of());
+    }
+
+    public BackpackSyncPayload(String title, List<ItemStack> items, List<Integer> slotLimits) {
+        this(title, items, slotLimits, java.util.List.of());
     }
 
     public static final Type<BackpackSyncPayload> TYPE = new Type<>(
@@ -25,18 +29,21 @@ public record BackpackSyncPayload(String title, List<ItemStack> items, List<Inte
             int count = Math.min(162, buf.readVarInt());
             List<ItemStack> items = new ArrayList<>(count);
             List<Integer> limits = new ArrayList<>(count);
+            List<Boolean> infinite = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
                 if (buf.readBoolean()) {
                     ItemStack stack = ItemStack.STREAM_CODEC.decode(buf);
                     stack.setCount(Math.max(1, buf.readVarInt()));
                     items.add(stack);
                     limits.add(buf.readVarInt());
+                    infinite.add(buf.readBoolean());
                 } else {
                     items.add(ItemStack.EMPTY);
                     limits.add(64);
+                    infinite.add(false);
                 }
             }
-            return new BackpackSyncPayload(title, items, limits);
+            return new BackpackSyncPayload(title, items, limits, infinite);
         }
 
         public void encode(RegistryFriendlyByteBuf buf, BackpackSyncPayload payload) {
@@ -52,6 +59,8 @@ public record BackpackSyncPayload(String title, List<ItemStack> items, List<Inte
                     ItemStack.STREAM_CODEC.encode(buf, encoded);
                     buf.writeVarInt(Math.max(1, stack.getCount()));
                     buf.writeVarInt(i < payload.slotLimits().size() ? payload.slotLimits().get(i) : 64);
+                    buf.writeBoolean(i < payload.infiniteSlots().size()
+                            && Boolean.TRUE.equals(payload.infiniteSlots().get(i)));
                 }
             }
         }

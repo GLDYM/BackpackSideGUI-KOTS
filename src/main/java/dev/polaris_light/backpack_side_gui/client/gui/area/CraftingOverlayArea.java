@@ -75,13 +75,18 @@ public final class CraftingOverlayArea extends IOverlayArea {
             }
     }
 
-    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         for (int i = 0; i < 9; i++)
             slots[i].renderHighlightAt(graphics, x + Layout.INPUT_X + (i % 3) * Layout.SLOT_SIZE,
                     y + Layout.INPUT_Y + (i / 3) * Layout.SLOT_SIZE, mouseX, mouseY);
         slots[9].renderHighlightAt(graphics, x + Layout.RESULT_X, y + Layout.RESULT_Y, mouseX, mouseY);
+    }
+
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible)
+            return;
         for (int i = 0; i < 9; i++)
             slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + Layout.INPUT_X + (i % 3) * Layout.SLOT_SIZE,
                     y + Layout.INPUT_Y + (i / 3) * Layout.SLOT_SIZE, mouseX, mouseY);

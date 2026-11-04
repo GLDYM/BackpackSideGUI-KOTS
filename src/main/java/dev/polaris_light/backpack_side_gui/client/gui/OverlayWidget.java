@@ -127,6 +127,10 @@ public final class OverlayWidget extends IOverlayWidget {
         area.setContents(title, items, limits);
     }
 
+    public void setContents(String title, List<ItemStack> items, List<Integer> limits, List<Boolean> infiniteSlots) {
+        area.setContents(title, items, limits, infiniteSlots);
+    }
+
     public void setAnchorPosition(int anchorX, int anchorY) {
         if (!dragging) {
             this.anchorX = anchorX;
@@ -185,6 +189,15 @@ public final class OverlayWidget extends IOverlayWidget {
                 button.setBounds(anchorX + (BUTTON_SIZE + BUTTON_GAP) * (2 + utilityIndex++), anchorY);
             button.render(graphics, minecraft);
         }
+    }
+
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
+        area.renderSlotFeedback(graphics, mouseX, mouseY);
+        crafting.renderSlotFeedback(graphics, mouseX, mouseY);
+        furnace.renderSlotFeedback(graphics, mouseX, mouseY);
+        anvil.renderSlotFeedback(graphics, mouseX, mouseY);
+        smithing.renderSlotFeedback(graphics, mouseX, mouseY);
+        stonecutter.renderSlotFeedback(graphics, mouseX, mouseY);
     }
 
     @Override

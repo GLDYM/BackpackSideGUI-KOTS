@@ -57,20 +57,49 @@ public final class BackpackC2S {
             player.containerMenu
                     .setCarried(slot.isInfinite() ? slot.remove(amount) : slot.safeTake(amount, amount, player));
         } else {
-            if (carried.isEmpty() || !slot.mayPlace(carried))
-                return;
-            int amount = payload.clickType() == 2 ? 1
-                    : (payload.clickType() >= 10 ? Math.min(carried.getCount(), payload.clickType() - 10)
-                            : carried.getCount());
-            ItemStack rest = slot.safeInsert(carried.copyWithCount(amount));
-            ItemStack remaining = carried.copy();
-            remaining.shrink(amount - rest.getCount());
-            player.containerMenu.setCarried(remaining.isEmpty() ? ItemStack.EMPTY : remaining);
+            placeFromCarried(player, slot, payload.clickType(), carried);
         }
         player.containerMenu.broadcastChanges();
         PacketDistributor.sendToPlayer(player, new BackpackCarriedPayload(player.containerMenu.getCarried().copy()),
                 new CustomPacketPayload[0]);
         PacketDistributor.sendToPlayer(player, snapshot(access.get(), player), new CustomPacketPayload[0]);
+    }
+
+    private static void placeFromCarried(ServerPlayer player, BackpackVirtualSlot slot, int clickType,
+            ItemStack carried) {
+        if (carried.isEmpty())
+            return;
+        ItemStack existing = slot.getItem();
+        if (!slot.mayPlace(carried)) {
+            if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, carried))
+                return;
+            int room = Math.max(0, carried.getMaxStackSize() - carried.getCount());
+            int amount = Math.min(room, existing.getCount());
+            if (amount <= 0)
+                return;
+            ItemStack taken = slot.remove(amount);
+            if (taken.isEmpty())
+                return;
+            carried.grow(taken.getCount());
+            slot.onTake(player, taken);
+            player.containerMenu.setCarried(carried);
+            return;
+        }
+        if (existing.isEmpty() || ItemStack.isSameItemSameComponents(existing, carried)) {
+            int amount = clickType == 2 ? 1
+                    : (clickType >= 10 ? Math.min(carried.getCount(), clickType - 10) : carried.getCount());
+            ItemStack rest = slot.safeInsert(carried.copyWithCount(amount));
+            ItemStack remaining = carried.copy();
+            remaining.shrink(amount - rest.getCount());
+            player.containerMenu.setCarried(remaining.isEmpty() ? ItemStack.EMPTY : remaining);
+            return;
+        }
+        if (carried.getCount() > slot.getMaxStackSize(carried)
+                || existing.getCount() > existing.getMaxStackSize())
+            return;
+        ItemStack swapped = existing.copy();
+        slot.set(carried.copy());
+        player.containerMenu.setCarried(swapped);
     }
 
     public static void handleDrag(ServerPlayer player, BackpackDragPayload payload) {
@@ -170,12 +199,14 @@ public final class BackpackC2S {
     public static BackpackSyncPayload snapshot(BackpackAccess access, ServerPlayer player) {
         ArrayList<ItemStack> s = new ArrayList<>();
         ArrayList<Integer> limits = new ArrayList<>();
+        ArrayList<Boolean> infinite = new ArrayList<>();
         for (int i = 0; i < access.handler().getSlots(); i++) {
             ItemStack item = access.handler().getStackInSlot(i).copy();
             s.add(item);
             BackpackVirtualSlot virtualSlot = new BackpackVirtualSlot(access.stack(), i, player);
             limits.add(virtualSlot.getMaxStackSize(item));
+            infinite.add(virtualSlot.isInfinite());
         }
-        return new BackpackSyncPayload(access.stack().getHoverName().getString(), s, limits);
+        return new BackpackSyncPayload(access.stack().getHoverName().getString(), s, limits, infinite);
     }
 }

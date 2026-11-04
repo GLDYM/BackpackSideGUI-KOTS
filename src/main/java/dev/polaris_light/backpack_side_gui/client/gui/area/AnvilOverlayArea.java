@@ -109,12 +109,18 @@ public final class AnvilOverlayArea extends IOverlayArea {
         return handled;
     }
 
-    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+    public void renderSlotFeedback(GuiGraphics graphics, double mouseX, double mouseY) {
         if (!visible)
             return;
         int[] xs = { Layout.FIRST_SLOT_X, Layout.SECOND_SLOT_X, Layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
             slots[i].renderHighlightAt(graphics, x + xs[i], y + Layout.SLOTS_Y, mouseX, mouseY);
+    }
+
+    public void renderTooltip(GuiGraphics graphics, double mouseX, double mouseY) {
+        if (!visible)
+            return;
+        int[] xs = { Layout.FIRST_SLOT_X, Layout.SECOND_SLOT_X, Layout.RESULT_SLOT_X };
         for (int i = 0; i < slots.length; i++)
             slots[i].renderTooltip(graphics, Minecraft.getInstance(), x + xs[i], y + Layout.SLOTS_Y, mouseX, mouseY);
     }

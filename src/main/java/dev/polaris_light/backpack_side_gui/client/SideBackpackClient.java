@@ -19,6 +19,7 @@ import dev.polaris_light.backpack_side_gui.network.payload.SmithingSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.StonecutterSyncPayload;
 import dev.polaris_light.backpack_side_gui.network.payload.UtilityFlagsPayload;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -238,10 +239,15 @@ public final class SideBackpackClient {
     }
 
     public static void receive(String name, List<ItemStack> stacks, List<Integer> limits) {
+        receive(name, stacks, limits, List.of());
+    }
+
+    public static void receive(String name, List<ItemStack> stacks, List<Integer> limits,
+            List<Boolean> infiniteSlots) {
         ensurePlayerContext();
         hasBackpack = name != null && !name.isBlank();
         if (hasBackpack)
-            OVERLAY.setContents(name, stacks, limits);
+            OVERLAY.setContents(name, stacks, limits, infiniteSlots);
     }
 
     public static void receiveCarried(ItemStack carried) {
@@ -259,18 +265,20 @@ public final class SideBackpackClient {
             return;
         if (!hasBackpack)
             return;
+        GuiGraphics graphics = event.getGuiGraphics();
         RenderSystem.disableDepthTest();
-        event.getGuiGraphics().pose().pushPose();
+        graphics.pose().pushPose();
         // Why 330.0F? Ask Mojang.
-        event.getGuiGraphics().pose().translate(0.0F, 0.0F, 330.0F);
+        graphics.pose().translate(0.0F, 0.0F, 330.0F);
         try {
+            Minecraft minecraft = Minecraft.getInstance();
             OVERLAY.setAnchorPosition(event.getScreen().width / 2 + BackpackSideGuiConfig.OVERLAY_X.get(),
                     event.getScreen().height / 2 + BackpackSideGuiConfig.OVERLAY_Y.get());
-            Minecraft minecraft = Minecraft.getInstance();
-            OVERLAY.render(event.getScreen(), event.getGuiGraphics(), minecraft);
-            OVERLAY.renderTooltip(event.getGuiGraphics(), minecraft, event.getMouseX(), event.getMouseY());
+            OVERLAY.render(event.getScreen(), graphics, minecraft);
+            OVERLAY.renderSlotFeedback(graphics, event.getMouseX(), event.getMouseY());
+            OVERLAY.renderTooltip(graphics, minecraft, event.getMouseX(), event.getMouseY());
         } finally {
-            event.getGuiGraphics().pose().popPose();
+            graphics.pose().popPose();
             RenderSystem.enableDepthTest();
         }
     }
